@@ -1,0 +1,286 @@
+/* ============================================================
+   JurisFlow — Novo Processo CSS (extensão de novo-cliente.css)
+   ============================================================ */
+
+/* ── Processo Status Selector ────────────────────────────── */
+.proc-status-sel {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pstbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+}
+.pstbtn:hover { background: var(--gray-50); border-color: var(--gray-400); }
+.pstbtn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.pstbtn.urgent.active {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ── Priority Selector ───────────────────────────────────── */
+.priority-sel {
+  display: flex;
+  gap: 6px;
+}
+.pribtn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+  text-align: center;
+}
+.pribtn:hover { border-color: var(--gray-400); }
+.pribtn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+/* ── Autocomplete ────────────────────────────────────────── */
+.autocomplete-wrap { position: relative; }
+.ac-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+  overflow: hidden;
+  animation: fcardIn .18s ease both;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ac-dropdown.active { display: block; }
+.ac-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.ac-item:hover { background: var(--gray-50); }
+.ac-item-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-accent);
+  font-size: .72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ac-item-info { flex: 1; }
+.ac-item-name { font-size: .83rem; font-weight: 500; color: var(--gray-800); }
+.ac-item-name mark {
+  background: rgba(37,99,235,.12);
+  color: var(--blue-accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.ac-item-cpf { font-size: .72rem; color: var(--gray-400); }
+.ac-empty {
+  padding: 14px;
+  font-size: .82rem;
+  color: var(--gray-400);
+  text-align: center;
+}
+
+/* ── Date with alert ─────────────────────────────────────── */
+.date-with-alert { display: flex; flex-direction: column; gap: 5px; }
+.date-alert {
+  font-size: .73rem;
+  font-weight: 500;
+  color: var(--amber);
+  padding: 4px 8px;
+  background: var(--amber-soft);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.date-alert.urgent { color: var(--red); background: var(--red-soft); }
+
+/* ── Prazo Banner ────────────────────────────────────────── */
+.prazo-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--amber-soft);
+  border: 1px solid #F59E0B33;
+  border-radius: var(--radius-sm);
+  margin-top: 16px;
+  font-size: .83rem;
+  font-weight: 500;
+  color: #92400E;
+  animation: fcardIn .25s ease both;
+}
+.prazo-banner.urgent {
+  background: var(--red-soft);
+  border-color: #EF444433;
+  color: var(--red);
+}
+
+/* ── Timeline ────────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 20px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  background: var(--gray-200);
+  border-radius: 2px;
+}
+.tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 0;
+  position: relative;
+  animation: fcardIn .25s ease both;
+}
+.tl-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 28px;
+  bottom: -12px;
+  width: 2px;
+  background: var(--gray-100);
+}
+.tl-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--white);
+  flex-shrink: 0;
+  margin-left: -20px;
+  margin-top: 3px;
+  box-shadow: 0 0 0 2px var(--gray-200);
+  z-index: 1;
+  position: relative;
+}
+.tl-dot.blue  { background: var(--blue-accent); box-shadow: 0 0 0 2px rgba(37,99,235,.2); }
+.tl-dot.green { background: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,.2); }
+.tl-dot.amber { background: var(--amber); box-shadow: 0 0 0 2px rgba(245,158,11,.2); }
+.tl-dot.red   { background: var(--red); box-shadow: 0 0 0 2px rgba(239,68,68,.2); }
+.tl-dot.gray  { background: var(--gray-400); }
+.tl-content { flex: 1; }
+.tl-title { font-size: .85rem; font-weight: 500; color: var(--gray-800); }
+.tl-meta  { font-size: .73rem; color: var(--gray-400); margin-top: 2px; }
+.tl-badge {
+  font-size: .68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tl-item-del {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: .78rem;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.tl-item-del:hover { color: var(--red); background: var(--red-soft); }
+
+/* ── Add Event Button ────────────────────────────────────── */
+.btn-add-event {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .79rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  color: var(--navy);
+  transition: all .15s;
+}
+.btn-add-event:hover {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+
+/* ── Timeline add form ───────────────────────────────────── */
+.tl-add-form {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  animation: fcardIn .2s ease both;
+}
+.btn-tl-add {
+  padding: 9px 16px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.btn-tl-add:hover { background: var(--navy-mid); }
+.btn-tl-cancel {
+  padding: 9px 11px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--gray-600);
+  cursor: pointer;
+  font-size: .82rem;
+  transition: all .15s;
+}
+.btn-tl-cancel:hover { border-color: var(--red); color: var(--red); }

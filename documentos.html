@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos — JurisFlow</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .btn-primary {
+      height:40px; padding:0 20px; background:var(--navy);
+      color:var(--white); border:none; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600;
+      cursor:pointer; display:flex; align-items:center; gap:8px;
+      transition:all .2s; white-space:nowrap;
+    }
+    .btn-primary:hover { background:var(--navy-light); }
+    .page-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .search-box { position:relative; flex:1; min-width:220px; }
+    .search-box input {
+      width:100%; height:40px; padding:0 16px 0 40px;
+      border:1px solid var(--gray-200); border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.85rem; color:var(--gray-800);
+      background:var(--white); outline:none; transition:border-color .2s;
+    }
+    .search-box input:focus { border-color:var(--navy-light); }
+    .search-box .s-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--gray-400); pointer-events:none; }
+    .filter-select {
+      height:40px; padding:0 14px; border:1px solid var(--gray-200);
+      border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif;
+      font-size:.83rem; color:var(--gray-800); background:var(--white); cursor:pointer; outline:none;
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border:2px dashed var(--gray-200); border-radius:var(--radius-lg);
+      padding:32px; text-align:center; background:var(--white);
+      transition:all .2s; cursor:pointer; animation:fadeUp .4s ease both;
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color:var(--navy-light); background:var(--blue-soft); }
+    .upload-icon { font-size:2.5rem; opacity:.4; margin-bottom:10px; }
+    .upload-text { font-size:.9rem; font-weight:600; color:var(--gray-700); margin-bottom:4px; }
+    .upload-sub { font-size:.78rem; color:var(--gray-400); }
+    .upload-types { display:flex; gap:6px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+    .upload-type { font-size:.68rem; padding:3px 9px; border-radius:20px; background:var(--gray-100); color:var(--gray-600); font-weight:500; }
+
+    /* Categories */
+    .cat-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .cat-btn {
+      display:flex; align-items:center; gap:6px; padding:8px 14px;
+      border:1px solid var(--gray-200); border-radius:20px; background:var(--white);
+      font-family:'DM Sans',sans-serif; font-size:.8rem; font-weight:500; color:var(--gray-600);
+      cursor:pointer; transition:all .15s;
+    }
+    .cat-btn:hover { border-color:var(--navy); color:var(--navy); }
+    .cat-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+    .cat-count { font-size:.7rem; padding:1px 7px; border-radius:20px; }
+    .cat-btn.active .cat-count { background:rgba(255,255,255,.25); color:var(--white); }
+    .cat-btn:not(.active) .cat-count { background:var(--gray-100); color:var(--gray-600); }
+
+    /* Docs Grid */
+    .docs-layout { display:grid; grid-template-columns:1fr; gap:0; }
+    .docs-card { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; animation:fadeUp .4s .2s ease both; }
+    .docs-card-header { padding:18px 24px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+    .dch-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--navy); }
+    .dch-count { font-size:.73rem; color:var(--gray-400); margin-top:2px; }
+    table { width:100%; border-collapse:collapse; }
+    thead th {
+      padding:11px 20px; text-align:left;
+      font-size:.68rem; font-weight:600; color:var(--gray-400);
+      text-transform:uppercase; letter-spacing:.08em;
+      background:var(--gray-50); border-bottom:1px solid var(--gray-100);
+    }
+    tbody tr { border-bottom:1px solid var(--gray-100); transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:var(--gray-50); }
+    td { padding:13px 20px; font-size:.83rem; color:var(--gray-800); vertical-align:middle; }
+    .doc-cell { display:flex; align-items:center; gap:12px; }
+    .doc-icon { width:36px; height:36px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .doc-name { font-weight:600; color:var(--navy); font-size:.84rem; }
+    .doc-proc { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
+    .cat-badge { display:inline-block; font-size:.68rem; font-weight:600; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
+    .cb-peticao     { background:#EEF3FF; color:#2563EB; }
+    .cb-contrato    { background:#ECFDF5; color:#059669; }
+    .cb-laudo       { background:#FFFBEB; color:#D97706; }
+    .cb-procuracao  { background:#F5F3FF; color:#7C3AED; }
+    .cb-decisao     { background:#FEF2F2; color:#DC2626; }
+    .cb-outros      { background:#F1F5F9; color:#64748B; }
+    .doc-size { font-size:.78rem; color:var(--gray-400); }
+    .doc-date { font-size:.78rem; color:var(--gray-500); }
+    .doc-actions { display:flex; gap:6px; }
+    .btn-doc {
+      width:30px; height:30px; border:1px solid var(--gray-200);
+      border-radius:var(--radius-sm); background:var(--white);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; transition:all .15s; color:var(--gray-600);
+    }
+    .btn-doc:hover { background:var(--gray-100); border-color:var(--navy); }
+
+    @media (max-width:700px) {
+      td:nth-child(3),th:nth-child(3),
+      td:nth-child(4),th:nth-child(4) { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">⚖</div>
+    <div><div class="brand-name">JurisFlow</div><div class="brand-tagline">Sistema Jurídico</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item active" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Documentos</div>
+      <div class="page-subtitle">Gestão de arquivos, petições e contratos</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
+      <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Upload + toolbar -->
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📤</div>
+      <div class="upload-text">Arraste arquivos aqui ou clique para fazer upload</div>
+      <div class="upload-sub">Suporte para múltiplos arquivos simultâneos</div>
+      <div class="upload-types">
+        <span class="upload-type">📄 PDF</span>
+        <span class="upload-type">📝 DOCX</span>
+        <span class="upload-type">📊 XLSX</span>
+        <span class="upload-type">🖼 JPEG/PNG</span>
+      </div>
+      <input type="file" id="fileInput" multiple style="display:none;" />
+    </div>
+
+    <div class="page-toolbar">
+      <div class="search-box">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar por nome, processo ou categoria..." />
+      </div>
+      <select class="filter-select" id="filterCat">
+        <option value="">Todas as categorias</option>
+        <option value="peticao">Petição</option>
+        <option value="contrato">Contrato</option>
+        <option value="laudo">Laudo</option>
+        <option value="procuracao">Procuração</option>
+        <option value="decisao">Decisão Judicial</option>
+      </select>
+      <button class="btn-primary" onclick="document.getElementById('fileInput').click()">＋ Upload</button>
+    </div>
+
+    <!-- Categorias -->
+    <div class="cat-row" id="catRow">
+      <button class="cat-btn active" data-cat="">Todos <span class="cat-count">42</span></button>
+      <button class="cat-btn" data-cat="peticao">📄 Petições <span class="cat-count">18</span></button>
+      <button class="cat-btn" data-cat="contrato">📋 Contratos <span class="cat-count">9</span></button>
+      <button class="cat-btn" data-cat="laudo">🔍 Laudos <span class="cat-count">6</span></button>
+      <button class="cat-btn" data-cat="procuracao">✍️ Procurações <span class="cat-count">5</span></button>
+      <button class="cat-btn" data-cat="decisao">⚖️ Decisões <span class="cat-count">4</span></button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="docs-card">
+      <div class="docs-card-header">
+        <div>
+          <div class="dch-title">Repositório de Documentos</div>
+          <div class="dch-count" id="docCount">42 documentos</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Categoria</th>
+              <th>Tamanho</th>
+              <th>Data</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="docsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="dashboard.js"></script>
+<script>
+(function(){
+  const docs = [
+    { nome:'Contestação — Proc. 0012345-88.pdf', proc:'Maria Aparecida Souza', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'1.2 MB', data:'20/05/2026' },
+    { nome:'Recurso de Apelação — TJ-SP.pdf', proc:'Construtora Beta Ltda', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'856 KB', data:'19/05/2026' },
+    { nome:'Contrato de Honorários — João Ferreira.docx', proc:'João Paulo Ferreira', cat:'contrato', icon:'📋', cor:'#ECFDF5', tam:'234 KB', data:'15/05/2026' },
+    { nome:'Laudo Pericial — Proc. 0056789-11.pdf', proc:'Roberto Alves Costa', cat:'laudo', icon:'🔍', cor:'#FFFBEB', tam:'3.4 MB', data:'14/05/2026' },
+    { nome:'Procuração Ad Judicia — Tecno Solutions.pdf', proc:'Tecno Solutions S/A', cat:'procuracao', icon:'✍️', cor:'#F5F3FF', tam:'412 KB', data:'12/05/2026' },
+    { nome:'Decisão Interlocutória — Proc. 0098761-22.pdf', proc:'Tecno Solutions S/A', cat:'decisao', icon:'⚖️', cor:'#FEF2F2', tam:'678 KB', data:'10/05/2026' },
+    { nome:'Petição Inicial — Ação Trabalhista.docx', proc:'João Paulo Ferreira', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'520 KB', data:'08/05/2026' },
+    { nome:'Contrato de Prestação de Serviços — Beta.docx', proc:'Construtora Beta Ltda', cat:'contrato', icon:'📋', cor:'#ECFDF5', tam:'301 KB', data:'05/05/2026' },
+    { nome:'Alegações Finais — Proc. 0056789-11.pdf', proc:'Roberto Alves Costa', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'980 KB', data:'02/05/2026' },
+    { nome:'Laudo Médico — Ana Lima Rodrigues.pdf', proc:'Ana Lima Rodrigues', cat:'laudo', icon:'🔍', cor:'#FFFBEB', tam:'2.1 MB', data:'28/04/2026' },
+    { nome:'Procuração — Holding Nobre Ltda.pdf', proc:'Holding Nobre Ltda', cat:'procuracao', icon:'✍️', cor:'#F5F3FF', tam:'387 KB', data:'25/04/2026' },
+    { nome:'Sentença — Proc. 0055443-11 (arquivado).pdf', proc:'Fernanda Melo Braga', cat:'decisao', icon:'⚖️', cor:'#FEF2F2', tam:'1.8 MB', data:'20/04/2026' },
+  ];
+
+  const catLabel = { peticao:'Petição', contrato:'Contrato', laudo:'Laudo', procuracao:'Procuração', decisao:'Decisão Judicial' };
+  const catClass = { peticao:'cb-peticao', contrato:'cb-contrato', laudo:'cb-laudo', procuracao:'cb-procuracao', decisao:'cb-decisao' };
+
+  function render(list){
+    document.getElementById('docCount').textContent = list.length + ' documentos';
+    document.getElementById('docsBody').innerHTML = list.map(d => `<tr>
+      <td>
+        <div class="doc-cell">
+          <div class="doc-icon" style="background:${d.cor};">${d.icon}</div>
+          <div>
+            <div class="doc-name">${d.nome}</div>
+            <div class="doc-proc">${d.proc}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="cat-badge ${catClass[d.cat]}">${catLabel[d.cat]}</span></td>
+      <td class="doc-size">${d.tam}</td>
+      <td class="doc-date">${d.data}</td>
+      <td>
+        <div class="doc-actions">
+          <button class="btn-doc" title="Visualizar" onclick="window.JurisFlow.showToast('👁 Abrindo: ${d.nome}','info')">👁</button>
+          <button class="btn-doc" title="Download" onclick="window.JurisFlow.showToast('⬇️ Download: ${d.nome}','success')">⬇️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  }
+
+  render(docs);
+
+  let activeCat = '';
+  function applyFilters(){
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('filterCat').value || activeCat;
+    render(docs.filter(d =>
+      (!q || d.nome.toLowerCase().includes(q) || d.proc.toLowerCase().includes(q)) &&
+      (!cat || d.cat === cat)
+    ));
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterCat').addEventListener('change', applyFilters);
+
+  document.getElementById('catRow').addEventListener('click', e => {
+    const btn = e.target.closest('.cat-btn');
+    if(!btn) return;
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    document.getElementById('filterCat').value = '';
+    applyFilters();
+  });
+
+  // Upload zone
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('click', () => document.getElementById('fileInput').click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    const files = [...e.dataTransfer.files];
+    if(files.length) window.JurisFlow.showToast(`✅ ${files.length} arquivo(s) enviado(s) com sucesso!`, 'success');
+  });
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if(e.target.files.length) window.JurisFlow.showToast(`✅ ${e.target.files.length} arquivo(s) enviado(s) com sucesso!`, 'success');
+  });
+})();
+</script>
+</body>
+</html>

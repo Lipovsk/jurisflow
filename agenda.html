@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda — JurisFlow</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .agenda-layout { display:grid; grid-template-columns:320px 1fr; gap:24px; }
+    .btn-primary {
+      height:40px; padding:0 20px; background:var(--navy);
+      color:var(--white); border:none; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600;
+      cursor:pointer; display:flex; align-items:center; gap:8px;
+      transition:all .2s; white-space:nowrap;
+    }
+    .btn-primary:hover { background:var(--navy-light); }
+
+    /* Mini Calendar */
+    .mini-calendar { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; }
+    .cal-header { padding:18px 20px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+    .cal-month { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--navy); }
+    .cal-nav { display:flex; gap:4px; }
+    .cal-nav button { width:28px; height:28px; border:1px solid var(--gray-200); border-radius:6px; background:var(--white); cursor:pointer; color:var(--gray-600); font-size:.85rem; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .cal-nav button:hover { background:var(--gray-100); }
+    .cal-grid { padding:12px 16px 16px; }
+    .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px; }
+    .cal-weekdays span { text-align:center; font-size:.65rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; padding:4px 0; }
+    .cal-days { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+    .cal-day {
+      aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      border-radius:6px; cursor:pointer; font-size:.8rem; color:var(--gray-800);
+      transition:all .15s; position:relative; gap:2px;
+    }
+    .cal-day:hover { background:var(--gray-100); }
+    .cal-day.other-month { color:var(--gray-200); cursor:default; }
+    .cal-day.today { background:var(--navy); color:var(--white); font-weight:700; }
+    .cal-day.today:hover { background:var(--navy-light); }
+    .cal-day.has-event::after { content:''; width:5px; height:5px; border-radius:50%; background:var(--gold); position:absolute; bottom:4px; }
+    .cal-day.has-event.today::after { background:var(--white); }
+    .cal-day.selected:not(.today) { background:var(--blue-soft); color:var(--blue-accent); font-weight:600; }
+
+    /* Legenda */
+    .cal-legend { padding:12px 16px; border-top:1px solid var(--gray-100); display:flex; flex-direction:column; gap:8px; }
+    .legend-item { display:flex; align-items:center; gap:8px; font-size:.75rem; color:var(--gray-600); }
+    .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+    /* Prazos rápidos */
+    .quick-deadlines { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; margin-top:0; }
+    .qd-header { padding:16px 20px; border-bottom:1px solid var(--gray-100); }
+    .qd-title { font-family:'Playfair Display',serif; font-size:.95rem; font-weight:600; color:var(--navy); }
+    .qd-sub { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
+    .deadline-item { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--gray-100); transition:background .15s; cursor:pointer; }
+    .deadline-item:last-child { border-bottom:none; }
+    .deadline-item:hover { background:var(--gray-50); }
+    .dl-strip { width:4px; height:42px; border-radius:2px; flex-shrink:0; }
+    .dl-info { flex:1; min-width:0; }
+    .dl-title { font-size:.82rem; font-weight:600; color:var(--gray-800); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dl-client { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
+    .dl-date { font-size:.75rem; font-weight:700; padding:4px 9px; border-radius:20px; flex-shrink:0; }
+
+    /* Timeline */
+    .timeline-card { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; animation:fadeUp .4s ease both; }
+    .timeline-header { padding:20px 24px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+    .timeline-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--navy); }
+    .timeline-sub { font-size:.73rem; color:var(--gray-400); margin-top:2px; }
+    .tab-row { display:flex; gap:4px; }
+    .tab-btn { height:32px; padding:0 14px; border:1px solid var(--gray-200); border-radius:20px; background:var(--white); font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:500; color:var(--gray-600); cursor:pointer; transition:all .15s; }
+    .tab-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+    .timeline-body { padding:20px 24px; display:flex; flex-direction:column; gap:0; }
+    .tl-item { display:flex; gap:16px; position:relative; padding-bottom:24px; }
+    .tl-item:last-child { padding-bottom:0; }
+    .tl-item:last-child .tl-line { display:none; }
+    .tl-left { display:flex; flex-direction:column; align-items:center; width:44px; flex-shrink:0; }
+    .tl-dot { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; border:2px solid var(--white); box-shadow:0 0 0 2px currentColor; }
+    .tl-dot.red   { background:#FEF2F2; color:#DC2626; box-shadow:0 0 0 2px #FCA5A5; }
+    .tl-dot.amber { background:#FFFBEB; color:#D97706; box-shadow:0 0 0 2px #FCD34D; }
+    .tl-dot.blue  { background:#EEF3FF; color:#2563EB; box-shadow:0 0 0 2px #BFDBFE; }
+    .tl-dot.green { background:#ECFDF5; color:#059669; box-shadow:0 0 0 2px #A7F3D0; }
+    .tl-dot.gold  { background:rgba(201,168,76,.1); color:var(--gold); box-shadow:0 0 0 2px rgba(201,168,76,.4); }
+    .tl-line { flex:1; width:2px; background:var(--gray-100); margin-top:4px; min-height:20px; }
+    .tl-content { flex:1; padding-top:6px; }
+    .tl-date-tag { font-size:.68rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .tl-event-title { font-size:.88rem; font-weight:600; color:var(--navy); }
+    .tl-event-detail { font-size:.78rem; color:var(--gray-500); margin-top:3px; line-height:1.5; }
+    .tl-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+    .tl-tag { font-size:.68rem; font-weight:600; padding:3px 9px; border-radius:20px; }
+    .tl-tag.red    { background:#FEF2F2; color:#DC2626; }
+    .tl-tag.amber  { background:#FFFBEB; color:#D97706; }
+    .tl-tag.blue   { background:#EEF3FF; color:#2563EB; }
+    .tl-tag.green  { background:#ECFDF5; color:#059669; }
+
+    @media (max-width:1100px) { .agenda-layout { grid-template-columns:1fr; } }
+  </style>
+
+  <!-- ── Drawer: Novo Compromisso ───────────────────────── -->
+  <style>
+    /* Overlay */
+    .dw-overlay {
+      position:fixed; inset:0; z-index:500;
+      background:rgba(13,27,42,.52); backdrop-filter:blur(3px);
+      opacity:0; pointer-events:none;
+      transition:opacity .3s ease;
+    }
+    .dw-overlay.open { opacity:1; pointer-events:all; }
+
+    /* Panel */
+    .dw-panel {
+      position:fixed; top:0; right:0; bottom:0; z-index:501;
+      width:780px; max-width:100vw;
+      display:flex; flex-direction:column;
+      background:var(--gray-50);
+      box-shadow:-12px 0 48px rgba(13,27,42,.2);
+      transform:translateX(100%);
+      transition:transform .38s cubic-bezier(.4,0,.2,1);
+    }
+    .dw-panel.open { transform:translateX(0); }
+
+    /* Header */
+    .dw-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 24px; background:var(--white);
+      border-bottom:1px solid var(--gray-200); flex-shrink:0;
+    }
+    .dw-header-id {
+      display:flex; align-items:center; gap:12px;
+    }
+    .dw-header-icon {
+      width:38px; height:38px; border-radius:10px;
+      background:var(--blue-soft); display:flex; align-items:center;
+      justify-content:center; font-size:1rem; flex-shrink:0;
+      transition:background .2s, color .2s;
+    }
+    .dw-title {
+      font-family:'Playfair Display',serif; font-size:1.18rem;
+      font-weight:700; color:var(--navy);
+    }
+    .dw-sub { font-size:.75rem; color:var(--gray-400); margin-top:2px; }
+    .dw-close {
+      width:34px; height:34px; border-radius:8px;
+      border:1px solid var(--gray-200); background:var(--white);
+      color:var(--gray-600); cursor:pointer; display:flex;
+      align-items:center; justify-content:center; font-size:.9rem;
+      transition:all .15s; flex-shrink:0;
+    }
+    .dw-close:hover { background:var(--gray-100); color:var(--navy); }
+
+    /* Body */
+    .dw-body { flex:1; overflow:hidden; display:flex; }
+    .dw-form {
+      flex:1; overflow-y:auto; padding:20px 22px;
+      display:flex; flex-direction:column; gap:16px;
+    }
+    .dw-form::-webkit-scrollbar { width:4px; }
+    .dw-form::-webkit-scrollbar-thumb { background:var(--gray-200); border-radius:4px; }
+
+    /* Summary sidebar */
+    .dw-summary {
+      width:228px; flex-shrink:0; border-left:1px solid var(--gray-200);
+      background:var(--white); padding:18px 14px;
+      overflow-y:auto; display:flex; flex-direction:column; gap:14px;
+    }
+    .dws-heading {
+      font-family:'Playfair Display',serif; font-size:.88rem;
+      font-weight:700; color:var(--navy);
+    }
+    .dws-hint {
+      font-size:.75rem; color:var(--gray-400); line-height:1.55;
+      text-align:center; padding:20px 8px;
+    }
+    .dws-card {
+      background:var(--gray-50); border:1px solid var(--gray-100);
+      border-radius:var(--radius-md); padding:14px;
+    }
+    .dws-item { display:flex; flex-direction:column; gap:1px; padding:6px 0; }
+    .dws-item:first-child { padding-top:0; }
+    .dws-sep { height:1px; background:var(--gray-100); }
+    .dws-rlabel {
+      font-size:.66rem; font-weight:600; color:var(--gray-400);
+      text-transform:uppercase; letter-spacing:.05em;
+    }
+    .dws-rvalue { font-size:.8rem; font-weight:500; color:var(--gray-800); }
+    .dws-tip {
+      text-align:center; padding:12px 8px;
+      border:1px dashed var(--gray-200); border-radius:var(--radius-sm);
+    }
+
+    /* Form sections */
+    .dw-section { display:flex; flex-direction:column; gap:8px; }
+    .dws-label {
+      font-size:.7rem; font-weight:700; color:var(--gray-600);
+      text-transform:uppercase; letter-spacing:.05em;
+    }
+    .dw-card {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-md); padding:16px;
+      display:flex; flex-direction:column; gap:14px;
+      transition:box-shadow .2s;
+    }
+    .dw-card:focus-within { box-shadow:var(--shadow-sm); }
+
+    /* Type grid */
+    .nc-type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .nc-type {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      padding:13px 8px; border-radius:var(--radius-md);
+      border:2px solid var(--gray-200); background:var(--white);
+      cursor:pointer; transition:all .2s ease;
+    }
+    .nc-type:hover { border-color:var(--gray-400); background:var(--gray-50); }
+    .nc-type-icon { font-size:1.35rem; }
+    .nc-type-name { font-size:.72rem; font-weight:600; color:var(--gray-700); }
+    /* Active states per type */
+    .nc-type.active                        { border-color:var(--blue-accent); background:var(--blue-soft); }
+    .nc-type.active .nc-type-name          { color:var(--blue-accent); }
+    .nc-type.active[data-type="prazo"]     { border-color:var(--red); background:var(--red-soft); }
+    .nc-type.active[data-type="prazo"] .nc-type-name { color:var(--red); }
+    .nc-type.active[data-type="reuniao"]   { border-color:var(--gold); background:rgba(201,168,76,.1); }
+    .nc-type.active[data-type="reuniao"] .nc-type-name { color:#8a6d1a; }
+    .nc-type.active[data-type="lembrete"] { border-color:var(--amber); background:var(--amber-soft); }
+    .nc-type.active[data-type="lembrete"] .nc-type-name { color:#b45309; }
+    .nc-type.active[data-type="tarefa"]   { border-color:var(--green); background:var(--green-soft); }
+    .nc-type.active[data-type="tarefa"] .nc-type-name { color:#065f46; }
+    .nc-type.active[data-type="protocolo"]{ border-color:#7C3AED; background:#F5F3FF; }
+    .nc-type.active[data-type="protocolo"] .nc-type-name { color:#7C3AED; }
+
+    /* Fields */
+    .dw-row { display:grid; gap:12px; }
+    .dw-row.c2 { grid-template-columns:1fr 1fr; }
+    .dw-row.c3 { grid-template-columns:1fr 1fr 1fr; }
+    .dw-field { display:flex; flex-direction:column; gap:5px; }
+    .dw-label {
+      font-size:.71rem; font-weight:600; color:var(--gray-600);
+      text-transform:uppercase; letter-spacing:.03em;
+    }
+    .dw-label.req::after { content:' *'; color:var(--red); }
+    .dw-input {
+      padding:9px 12px; border:1.5px solid var(--gray-200);
+      border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif;
+      font-size:.85rem; color:var(--gray-800); background:var(--white);
+      outline:none; width:100%; transition:border-color .2s,box-shadow .2s;
+      -webkit-appearance:none;
+    }
+    .dw-input:hover { border-color:var(--gray-400); }
+    .dw-input:focus { border-color:var(--blue-accent); box-shadow:0 0 0 3px rgba(37,99,235,.08); }
+    .dw-input.error { border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.08); }
+    select.dw-input { cursor:pointer; }
+    .dw-textarea { resize:vertical; min-height:90px; line-height:1.6; }
+    .dw-char-ctr { font-size:.7rem; color:var(--gray-400); text-align:right; }
+
+    /* Priority */
+    .nc-pri-row { display:flex; gap:6px; }
+    .nc-pri {
+      flex:1; padding:8px 4px; border-radius:var(--radius-sm);
+      border:1.5px solid var(--gray-200); background:var(--white);
+      font-family:'DM Sans',sans-serif; font-size:.75rem; font-weight:600;
+      cursor:pointer; text-align:center; transition:all .18s; color:var(--gray-600);
+    }
+    .nc-pri:hover { border-color:var(--gray-400); }
+    .nc-pri.active[data-p="baixa"]   { background:var(--green-soft); border-color:var(--green); color:#065f46; }
+    .nc-pri.active[data-p="media"]   { background:var(--blue-soft); border-color:var(--blue-accent); color:var(--blue-accent); }
+    .nc-pri.active[data-p="alta"]    { background:var(--amber-soft); border-color:var(--amber); color:#b45309; }
+    .nc-pri.active[data-p="urgente"] { background:var(--red-soft); border-color:var(--red); color:var(--red); }
+
+    /* Toggle */
+    .nc-toggle-row {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:6px 0;
+    }
+    .nc-toggle-info { flex:1; }
+    .nc-toggle-lbl { font-size:.84rem; font-weight:500; color:var(--gray-800); }
+    .nc-toggle-sub { font-size:.71rem; color:var(--gray-400); margin-top:1px; }
+    .nc-toggle { position:relative; width:42px; height:24px; flex-shrink:0; }
+    .nc-toggle input { opacity:0; width:0; height:0; position:absolute; }
+    .nc-tslider {
+      position:absolute; inset:0; background:var(--gray-200);
+      border-radius:99px; cursor:pointer; transition:background .2s;
+    }
+    .nc-tslider::after {
+      content:''; position:absolute; width:18px; height:18px;
+      left:3px; top:3px; background:var(--white); border-radius:50%;
+      transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,.2);
+    }
+    .nc-toggle input:checked ~ .nc-tslider { background:var(--navy); }
+    .nc-toggle input:checked ~ .nc-tslider::after { transform:translateX(18px); }
+
+    /* Status */
+    .nc-status-row { display:flex; gap:7px; flex-wrap:wrap; }
+    .nc-stat {
+      display:inline-flex; align-items:center; gap:6px; padding:7px 14px;
+      border-radius:20px; border:1.5px solid var(--gray-200); background:var(--white);
+      font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:500;
+      cursor:pointer; color:var(--gray-600); transition:all .18s;
+    }
+    .nc-stat:hover { border-color:var(--gray-400); }
+    .nc-stat.active[data-s="agendado"]  { background:var(--blue-soft); border-color:var(--blue-accent); color:var(--blue-accent); }
+    .nc-stat.active[data-s="andamento"] { background:var(--amber-soft); border-color:var(--amber); color:#b45309; }
+    .nc-stat.active[data-s="concluido"] { background:var(--green-soft); border-color:var(--green); color:#065f46; }
+    .nc-stat.active[data-s="cancelado"] { background:var(--gray-100); border-color:var(--gray-400); color:var(--gray-600); }
+    .nc-sdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .nc-sdot.blue  { background:var(--blue-accent); }
+    .nc-sdot.amber { background:var(--amber); }
+    .nc-sdot.green { background:var(--green); }
+    .nc-sdot.gray  { background:var(--gray-400); }
+
+    /* Reminders */
+    .nc-reminder-list { display:flex; flex-direction:column; gap:7px; margin-bottom:10px; }
+    .nc-reminder-item { display:flex; align-items:center; gap:8px; }
+    .nc-reminder-del {
+      width:28px; height:28px; border:1px solid var(--gray-200); border-radius:6px;
+      background:var(--white); color:var(--gray-400); cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:.75rem;
+      flex-shrink:0; transition:all .15s;
+    }
+    .nc-reminder-del:hover { border-color:var(--red); color:var(--red); background:var(--red-soft); }
+    .nc-add-reminder {
+      padding:7px 14px; border:1.5px dashed var(--gray-200); border-radius:var(--radius-sm);
+      background:var(--white); font-family:'DM Sans',sans-serif; font-size:.79rem;
+      font-weight:500; color:var(--gray-600); cursor:pointer; width:100%;
+      transition:all .15s; text-align:center;
+    }
+    .nc-add-reminder:hover { border-color:var(--navy); color:var(--navy); background:var(--gray-50); }
+
+    /* Autocomplete */
+    .nc-ac-wrap { position:relative; }
+    .nc-ac-drop {
+      display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-md); box-shadow:var(--shadow-lg);
+      z-index:600; overflow:hidden; max-height:200px; overflow-y:auto;
+    }
+    .nc-ac-drop.active { display:block; animation:ncSlide .18s ease both; }
+    .nc-ac-item {
+      display:flex; align-items:center; gap:10px; padding:10px 12px;
+      cursor:pointer; transition:background .12s;
+    }
+    .nc-ac-item:hover { background:var(--gray-50); }
+    .nc-ac-av {
+      width:28px; height:28px; border-radius:50%; background:var(--blue-soft);
+      color:var(--blue-accent); font-size:.68rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .nc-ac-name { font-size:.82rem; font-weight:500; color:var(--gray-800); }
+    .nc-ac-name mark { background:rgba(37,99,235,.12); color:var(--blue-accent); border-radius:2px; padding:0 1px; }
+    .nc-ac-cpf  { font-size:.71rem; color:var(--gray-400); }
+    .nc-ac-empty { padding:12px; font-size:.8rem; color:var(--gray-400); text-align:center; }
+
+    /* Upload */
+    .nc-upload-zone {
+      border:2px dashed var(--gray-200); border-radius:var(--radius-md);
+      padding:28px 20px; text-align:center; cursor:pointer; background:var(--gray-50);
+      transition:all .22s;
+    }
+    .nc-upload-zone:hover, .nc-upload-zone.drag-over { border-color:var(--blue-accent); background:var(--blue-soft); }
+    .nc-upload-ico { font-size:1.6rem; margin-bottom:8px; }
+    .nc-upload-ttl { font-size:.84rem; font-weight:600; color:var(--gray-800); margin-bottom:4px; }
+    .nc-upload-hint { font-size:.74rem; color:var(--gray-400); margin-bottom:14px; }
+    .nc-upload-btn {
+      padding:7px 18px; border:1.5px solid var(--gray-200); border-radius:var(--radius-sm);
+      background:var(--white); font-family:'DM Sans',sans-serif; font-size:.8rem;
+      font-weight:500; color:var(--navy); cursor:pointer; transition:all .15s;
+    }
+    .nc-upload-btn:hover { background:var(--navy); color:var(--white); border-color:var(--navy); }
+    .nc-file-list { padding:0 16px 12px; display:flex; flex-direction:column; gap:6px; }
+    .nc-file-item {
+      display:flex; align-items:center; gap:9px; padding:8px 12px;
+      background:var(--gray-50); border:1px solid var(--gray-200);
+      border-radius:var(--radius-sm); animation:ncSlide .2s ease both;
+    }
+    .nc-file-ico { width:28px; height:28px; border-radius:7px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; font-size:.8rem; flex-shrink:0; }
+    .nc-file-info { flex:1; min-width:0; }
+    .nc-file-name { font-size:.79rem; font-weight:500; color:var(--gray-800); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .nc-file-meta { font-size:.69rem; color:var(--gray-400); }
+    .nc-file-del { background:none; border:none; color:var(--gray-400); cursor:pointer; padding:3px 5px; border-radius:4px; font-size:.76rem; transition:all .15s; flex-shrink:0; }
+    .nc-file-del:hover { color:var(--red); background:var(--red-soft); }
+
+    /* Footer */
+    .dw-footer {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 24px; background:var(--white);
+      border-top:1px solid var(--gray-200); flex-shrink:0; gap:10px;
+    }
+    .dwf-cancel {
+      padding:9px 18px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:500;
+      cursor:pointer; background:var(--white); border:1.5px solid var(--gray-200);
+      color:var(--gray-600); transition:all .15s;
+    }
+    .dwf-cancel:hover { background:var(--gray-50); border-color:var(--gray-400); }
+    .dwf-other {
+      padding:9px 18px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:500;
+      cursor:pointer; background:var(--white); border:1.5px solid var(--gray-200);
+      color:var(--gray-800); transition:all .15s;
+    }
+    .dwf-other:hover { background:var(--gray-50); border-color:var(--navy); color:var(--navy); }
+    .dwf-save {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 22px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.84rem; font-weight:600;
+      cursor:pointer; background:var(--navy); border:none; color:var(--white);
+      transition:all .2s ease; position:relative; overflow:hidden;
+    }
+    .dwf-save:hover { background:var(--navy-mid); box-shadow:var(--shadow-md); transform:translateY(-1px); }
+    .dwf-save:active { transform:scale(.97); }
+    .dwf-save:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* Animations */
+    @keyframes ncSlide { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+    /* Responsive */
+    @media (max-width:900px) { .dw-panel { width:100%; } .dw-summary { display:none; } }
+    @media (max-width:600px) {
+      .dw-row.c2, .dw-row.c3 { grid-template-columns:1fr; }
+      .nc-type-grid { grid-template-columns:repeat(2,1fr); }
+      .nc-pri-row { flex-wrap:wrap; }
+      .dw-footer { flex-wrap:wrap; }
+      .dw-footer > div { width:100%; display:flex; gap:8px; }
+      .dwf-save, .dwf-other { flex:1; justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">⚖</div>
+    <div><div class="brand-name">JurisFlow</div><div class="brand-tagline">Sistema Jurídico</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item active" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Agenda Jurídica</div>
+      <div class="page-subtitle">Prazos, audiências e compromissos</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
+      <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px;">
+      <button class="btn-primary" id="btnNovoCompromisso">＋ Novo Compromisso</button>
+    </div>
+
+    <div class="agenda-layout">
+
+      <!-- Coluna esquerda: calendário + prazos rápidos -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Mini-calendar -->
+        <div class="mini-calendar">
+          <div class="cal-header">
+            <div class="cal-month" id="calMonth">Maio 2026</div>
+            <div class="cal-nav">
+              <button id="calPrev">‹</button>
+              <button id="calNext">›</button>
+            </div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-weekdays">
+              <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span>
+              <span>Qui</span><span>Sex</span><span>Sáb</span>
+            </div>
+            <div class="cal-days" id="calDays"></div>
+          </div>
+          <div class="cal-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#DC2626;"></div>Prazo urgente</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#D97706;"></div>Audiência</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--gold);"></div>Lembrete</div>
+          </div>
+        </div>
+
+        <!-- Prazos rápidos -->
+        <div class="quick-deadlines">
+          <div class="qd-header">
+            <div class="qd-title">⚡ Próximos Prazos</div>
+            <div class="qd-sub">Esta semana</div>
+          </div>
+          <div class="deadline-item">
+            <div class="dl-strip" style="background:#DC2626;"></div>
+            <div class="dl-info">
+              <div class="dl-title">Contestação — Proc. 0012345-88</div>
+              <div class="dl-client">Maria Aparecida Souza</div>
+            </div>
+            <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
+          </div>
+          <div class="deadline-item">
+            <div class="dl-strip" style="background:#DC2626;"></div>
+            <div class="dl-info">
+              <div class="dl-title">Recurso de Apelação — TJ/SP</div>
+              <div class="dl-client">Construtora Beta Ltda</div>
+            </div>
+            <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
+          </div>
+          <div class="deadline-item">
+            <div class="dl-strip" style="background:#D97706;"></div>
+            <div class="dl-info">
+              <div class="dl-title">Petição Inicial Trabalhista</div>
+              <div class="dl-client">João Paulo Ferreira</div>
+            </div>
+            <div class="dl-date" style="background:#FFFBEB;color:#D97706;">22/05</div>
+          </div>
+          <div class="deadline-item">
+            <div class="dl-strip" style="background:#D97706;"></div>
+            <div class="dl-info">
+              <div class="dl-title">Manifestação — Proc. 0098761-22</div>
+              <div class="dl-client">Tecno Solutions S/A</div>
+            </div>
+            <div class="dl-date" style="background:#FFFBEB;color:#D97706;">23/05</div>
+          </div>
+          <div class="deadline-item">
+            <div class="dl-strip" style="background:#2563EB;"></div>
+            <div class="dl-info">
+              <div class="dl-title">Alegações Finais — Proc. 0056789</div>
+              <div class="dl-client">Roberto Alves Costa</div>
+            </div>
+            <div class="dl-date" style="background:#EEF3FF;color:#2563EB;">26/05</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Coluna direita: timeline -->
+      <div class="timeline-card">
+        <div class="timeline-header">
+          <div>
+            <div class="timeline-title">Agenda da Semana</div>
+            <div class="timeline-sub">20 a 26 de Maio de 2026</div>
+          </div>
+          <div class="tab-row">
+            <button class="tab-btn active" onclick="filterTl('')">Todos</button>
+            <button class="tab-btn" onclick="filterTl('Audiência')">Audiências</button>
+            <button class="tab-btn" onclick="filterTl('Prazo')">Prazos</button>
+          </div>
+        </div>
+        <div class="timeline-body" id="tlBody">
+
+          <div class="tl-item" data-tipo="Prazo">
+            <div class="tl-left">
+              <div class="tl-dot red">⚡</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Hoje — 20 de Maio · Urgente</div>
+              <div class="tl-event-title">Contestação — Processo 0012345-88</div>
+              <div class="tl-event-detail">Cliente: Maria Aparecida Souza · Vara Cível</div>
+              <div class="tl-tags"><span class="tl-tag red">Prazo</span><span class="tl-tag red">Urgente</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Audiência">
+            <div class="tl-left">
+              <div class="tl-dot blue">📋</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Hoje — 20 de Maio · 09:00</div>
+              <div class="tl-event-title">Audiência de Instrução — Cível</div>
+              <div class="tl-event-detail">📍 2ª Vara Cível — TJSP · Dr. Juiz Ferreira Lima</div>
+              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag red">Hoje</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Audiência">
+            <div class="tl-left">
+              <div class="tl-dot amber">📋</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Amanhã — 21 de Maio · 14:30</div>
+              <div class="tl-event-title">Audiência Trabalhista — Conciliação</div>
+              <div class="tl-event-detail">📍 3ª Vara do Trabalho · Cliente: João Paulo Ferreira</div>
+              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag amber">Trabalhista</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Prazo">
+            <div class="tl-left">
+              <div class="tl-dot amber">⏰</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Sexta-feira — 22 de Maio</div>
+              <div class="tl-event-title">Petição Inicial — Ação Trabalhista</div>
+              <div class="tl-event-detail">Cliente: João Paulo Ferreira · Protocolo TRT</div>
+              <div class="tl-tags"><span class="tl-tag amber">Prazo</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Audiência">
+            <div class="tl-left">
+              <div class="tl-dot green">📋</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Qui — 22 de Maio · 10:00</div>
+              <div class="tl-event-title">Audiência de Custódia</div>
+              <div class="tl-event-detail">📍 1ª Vara Criminal · Cliente: Roberto Alves Costa</div>
+              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag green">Criminal</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Prazo">
+            <div class="tl-left">
+              <div class="tl-dot amber">📄</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Sábado — 23 de Maio</div>
+              <div class="tl-event-title">Manifestação — Proc. 0098761-22</div>
+              <div class="tl-event-detail">Cliente: Tecno Solutions S/A · Fase de Liquidação</div>
+              <div class="tl-tags"><span class="tl-tag amber">Prazo</span></div>
+            </div>
+          </div>
+
+          <div class="tl-item" data-tipo="Lembrete">
+            <div class="tl-left">
+              <div class="tl-dot gold">🔔</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-date-tag">Segunda — 26 de Maio</div>
+              <div class="tl-event-title">Alegações Finais — Proc. 0056789-11</div>
+              <div class="tl-event-detail">Cliente: Roberto Alves Costa · Prazo final</div>
+              <div class="tl-tags"><span class="tl-tag blue">Prazo</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ================================================================
+     DRAWER — NOVO COMPROMISSO
+================================================================ -->
+<div class="dw-overlay" id="dwOverlay"></div>
+
+<div class="dw-panel" id="ncDrawer">
+
+  <!-- Header -->
+  <div class="dw-header">
+    <div class="dw-header-id">
+      <div class="dw-header-icon" id="dwHeaderIcon">📋</div>
+      <div>
+        <div class="dw-title">Novo Compromisso</div>
+        <div class="dw-sub">Preencha os dados do compromisso jurídico</div>
+      </div>
+    </div>
+    <button class="dw-close" id="dwClose" title="Fechar (Esc)">✕</button>
+  </div>
+
+  <!-- Body -->
+  <div class="dw-body">
+
+    <!-- Scrollable Form -->
+    <div class="dw-form" id="ncForm">
+
+      <!-- 1. Tipo -->
+      <div class="dw-section">
+        <div class="dws-label">1 · Tipo de Compromisso</div>
+        <div class="nc-type-grid" id="ncTypeGrid">
+          <button class="nc-type active" data-type="audiencia" data-icon="📋"><div class="nc-type-icon">📋</div><div class="nc-type-name">Audiência</div></button>
+          <button class="nc-type" data-type="prazo"    data-icon="⏰"><div class="nc-type-icon">⏰</div><div class="nc-type-name">Prazo</div></button>
+          <button class="nc-type" data-type="reuniao"  data-icon="🤝"><div class="nc-type-icon">🤝</div><div class="nc-type-name">Reunião</div></button>
+          <button class="nc-type" data-type="lembrete" data-icon="🔔"><div class="nc-type-icon">🔔</div><div class="nc-type-name">Lembrete</div></button>
+          <button class="nc-type" data-type="tarefa"   data-icon="✅"><div class="nc-type-icon">✅</div><div class="nc-type-name">Tarefa</div></button>
+          <button class="nc-type" data-type="protocolo" data-icon="📄"><div class="nc-type-icon">📄</div><div class="nc-type-name">Protocolo</div></button>
+        </div>
+      </div>
+
+      <!-- 2. Informações Principais -->
+      <div class="dw-section">
+        <div class="dws-label">2 · Informações Principais</div>
+        <div class="dw-card">
+          <div class="dw-field">
+            <label class="dw-label req">Título do Compromisso</label>
+            <input type="text" class="dw-input" id="ncTitulo" placeholder="Ex: Audiência de Instrução — Processo 0012345">
+          </div>
+          <div class="dw-row c2">
+            <div class="dw-field">
+              <label class="dw-label">Cliente Vinculado</label>
+              <div class="nc-ac-wrap">
+                <input type="text" class="dw-input" id="ncClienteBusca" placeholder="Buscar cliente…" autocomplete="off">
+                <div class="nc-ac-drop" id="ncAcDrop"></div>
+              </div>
+              <input type="hidden" id="ncClienteId">
+            </div>
+            <div class="dw-field">
+              <label class="dw-label">Processo Vinculado</label>
+              <input type="text" class="dw-input" id="ncProcesso" placeholder="Ex: 0012345-88.2024">
+            </div>
+          </div>
+          <div class="dw-field">
+            <label class="dw-label">Descrição Curta</label>
+            <input type="text" class="dw-input" id="ncDescricao" placeholder="Breve descrição do compromisso…">
+          </div>
+          <div class="dw-field">
+            <label class="dw-label">Prioridade</label>
+            <div class="nc-pri-row">
+              <button type="button" class="nc-pri" data-p="baixa">🟢 Baixa</button>
+              <button type="button" class="nc-pri active" data-p="media">🔵 Média</button>
+              <button type="button" class="nc-pri" data-p="alta">🟡 Alta</button>
+              <button type="button" class="nc-pri" data-p="urgente">🔴 Urgente</button>
+            </div>
+            <input type="hidden" id="ncPrioridade" value="media">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Data e Horário -->
+      <div class="dw-section">
+        <div class="dws-label">3 · Data e Horário</div>
+        <div class="dw-card">
+          <div class="dw-row c3" id="ncDateRow">
+            <div class="dw-field">
+              <label class="dw-label req">Data</label>
+              <input type="date" class="dw-input" id="ncData">
+            </div>
+            <div class="dw-field" id="ncHoraInicioWrap">
+              <label class="dw-label">Hora Inicial</label>
+              <input type="time" class="dw-input" id="ncHoraInicio" value="09:00">
+            </div>
+            <div class="dw-field" id="ncHoraFimWrap">
+              <label class="dw-label">Hora Final</label>
+              <input type="time" class="dw-input" id="ncHoraFim" value="10:00">
+            </div>
+          </div>
+          <div class="nc-toggle-row">
+            <div class="nc-toggle-info">
+              <div class="nc-toggle-lbl">Dia inteiro</div>
+              <div class="nc-toggle-sub">Oculta os campos de horário</div>
+            </div>
+            <label class="nc-toggle">
+              <input type="checkbox" id="ncDiaInteiro">
+              <span class="nc-tslider"></span>
+            </label>
+          </div>
+          <div class="dw-field">
+            <label class="dw-label">Repetição</label>
+            <select class="dw-input" id="ncRepeticao">
+              <option value="nao">Não repetir</option>
+              <option value="diario">Diário</option>
+              <option value="semanal">Semanal</option>
+              <option value="mensal">Mensal</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Local / Reunião -->
+      <div class="dw-section">
+        <div class="dws-label">4 · Local / Reunião</div>
+        <div class="dw-card">
+          <div class="dw-row c2">
+            <div class="dw-field">
+              <label class="dw-label">Local Físico</label>
+              <input type="text" class="dw-input" id="ncLocal" placeholder="Ex: Fórum Central de SP">
+            </div>
+            <div class="dw-field">
+              <label class="dw-label">Cidade</label>
+              <input type="text" class="dw-input" id="ncCidade" placeholder="Ex: São Paulo">
+            </div>
+          </div>
+          <div class="dw-field">
+            <label class="dw-label">Link Online / Videoconferência</label>
+            <input type="url" class="dw-input" id="ncLink" placeholder="https://meet.google.com/…">
+          </div>
+          <div class="dw-row c2">
+            <div class="dw-field">
+              <label class="dw-label">Tribunal / Vara</label>
+              <input type="text" class="dw-input" id="ncTribunal" placeholder="Ex: 3ª Vara Cível · TJSP">
+            </div>
+            <div class="dw-field">
+              <label class="dw-label">Sala</label>
+              <input type="text" class="dw-input" id="ncSala" placeholder="Ex: Sala 205">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Alertas e Lembretes -->
+      <div class="dw-section">
+        <div class="dws-label">5 · Alertas e Lembretes</div>
+        <div class="dw-card">
+          <div class="nc-toggle-row">
+            <div class="nc-toggle-info">
+              <div class="nc-toggle-lbl">Ativar lembrete</div>
+              <div class="nc-toggle-sub">Receba uma notificação antes do compromisso</div>
+            </div>
+            <label class="nc-toggle">
+              <input type="checkbox" id="ncLembreteToggle" checked>
+              <span class="nc-tslider"></span>
+            </label>
+          </div>
+          <div id="ncLembreteOptions">
+            <div class="nc-reminder-list" id="ncReminderList">
+              <div class="nc-reminder-item">
+                <select class="dw-input" style="flex:1;">
+                  <option value="1d" selected>1 dia antes</option>
+                  <option value="3d">3 dias antes</option>
+                  <option value="7d">7 dias antes</option>
+                  <option value="1h">1 hora antes</option>
+                  <option value="15m">15 minutos antes</option>
+                </select>
+                <button type="button" class="nc-reminder-del" onclick="this.closest('.nc-reminder-item').remove()">✕</button>
+              </div>
+            </div>
+            <button type="button" class="nc-add-reminder" id="ncAddReminder">+ Adicionar lembrete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Status -->
+      <div class="dw-section">
+        <div class="dws-label">6 · Status do Compromisso</div>
+        <div class="dw-card">
+          <div class="nc-status-row">
+            <button type="button" class="nc-stat active" data-s="agendado"><span class="nc-sdot blue"></span> Agendado</button>
+            <button type="button" class="nc-stat" data-s="andamento"><span class="nc-sdot amber"></span> Em Andamento</button>
+            <button type="button" class="nc-stat" data-s="concluido"><span class="nc-sdot green"></span> Concluído</button>
+            <button type="button" class="nc-stat" data-s="cancelado"><span class="nc-sdot gray"></span> Cancelado</button>
+          </div>
+          <input type="hidden" id="ncStatus" value="agendado">
+        </div>
+      </div>
+
+      <!-- 7. Documentos -->
+      <div class="dw-section">
+        <div class="dws-label">7 · Documentos</div>
+        <div class="dw-card" style="padding:0;overflow:hidden;">
+          <div class="nc-upload-zone" id="ncUploadZone" style="margin:16px 16px 0;border-radius:var(--radius-sm);">
+            <div class="nc-upload-ico">📎</div>
+            <div class="nc-upload-ttl">Arraste arquivos ou clique para selecionar</div>
+            <div class="nc-upload-hint">Intimações, PDFs, comprovantes (máx. 10 MB por arquivo)</div>
+            <input type="file" id="ncFileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none">
+            <button type="button" class="nc-upload-btn" id="ncUploadBtn">+ Adicionar Arquivo</button>
+          </div>
+          <div class="nc-file-list" id="ncFileList"></div>
+        </div>
+      </div>
+
+      <!-- 8. Observações -->
+      <div class="dw-section" style="padding-bottom:8px;">
+        <div class="dws-label">8 · Observações</div>
+        <div class="dw-card">
+          <textarea class="dw-input dw-textarea" id="ncObs" placeholder="Detalhes, anotações importantes, estratégia, orientações sobre o compromisso…"></textarea>
+          <div class="dw-char-ctr"><span id="ncObsCount">0</span> / 600 caracteres</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Live Summary Sidebar -->
+    <div class="dw-summary">
+      <div class="dws-heading">Resumo</div>
+      <div class="dws-hint" id="dwsHint">Preencha os campos ao lado para ver o resumo automático do compromisso.</div>
+      <div id="dwsSummaryContent" style="display:none;flex-direction:column;gap:10px;">
+        <div id="dwsBadgeWrap"></div>
+        <div class="dws-card">
+          <div id="dwsRows"></div>
+        </div>
+      </div>
+      <div class="dws-tip">
+        <div style="font-size:1.1rem;margin-bottom:6px;">⌨️</div>
+        <div style="font-size:.71rem;color:var(--gray-400);line-height:1.5;">
+          <strong>Alt+N</strong> para abrir<br>
+          <strong>Esc</strong> para fechar
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dw-body -->
+
+  <!-- Footer -->
+  <div class="dw-footer">
+    <button class="dwf-cancel" id="dwCancel">Cancelar</button>
+    <div style="display:flex;gap:10px;">
+      <button class="dwf-other" id="dwSaveOther">Salvar e Criar Outro</button>
+      <button class="dwf-save" id="dwSave">
+        <span class="dwf-save-text">✓ Salvar Compromisso</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /dw-panel -->
+
+<script src="dashboard.js"></script>
+<script>
+(function(){
+  // Mini calendar
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let curDate = new Date(2026,4,1); // Maio 2026
+  const eventDays = [20,22,23,26];
+
+  function renderCal(){
+    document.getElementById('calMonth').textContent = months[curDate.getMonth()] + ' ' + curDate.getFullYear();
+    const first = new Date(curDate.getFullYear(), curDate.getMonth(), 1).getDay();
+    const total = new Date(curDate.getFullYear(), curDate.getMonth()+1, 0).getDate();
+    const today = new Date(2026,4,20);
+    let html = '';
+    for(let i=0;i<first;i++) html += `<div class="cal-day other-month">${new Date(curDate.getFullYear(),curDate.getMonth(),-(first-1-i)).getDate()}</div>`;
+    for(let d=1;d<=total;d++){
+      const isToday = d===today.getDate() && curDate.getMonth()===today.getMonth() && curDate.getFullYear()===today.getFullYear();
+      const hasEv = eventDays.includes(d);
+      html += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}">${d}</div>`;
+    }
+    document.getElementById('calDays').innerHTML = html;
+    document.querySelectorAll('.cal-day:not(.other-month)').forEach(el=>{
+      el.addEventListener('click',()=>{
+        document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
+        if(!el.classList.contains('today')) el.classList.add('selected');
+      });
+    });
+  }
+  renderCal();
+  document.getElementById('calPrev').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()-1); renderCal(); });
+  document.getElementById('calNext').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()+1); renderCal(); });
+
+  // ── Drawer: Novo Compromisso ────────────────────────────
+  (function(){
+    const overlay  = document.getElementById('dwOverlay');
+    const drawer   = document.getElementById('ncDrawer');
+    const btnOpen  = document.getElementById('btnNovoCompromisso');
+    const btnClose = document.getElementById('dwClose');
+
+    function openDrawer() {
+      overlay.classList.add('open');
+      drawer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('ncTitulo')?.focus(), 80);
+    }
+    function closeDrawer() {
+      overlay.classList.remove('open');
+      drawer.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    btnOpen.addEventListener('click', openDrawer);
+    btnClose.addEventListener('click', closeDrawer);
+    document.getElementById('dwCancel').addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDrawer();
+      if (e.altKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); openDrawer(); }
+    });
+
+    // ── Type selection ──────────────────────────────────
+    const typeIcons = { audiencia:'📋', prazo:'⏰', reuniao:'🤝', lembrete:'🔔', tarefa:'✅', protocolo:'📄' };
+    document.querySelectorAll('.nc-type').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nc-type').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const icon = typeIcons[btn.dataset.type] || '📋';
+        document.getElementById('dwHeaderIcon').textContent = icon;
+        updateSummary();
+      });
+    });
+
+    // ── Priority ─────────────────────────────────────────
+    document.querySelectorAll('.nc-pri').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nc-pri').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('ncPrioridade').value = btn.dataset.p;
+        updateSummary();
+      });
+    });
+
+    // ── Status ───────────────────────────────────────────
+    document.querySelectorAll('.nc-stat').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nc-stat').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('ncStatus').value = btn.dataset.s;
+        updateSummary();
+      });
+    });
+
+    // ── Dia inteiro toggle ────────────────────────────────
+    document.getElementById('ncDiaInteiro').addEventListener('change', function() {
+      document.getElementById('ncHoraInicioWrap').style.display = this.checked ? 'none' : '';
+      document.getElementById('ncHoraFimWrap').style.display    = this.checked ? 'none' : '';
+      updateSummary();
+    });
+
+    // ── Lembrete toggle ───────────────────────────────────
+    document.getElementById('ncLembreteToggle').addEventListener('change', function() {
+      document.getElementById('ncLembreteOptions').style.display = this.checked ? '' : 'none';
+    });
+
+    // ── Add reminder ──────────────────────────────────────
+    document.getElementById('ncAddReminder').addEventListener('click', () => {
+      const list = document.getElementById('ncReminderList');
+      const item = document.createElement('div');
+      item.className = 'nc-reminder-item';
+      item.innerHTML = `
+        <select class="dw-input" style="flex:1;">
+          <option value="15m">15 minutos antes</option>
+          <option value="1h">1 hora antes</option>
+          <option value="1d" selected>1 dia antes</option>
+          <option value="3d">3 dias antes</option>
+          <option value="7d">7 dias antes</option>
+        </select>
+        <button type="button" class="nc-reminder-del" onclick="this.closest('.nc-reminder-item').remove()">✕</button>
+      `;
+      list.appendChild(item);
+    });
+
+    // ── Client Autocomplete ───────────────────────────────
+    const CLIENTS_NC = [
+      { id:1, nome:'Ana Lima',        cpf:'123.456.789-00', ini:'AL' },
+      { id:2, nome:'Roberto Sousa',   cpf:'987.654.321-00', ini:'RS' },
+      { id:3, nome:'Maria Fernanda',  cpf:'456.123.789-00', ini:'MF' },
+      { id:4, nome:'João Carlos',     cpf:'321.654.987-00', ini:'JC' },
+      { id:5, nome:'Carla Pereira',   cpf:'741.852.963-00', ini:'CP' },
+      { id:6, nome:'Marcos Almeida',  cpf:'159.753.456-00', ini:'MA' },
+    ];
+    const clientInput = document.getElementById('ncClienteBusca');
+    const acDrop      = document.getElementById('ncAcDrop');
+
+    clientInput.addEventListener('input', () => {
+      const q = clientInput.value.trim().toLowerCase();
+      if (!q) { acDrop.classList.remove('active'); return; }
+      const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+      const hits = CLIENTS_NC.filter(c => c.nome.toLowerCase().includes(q) || c.cpf.includes(q));
+      acDrop.innerHTML = hits.length
+        ? hits.map(c => `<div class="nc-ac-item" data-id="${c.id}" data-nome="${c.nome}"><div class="nc-ac-av">${c.ini}</div><div><div class="nc-ac-name">${c.nome.replace(re,'<mark>$1</mark>')}</div><div class="nc-ac-cpf">${c.cpf}</div></div></div>`).join('')
+        : `<div class="nc-ac-empty">Nenhum cliente encontrado</div>`;
+      acDrop.querySelectorAll('.nc-ac-item').forEach(item => {
+        item.addEventListener('mousedown', e => {
+          e.preventDefault();
+          clientInput.value = item.dataset.nome;
+          document.getElementById('ncClienteId').value = item.dataset.id;
+          acDrop.classList.remove('active');
+          updateSummary();
+        });
+      });
+      acDrop.classList.add('active');
+    });
+    clientInput.addEventListener('blur', () => setTimeout(() => acDrop.classList.remove('active'), 160));
+
+    // ── File Upload ───────────────────────────────────────
+    const uploadZone = document.getElementById('ncUploadZone');
+    const fileInput  = document.getElementById('ncFileInput');
+    const fileList   = document.getElementById('ncFileList');
+    document.getElementById('ncUploadBtn').addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('click', e => { if (!e.target.closest('.nc-upload-btn')) fileInput.click(); });
+    uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault(); uploadZone.classList.remove('drag-over');
+      addNcFiles([...e.dataTransfer.files]);
+    });
+    fileInput.addEventListener('change', () => { addNcFiles([...fileInput.files]); fileInput.value = ''; });
+
+    function addNcFiles(files) {
+      files.forEach(file => {
+        if (file.size > 10*1024*1024) { window.JurisFlow?.showToast(`"${file.name}" excede 10 MB.`, 'warning'); return; }
+        const ext  = file.name.split('.').pop().toUpperCase();
+        const icons = { PDF:'📕', DOC:'📘', DOCX:'📘', JPG:'🖼', JPEG:'🖼', PNG:'🖼' };
+        const icon = icons[ext] || '📎';
+        const size = file.size < 1024*1024 ? `${(file.size/1024).toFixed(0)} KB` : `${(file.size/1024/1024).toFixed(1)} MB`;
+        const item = document.createElement('div');
+        item.className = 'nc-file-item';
+        item.innerHTML = `<div class="nc-file-ico">${icon}</div><div class="nc-file-info"><div class="nc-file-name">${file.name}</div><div class="nc-file-meta">${ext} · ${size}</div></div><button class="nc-file-del" title="Remover">✕</button>`;
+        item.querySelector('.nc-file-del').addEventListener('click', () => item.remove());
+        fileList.appendChild(item);
+      });
+    }
+
+    // ── Char Counter ──────────────────────────────────────
+    const obsTA  = document.getElementById('ncObs');
+    const obsCtr = document.getElementById('ncObsCount');
+    obsTA.addEventListener('input', () => {
+      if (obsTA.value.length > 600) obsTA.value = obsTA.value.substring(0, 600);
+      obsCtr.textContent = obsTA.value.length;
+      obsCtr.style.color = obsTA.value.length > 500 ? 'var(--amber)' : 'var(--gray-400)';
+    });
+
+    // ── Live Summary ──────────────────────────────────────
+    ['ncTitulo','ncClienteBusca','ncProcesso','ncData','ncHoraInicio'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input',  updateSummary);
+      document.getElementById(id)?.addEventListener('change', updateSummary);
+    });
+
+    const TYPE_COLORS = {
+      audiencia: { bg:'var(--blue-soft)',           txt:'var(--blue-accent)' },
+      prazo:     { bg:'var(--red-soft)',             txt:'var(--red)' },
+      reuniao:   { bg:'rgba(201,168,76,.12)',        txt:'#8a6d1a' },
+      lembrete:  { bg:'var(--amber-soft)',           txt:'#b45309' },
+      tarefa:    { bg:'var(--green-soft)',           txt:'#065f46' },
+      protocolo: { bg:'#F5F3FF',                    txt:'#7C3AED' },
+    };
+    const PRI_COLORS = { baixa:'#065f46', media:'var(--blue-accent)', alta:'#b45309', urgente:'var(--red)' };
+    const PRI_NAMES  = { baixa:'🟢 Baixa', media:'🔵 Média', alta:'🟡 Alta', urgente:'🔴 Urgente' };
+    const STAT_NAMES = { agendado:'Agendado', andamento:'Em Andamento', concluido:'Concluído', cancelado:'Cancelado' };
+
+    function updateSummary() {
+      const titulo   = document.getElementById('ncTitulo').value.trim();
+      const cliente  = document.getElementById('ncClienteBusca').value.trim();
+      const processo = document.getElementById('ncProcesso').value.trim();
+      const data     = document.getElementById('ncData').value;
+      const hora     = document.getElementById('ncHoraInicio').value;
+      const pri      = document.getElementById('ncPrioridade').value;
+      const status   = document.getElementById('ncStatus').value;
+      const diaInt   = document.getElementById('ncDiaInteiro').checked;
+      const tipo     = document.querySelector('.nc-type.active');
+
+      const hint    = document.getElementById('dwsHint');
+      const content = document.getElementById('dwsSummaryContent');
+
+      if (!titulo && !cliente && !data) {
+        hint.style.display = ''; content.style.display = 'none'; return;
+      }
+      hint.style.display = 'none'; content.style.display = 'flex';
+
+      // Badge
+      if (tipo) {
+        const t = tipo.dataset.type;
+        const c = TYPE_COLORS[t] || TYPE_COLORS.audiencia;
+        const icon = typeIcons[t] || '📋';
+        const name = tipo.querySelector('.nc-type-name').textContent;
+        document.getElementById('dwsBadgeWrap').innerHTML =
+          `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:.73rem;font-weight:600;background:${c.bg};color:${c.txt}">${icon} ${name}</span>`;
+      }
+
+      // Rows
+      const rows = [];
+      if (titulo)    rows.push({ l:'Título',     v: titulo.length > 28 ? titulo.substring(0,28)+'…' : titulo });
+      if (cliente)   rows.push({ l:'Cliente',    v: cliente });
+      if (processo)  rows.push({ l:'Processo',   v: processo });
+      if (data) {
+        const d = new Date(data + 'T00:00:00');
+        rows.push({ l:'Data', v: d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) });
+      }
+      if (!diaInt && hora) rows.push({ l:'Horário', v: hora });
+      if (pri)    rows.push({ l:'Prioridade', v: PRI_NAMES[pri], color: PRI_COLORS[pri] });
+      if (status) rows.push({ l:'Status',     v: STAT_NAMES[status] });
+
+      document.getElementById('dwsRows').innerHTML = rows.map((r, i) =>
+        `${i > 0 ? '<div class="dws-sep"></div>' : ''}<div class="dws-item"><div class="dws-rlabel">${r.l}</div><div class="dws-rvalue"${r.color ? ` style="color:${r.color};font-weight:600"` : ''}>${r.v}</div></div>`
+      ).join('');
+    }
+
+    // ── Save ──────────────────────────────────────────────
+    function resetForm() {
+      ['ncTitulo','ncClienteBusca','ncClienteId','ncProcesso','ncDescricao','ncData','ncLocal','ncCidade','ncLink','ncTribunal','ncSala','ncObs']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      document.getElementById('ncFileList').innerHTML = '';
+      document.getElementById('ncHoraInicio').value = '09:00';
+      document.getElementById('ncHoraFim').value    = '10:00';
+      document.querySelectorAll('.nc-type').forEach((b,i) => b.classList.toggle('active', i===0));
+      document.getElementById('dwHeaderIcon').textContent = '📋';
+      document.querySelectorAll('.nc-pri').forEach((b,i)  => b.classList.toggle('active', i===1));
+      document.querySelectorAll('.nc-stat').forEach((b,i) => b.classList.toggle('active', i===0));
+      document.getElementById('ncPrioridade').value = 'media';
+      document.getElementById('ncStatus').value     = 'agendado';
+      document.getElementById('ncDiaInteiro').checked = false;
+      document.getElementById('ncHoraInicioWrap').style.display = '';
+      document.getElementById('ncHoraFimWrap').style.display    = '';
+      obsCtr.textContent = '0'; obsCtr.style.color = 'var(--gray-400)';
+      updateSummary();
+    }
+
+    function doSave(createAnother) {
+      const titulo = document.getElementById('ncTitulo').value.trim();
+      const data   = document.getElementById('ncData').value;
+      const saveBtn = document.getElementById('dwSave');
+
+      if (!titulo) {
+        document.getElementById('ncTitulo').classList.add('error');
+        document.getElementById('ncTitulo').focus();
+        window.JurisFlow?.showToast('Preencha o título do compromisso.', 'warning');
+        return;
+      }
+      if (!data) {
+        document.getElementById('ncData').classList.add('error');
+        document.getElementById('ncData').focus();
+        window.JurisFlow?.showToast('Selecione a data do compromisso.', 'warning');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.querySelector('.dwf-save-text').textContent = 'Salvando…';
+
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.querySelector('.dwf-save-text').textContent = '✓ Salvar Compromisso';
+        window.JurisFlow?.showToast(`"${titulo}" adicionado à agenda!`, 'success');
+
+        // Add to timeline
+        const tipo = document.querySelector('.nc-type.active');
+        const tipoName = tipo ? tipo.querySelector('.nc-type-name').textContent : 'Compromisso';
+        const tipoIcon = tipo ? typeIcons[tipo.dataset.type] : '📋';
+        const cliente  = document.getElementById('ncClienteBusca').value.trim() || 'Sem cliente vinculado';
+        const hora = document.getElementById('ncDiaInteiro').checked ? 'Dia inteiro'
+          : (document.getElementById('ncHoraInicio').value || '');
+        const tlBody = document.getElementById('tlBody');
+        const tlItem = document.createElement('div');
+        tlItem.className = 'tl-item';
+        tlItem.dataset.tipo = tipoName;
+        tlItem.innerHTML = `
+          <div class="tl-left">
+            <div class="tl-dot blue">${tipoIcon}</div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-content">
+            <div class="tl-date-tag">Novo · ${hora || 'Sem horário'}</div>
+            <div class="tl-event-title">${titulo}</div>
+            <div class="tl-event-detail">${cliente}</div>
+            <div class="tl-tags"><span class="tl-tag blue">${tipoName}</span></div>
+          </div>
+        `;
+        if (tlBody) tlBody.insertBefore(tlItem, tlBody.firstChild);
+
+        if (createAnother) { resetForm(); }
+        else               { closeDrawer(); }
+      }, 850);
+    }
+
+    document.getElementById('dwSave').addEventListener('click',      () => doSave(false));
+    document.getElementById('dwSaveOther').addEventListener('click', () => doSave(true));
+
+    // Remove error class on input
+    document.getElementById('ncTitulo').addEventListener('input', () =>
+      document.getElementById('ncTitulo').classList.remove('error'));
+    document.getElementById('ncData').addEventListener('change', () =>
+      document.getElementById('ncData').classList.remove('error'));
+  })();
+
+  // Timeline filter
+  window.filterTl = function(tipo){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('#tlBody .tl-item').forEach(item=>{
+      item.style.display = (!tipo || item.dataset.tipo===tipo) ? '' : 'none';
+    });
+  };
+})();
+</script>
+</body>
+</html>

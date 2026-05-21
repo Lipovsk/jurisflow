@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — JurisFlow</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
+
+    /* Nav lateral interno */
+    .settings-nav { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; position:sticky; top:24px; }
+    .settings-nav-header { padding:16px 18px 12px; border-bottom:1px solid var(--gray-100); font-family:'Playfair Display',serif; font-size:.92rem; font-weight:600; color:var(--navy); }
+    .settings-nav-list { padding:8px; }
+    .snav-item { display:flex; align-items:center; gap:9px; width:100%; padding:9px 11px; border:none; background:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:.81rem; font-weight:500; color:var(--gray-600); cursor:pointer; transition:all .15s; text-align:left; }
+    .snav-item:hover { background:var(--gray-50); color:var(--navy); }
+    .snav-item.active { background:var(--navy); color:var(--white); }
+    .snav-item .si { font-size:.88rem; width:18px; text-align:center; flex-shrink:0; }
+    .snav-div { height:1px; background:var(--gray-100); margin:5px 8px; }
+
+    /* Seções */
+    .cfg-section { display:none; flex-direction:column; gap:20px; }
+    .cfg-section.active { display:flex; }
+
+    /* Cards */
+    .cfg-card { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; animation:fadeUp .35s ease both; }
+    .cfg-card-header { padding:18px 24px 14px; border-bottom:1px solid var(--gray-100); }
+    .cfg-card-title { font-family:'Playfair Display',serif; font-size:.97rem; font-weight:600; color:var(--navy); }
+    .cfg-card-sub { font-size:.72rem; color:var(--gray-400); margin-top:3px; }
+    .cfg-card-body { padding:22px 24px; }
+
+    /* Forms */
+    .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .fgrid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+    .fcol { grid-column:1/-1; }
+    .field { display:flex; flex-direction:column; gap:5px; }
+    .field label { font-size:.77rem; font-weight:600; color:var(--gray-600); }
+    .field input, .field select, .field textarea { height:40px; padding:0 13px; border:1px solid var(--gray-200); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:.84rem; color:var(--gray-800); background:var(--gray-50); outline:none; transition:border-color .2s, background .2s; }
+    .field textarea { height:auto; min-height:88px; padding:11px 13px; resize:vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--navy-light); background:var(--white); }
+    .field-hint { font-size:.71rem; color:var(--gray-400); }
+
+    /* Upload row */
+    .upload-row { display:flex; align-items:center; gap:20px; padding:18px 20px; background:var(--gray-50); border-radius:var(--radius-md); margin-bottom:20px; }
+    .avatar-circle { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#0D1B2A,#1a2f52); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; color:var(--gold); flex-shrink:0; border:3px solid var(--white); box-shadow:0 4px 12px rgba(13,27,42,.15); overflow:hidden; }
+    .avatar-circle img { width:100%; height:100%; object-fit:cover; }
+    .logo-rect { width:120px; height:56px; border-radius:var(--radius-sm); background:var(--white); display:flex; align-items:center; justify-content:center; font-size:.74rem; color:var(--gray-400); flex-shrink:0; border:1px dashed var(--gray-300); overflow:hidden; }
+    .logo-rect img { max-height:52px; max-width:116px; object-fit:contain; }
+    .upload-info { flex:1; }
+    .upload-info strong { display:block; font-size:.88rem; font-weight:600; color:var(--navy); margin-bottom:2px; }
+    .upload-info span { font-size:.73rem; color:var(--gray-400); }
+    .upload-btns { display:flex; gap:8px; margin-top:10px; }
+
+    /* Buttons */
+    .btn-primary { height:40px; padding:0 20px; background:var(--navy); color:var(--white); border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .2s; white-space:nowrap; }
+    .btn-primary:hover { background:var(--navy-light); transform:translateY(-1px); }
+    .btn-outline { height:40px; padding:0 16px; border:1px solid var(--gray-200); border-radius:var(--radius-sm); background:var(--white); font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:500; color:var(--gray-700); cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:all .15s; }
+    .btn-outline:hover { border-color:var(--navy); color:var(--navy); }
+    .btn-sm { height:34px; padding:0 13px; font-size:.78rem; }
+    .btn-danger { border-color:#EF4444; color:#EF4444; }
+    .btn-danger:hover { background:#FEF2F2; border-color:#DC2626; color:#DC2626; }
+
+    /* Toggle */
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--gray-100); }
+    .toggle-row:last-child { border-bottom:none; padding-bottom:0; }
+    .toggle-row:first-child { padding-top:0; }
+    .toggle-info { flex:1; }
+    .toggle-info strong { display:block; font-size:.84rem; font-weight:600; color:var(--gray-800); }
+    .toggle-info span { display:block; font-size:.73rem; color:var(--gray-400); margin-top:1px; }
+    .badge-future { display:inline-block; font-size:.64rem; font-weight:600; padding:1px 7px; border-radius:20px; background:rgba(201,168,76,.15); color:var(--gold); margin-left:6px; vertical-align:middle; }
+    .toggle-sw { position:relative; width:44px; height:24px; flex-shrink:0; margin-left:16px; }
+    .toggle-sw input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-track { position:absolute; inset:0; border-radius:12px; background:var(--gray-200); cursor:pointer; transition:background .2s; }
+    .toggle-track::after { content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:var(--white); top:3px; left:3px; transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,.15); }
+    .toggle-sw input:checked + .toggle-track { background:var(--navy); }
+    .toggle-sw input:checked + .toggle-track::after { transform:translateX(20px); }
+    .toggle-sw input:disabled + .toggle-track { opacity:.45; cursor:not-allowed; }
+
+    /* Tema */
+    .theme-opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .theme-card { border:2px solid var(--gray-200); border-radius:var(--radius-md); padding:14px; cursor:pointer; transition:all .15s; }
+    .theme-card.selected { border-color:var(--navy); background:var(--blue-soft); }
+    .theme-preview { height:54px; border-radius:6px; display:flex; overflow:hidden; margin-bottom:8px; border:1px solid var(--gray-100); }
+    .tp-sb { width:28%; height:100%; }
+    .tp-ct { flex:1; padding:6px; display:flex; flex-direction:column; gap:3px; }
+    .tp-bar { height:7px; border-radius:2px; }
+    .theme-label { font-size:.8rem; font-weight:600; color:var(--gray-700); text-align:center; }
+
+    /* Cores */
+    .color-opts { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .color-opt { width:30px; height:30px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all .15s; }
+    .color-opt:hover { transform:scale(1.15); }
+    .color-opt.selected { border-color:var(--gray-800); transform:scale(1.15); }
+
+    /* Fonte */
+    .font-ctrl { display:flex; align-items:center; gap:10px; margin-top:6px; }
+    .fc-btn { width:32px; height:32px; border:1px solid var(--gray-200); border-radius:var(--radius-sm); background:var(--white); font-size:.9rem; font-weight:700; cursor:pointer; color:var(--gray-600); display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .fc-btn:hover { background:var(--gray-100); border-color:var(--navy); }
+    .fc-val { font-size:.88rem; font-weight:700; color:var(--navy); min-width:42px; text-align:center; }
+
+    /* Senha */
+    .strength-wrap { margin-top:4px; }
+    .strength-bar { height:4px; background:var(--gray-100); border-radius:2px; overflow:hidden; }
+    .strength-fill { height:100%; border-radius:2px; width:0; transition:all .3s; }
+    .strength-text { font-size:.7rem; font-weight:600; margin-top:3px; display:block; }
+
+    /* Tags */
+    .tag-input-row { display:flex; gap:8px; }
+    .tag-input-row input { flex:1; }
+    .tag-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; min-height:28px; }
+    .tag-item { display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:var(--white); font-size:.77rem; font-weight:500; padding:4px 10px; border-radius:20px; }
+    .tag-item.light { background:var(--gray-100); color:var(--gray-700); }
+    .tag-remove { cursor:pointer; opacity:.6; font-size:.7rem; line-height:1; }
+    .tag-remove:hover { opacity:1; }
+
+    /* Tabela usuários */
+    .user-table { width:100%; border-collapse:collapse; }
+    .user-table th { padding:10px 16px; text-align:left; font-size:.68rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.08em; background:var(--gray-50); border-bottom:1px solid var(--gray-100); }
+    .user-table td { padding:12px 16px; font-size:.83rem; color:var(--gray-800); border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    .user-table tbody tr:last-child td { border-bottom:none; }
+    .user-table tbody tr:hover td { background:var(--gray-50); }
+    .access-badge { display:inline-block; font-size:.68rem; font-weight:600; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
+    .ab-admin { background:rgba(201,168,76,.15); color:var(--gold); }
+    .ab-editor { background:#EEF3FF; color:#2563EB; }
+    .ab-viewer { background:#F1F5F9; color:#64748B; }
+    .add-user-panel { display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:18px; margin-top:16px; }
+
+    /* Integrações */
+    .int-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .int-card { border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:18px; display:flex; flex-direction:column; gap:10px; transition:all .15s; }
+    .int-card:hover { border-color:var(--navy-light); box-shadow:var(--shadow-sm); }
+    .int-icon { width:42px; height:42px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.25rem; }
+    .int-name { font-size:.85rem; font-weight:600; color:var(--navy); }
+    .int-desc { font-size:.73rem; color:var(--gray-400); line-height:1.45; flex:1; }
+    .int-status { display:inline-flex; align-items:center; gap:5px; font-size:.71rem; font-weight:600; padding:3px 9px; border-radius:20px; }
+    .is-on { background:var(--green-soft); color:var(--green); }
+    .is-off { background:#EEF3FF; color:#2563EB; }
+    .is-soon { background:rgba(201,168,76,.12); color:var(--gold); }
+
+    /* Dados */
+    .data-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .data-card { border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:18px; display:flex; gap:14px; align-items:flex-start; transition:all .15s; }
+    .data-card:hover { border-color:var(--gray-300); background:var(--gray-50); }
+    .dc-icon { width:40px; height:40px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .dc-text h4 { font-size:.85rem; font-weight:600; color:var(--navy); margin-bottom:3px; }
+    .dc-text p { font-size:.73rem; color:var(--gray-400); line-height:1.4; margin-bottom:10px; }
+
+    /* Footer fixo */
+    .cfg-footer { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow-sm); position:sticky; bottom:16px; }
+    .cfg-footer-left { font-size:.77rem; color:var(--gray-400); }
+    .cfg-footer-btns { display:flex; gap:10px; }
+
+    @media (max-width:1100px) {
+      .settings-layout { grid-template-columns:1fr; }
+      .settings-nav { position:static; }
+      .int-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:700px) {
+      .fgrid,.fgrid3 { grid-template-columns:1fr; }
+      .theme-opts { grid-template-columns:1fr 1fr; }
+      .data-grid { grid-template-columns:1fr; }
+      .int-grid { grid-template-columns:1fr; }
+      .cfg-footer { flex-direction:column; gap:12px; }
+      .cfg-footer-btns { width:100%; justify-content:flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">⚖</div>
+    <div><div class="brand-name">JurisFlow</div><div class="brand-tagline">Sistema Jurídico</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item active" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Configurações</div>
+      <div class="page-subtitle">Personalize o sistema de acordo com suas preferências</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
+      <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="settings-layout">
+
+      <!-- ── Nav Interna ── -->
+      <div class="settings-nav">
+        <div class="settings-nav-header">⚙️ Configurações</div>
+        <div class="settings-nav-list">
+          <button class="snav-item active" data-target="perfil"><span class="si">👤</span> Perfil Pessoal</button>
+          <button class="snav-item" data-target="escritorio"><span class="si">🏢</span> Escritório</button>
+          <div class="snav-div"></div>
+          <button class="snav-item" data-target="notificacoes"><span class="si">🔔</span> Notificações</button>
+          <button class="snav-item" data-target="aparencia"><span class="si">🎨</span> Aparência</button>
+          <div class="snav-div"></div>
+          <button class="snav-item" data-target="seguranca"><span class="si">🔒</span> Segurança</button>
+          <button class="snav-item" data-target="usuarios"><span class="si">👥</span> Usuários</button>
+          <div class="snav-div"></div>
+          <button class="snav-item" data-target="personalizacao"><span class="si">🏷️</span> Personalização</button>
+          <button class="snav-item" data-target="doc-cfg"><span class="si">📄</span> Documentos</button>
+          <button class="snav-item" data-target="fin-cfg"><span class="si">💰</span> Financeiro</button>
+          <div class="snav-div"></div>
+          <button class="snav-item" data-target="dados"><span class="si">🗄️</span> Dados</button>
+          <button class="snav-item" data-target="integracoes"><span class="si">🔗</span> Integrações</button>
+        </div>
+      </div>
+
+      <!-- ── Conteúdo ── -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- ════════════════════════════════════════
+             PERFIL PESSOAL
+        ════════════════════════════════════════ -->
+        <div class="cfg-section active" id="sec-perfil">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Perfil Pessoal</div>
+              <div class="cfg-card-sub">Suas informações profissionais exibidas no sistema</div>
+            </div>
+            <div class="cfg-card-body">
+              <!-- Avatar -->
+              <div class="upload-row">
+                <div class="avatar-circle" id="avatarPreview">CM</div>
+                <div class="upload-info">
+                  <strong>Dr. Carlos Mendes</strong>
+                  <span>OAB 12.345/SP · Advogado Sênior</span>
+                  <div class="upload-btns">
+                    <button class="btn-primary btn-sm" onclick="document.getElementById('avatarInput').click()">📷 Alterar foto</button>
+                    <button class="btn-outline btn-sm">Remover</button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+                  </div>
+                  <div class="field-hint" style="margin-top:6px;">JPG ou PNG. Máximo 2 MB. Dimensão recomendada: 200×200 px.</div>
+                </div>
+              </div>
+
+              <!-- Campos -->
+              <div class="fgrid">
+                <div class="field fcol">
+                  <label>Nome Completo *</label>
+                  <input type="text" value="Dr. Carlos Eduardo Mendes" id="pNome">
+                </div>
+                <div class="field">
+                  <label>Número da OAB *</label>
+                  <input type="text" value="12.345" id="pOAB" placeholder="Ex.: 12.345">
+                </div>
+                <div class="field">
+                  <label>Estado da OAB *</label>
+                  <select id="pEstadoOAB">
+                    <option>SP</option><option>RJ</option><option>MG</option><option>RS</option>
+                    <option>PR</option><option>SC</option><option>BA</option><option>GO</option>
+                    <option>DF</option><option>PE</option><option>CE</option><option>PA</option>
+                  </select>
+                </div>
+                <div class="field fcol">
+                  <label>E-mail Profissional *</label>
+                  <input type="email" value="carlos.mendes@mendesadvogados.com.br" id="pEmail">
+                </div>
+                <div class="field">
+                  <label>Telefone / WhatsApp</label>
+                  <input type="text" value="(11) 9 8765-4321" id="pTel" placeholder="(11) 9 0000-0000">
+                </div>
+                <div class="field">
+                  <label>Cargo ou Especialidade</label>
+                  <input type="text" value="Advogado Sênior — Direito Empresarial" id="pCargo">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-perfil -->
+
+        <!-- ════════════════════════════════════════
+             ESCRITÓRIO
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-escritorio">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Dados do Escritório</div>
+              <div class="cfg-card-sub">Informações institucionais exibidas em documentos e relatórios</div>
+            </div>
+            <div class="cfg-card-body">
+              <!-- Logo -->
+              <div class="upload-row">
+                <div class="logo-rect" id="logoPreview">
+                  <span style="font-size:.72rem;color:var(--gray-400);">Sem logo</span>
+                </div>
+                <div class="upload-info">
+                  <strong>Logo do Escritório</strong>
+                  <span>Usada em documentos, contratos e cabeçalhos</span>
+                  <div class="upload-btns">
+                    <button class="btn-primary btn-sm" onclick="document.getElementById('logoInput').click()">📁 Enviar logo</button>
+                    <button class="btn-outline btn-sm">Remover</button>
+                    <input type="file" id="logoInput" accept="image/*" style="display:none;">
+                  </div>
+                  <div class="field-hint" style="margin-top:6px;">PNG com fundo transparente recomendado. Máx. 2 MB.</div>
+                </div>
+              </div>
+
+              <div class="fgrid">
+                <div class="field fcol">
+                  <label>Nome do Escritório *</label>
+                  <input type="text" value="Mendes & Associados Advocacia" id="eNome">
+                </div>
+                <div class="field">
+                  <label>CNPJ ou CPF</label>
+                  <input type="text" value="12.345.678/0001-99" id="eCNPJ" placeholder="00.000.000/0000-00">
+                </div>
+                <div class="field">
+                  <label>Telefone Comercial</label>
+                  <input type="text" value="(11) 3456-7890" id="eTelCom" placeholder="(11) 0000-0000">
+                </div>
+                <div class="field fcol">
+                  <label>Endereço</label>
+                  <input type="text" value="Av. Paulista, 1000 — Cj. 502 — Bela Vista" id="eEndereco">
+                </div>
+                <div class="field">
+                  <label>Cidade</label>
+                  <input type="text" value="São Paulo" id="eCidade">
+                </div>
+                <div class="field">
+                  <label>Estado</label>
+                  <select id="eEstado">
+                    <option selected>SP</option><option>RJ</option><option>MG</option><option>RS</option>
+                    <option>PR</option><option>SC</option><option>BA</option><option>GO</option><option>DF</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>E-mail Profissional</label>
+                  <input type="email" value="contato@mendesadvogados.com.br" id="eEmail">
+                </div>
+                <div class="field">
+                  <label>Site</label>
+                  <input type="text" value="www.mendesadvogados.com.br" id="eSite" placeholder="www.seusite.com.br">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-escritorio -->
+
+        <!-- ════════════════════════════════════════
+             NOTIFICAÇÕES
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-notificacoes">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Tipos de Alerta</div>
+              <div class="cfg-card-sub">Escolha quais eventos geram notificações</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Alertas de Prazos</strong>
+                  <span>Notificações quando um prazo está se aproximando</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Alertas de Audiências</strong>
+                  <span>Lembretes antes de audiências agendadas</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Alertas Financeiros</strong>
+                  <span>Honorários vencidos, pagamentos recebidos</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Novos Documentos</strong>
+                  <span>Quando um documento for recebido ou atualizado</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox"><div class="toggle-track"></div></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Canais de Notificação</div>
+              <div class="cfg-card-sub">Onde você deseja receber os alertas</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Notificar por E-mail</strong>
+                  <span>Envio automático para carlos.mendes@mendesadvogados.com.br</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Notificar no Sistema</strong>
+                  <span>Alertas exibidos dentro do JurisFlow</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><div class="toggle-track"></div></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Notificar pelo WhatsApp</strong>
+                  <span>Mensagens automáticas no seu número<span class="badge-future">Em breve</span></span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" disabled><div class="toggle-track"></div></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Antecedência dos Lembretes</div>
+              <div class="cfg-card-sub">Com quantos dias de antecedência alertar</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field">
+                  <label>Prazo — alertar com</label>
+                  <select>
+                    <option>1 dia antes</option>
+                    <option selected>2 dias antes</option>
+                    <option>3 dias antes</option>
+                    <option>5 dias antes</option>
+                    <option>7 dias antes</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Audiência — alertar com</label>
+                  <select>
+                    <option>1 dia antes</option>
+                    <option selected>3 dias antes</option>
+                    <option>5 dias antes</option>
+                    <option>7 dias antes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-notificacoes -->
+
+        <!-- ════════════════════════════════════════
+             APARÊNCIA
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-aparencia">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Tema do Sistema</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="theme-opts">
+                <div class="theme-card selected" data-theme="light">
+                  <div class="theme-preview">
+                    <div class="tp-sb" style="background:#0D1B2A;"></div>
+                    <div class="tp-ct" style="background:#F8F9FB;">
+                      <div class="tp-bar" style="background:#E2E8F0;width:80%;"></div>
+                      <div class="tp-bar" style="background:#E2E8F0;width:60%;"></div>
+                      <div class="tp-bar" style="background:#C9A84C;width:40%;"></div>
+                    </div>
+                  </div>
+                  <div class="theme-label">☀️ Tema Claro</div>
+                </div>
+                <div class="theme-card" data-theme="dark">
+                  <div class="theme-preview">
+                    <div class="tp-sb" style="background:#060D17;"></div>
+                    <div class="tp-ct" style="background:#111827;">
+                      <div class="tp-bar" style="background:#1F2937;width:80%;"></div>
+                      <div class="tp-bar" style="background:#1F2937;width:60%;"></div>
+                      <div class="tp-bar" style="background:#C9A84C;width:40%;"></div>
+                    </div>
+                  </div>
+                  <div class="theme-label">🌙 Tema Escuro</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Cor Principal do Sistema</div>
+              <div class="cfg-card-sub">Aplicada em botões, badges e destaques</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="color-opts">
+                <div class="color-opt selected" style="background:#0D1B2A;" title="Navy (padrão)"></div>
+                <div class="color-opt" style="background:#C9A84C;" title="Dourado"></div>
+                <div class="color-opt" style="background:#2563EB;" title="Azul"></div>
+                <div class="color-opt" style="background:#059669;" title="Verde"></div>
+                <div class="color-opt" style="background:#7C3AED;" title="Roxo"></div>
+                <div class="color-opt" style="background:#DC2626;" title="Vermelho"></div>
+                <div class="color-opt" style="background:#0D9488;" title="Teal"></div>
+                <div class="color-opt" style="background:#374151;" title="Cinza escuro"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Preferências de Interface</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field">
+                  <label>Tamanho da Fonte</label>
+                  <div class="font-ctrl">
+                    <button class="fc-btn" id="fontMinus">−</button>
+                    <span class="fc-val" id="fontSizeVal">100%</span>
+                    <button class="fc-btn" id="fontPlus">+</button>
+                    <span class="field-hint">(80% – 120%)</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Idioma</label>
+                  <select>
+                    <option selected>Português (Brasil)</option>
+                    <option>English</option>
+                    <option>Español</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Formato de Data</label>
+                  <select>
+                    <option selected>DD/MM/AAAA</option>
+                    <option>MM/DD/AAAA</option>
+                    <option>AAAA-MM-DD</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Página Inicial Padrão</label>
+                  <select>
+                    <option selected>Dashboard</option>
+                    <option>Agenda</option>
+                    <option>Processos</option>
+                    <option>Clientes</option>
+                    <option>Financeiro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-aparencia -->
+
+        <!-- ════════════════════════════════════════
+             SEGURANÇA
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-seguranca">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Alterar Senha</div>
+              <div class="cfg-card-sub">Use uma senha forte com pelo menos 8 caracteres</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field fcol">
+                  <label>Senha Atual</label>
+                  <input type="password" id="senhaAtual" placeholder="••••••••">
+                </div>
+                <div class="field">
+                  <label>Nova Senha</label>
+                  <input type="password" id="novaSenha" placeholder="••••••••">
+                  <div class="strength-wrap">
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <span class="strength-text" id="strengthText"></span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Confirmar Nova Senha</label>
+                  <input type="password" id="confirmaSenha" placeholder="••••••••">
+                </div>
+              </div>
+              <div style="margin-top:20px;">
+                <button class="btn-primary" id="btnAlterarSenha">🔒 Alterar Senha</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Autenticação em Dois Fatores</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Ativar autenticação em dois fatores<span class="badge-future">Em breve</span></strong>
+                  <span>Adiciona uma camada extra de segurança ao login via app autenticador</span>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" disabled><div class="toggle-track"></div></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Sessão</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field">
+                  <label>Tempo para Logout Automático</label>
+                  <select>
+                    <option>15 minutos</option>
+                    <option>30 minutos</option>
+                    <option selected>1 hora</option>
+                    <option>2 horas</option>
+                    <option>4 horas</option>
+                    <option>Nunca</option>
+                  </select>
+                  <div class="field-hint">Sessão encerrada automaticamente após inatividade</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-seguranca -->
+
+        <!-- ════════════════════════════════════════
+             USUÁRIOS
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-usuarios">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div class="cfg-card-title">Equipe do Escritório</div>
+                <div class="cfg-card-sub">Gerencie quem tem acesso ao sistema</div>
+              </div>
+              <button class="btn-primary btn-sm" id="btnAddUser">＋ Adicionar Usuário</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="user-table">
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>E-mail</th>
+                    <th>Tipo de Acesso</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0D1B2A,#1a2f52);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--gold);">CM</div>
+                        <div><div style="font-weight:600;font-size:.84rem;">Dr. Carlos Mendes</div><div style="font-size:.72rem;color:var(--gray-400);">Proprietário</div></div>
+                      </div>
+                    </td>
+                    <td style="font-size:.82rem;color:var(--gray-600);">carlos.mendes@mendesadvogados.com.br</td>
+                    <td><span class="access-badge ab-admin">Administrador</span></td>
+                    <td><span style="font-size:.78rem;font-weight:600;color:var(--green);">● Ativo</span></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;">PS</div>
+                        <div><div style="font-weight:600;font-size:.84rem;">Paula Santos</div><div style="font-size:.72rem;color:var(--gray-400);">Assistente Jurídica</div></div>
+                      </div>
+                    </td>
+                    <td style="font-size:.82rem;color:var(--gray-600);">paula.santos@mendesadvogados.com.br</td>
+                    <td><span class="access-badge ab-editor">Editor</span></td>
+                    <td><span style="font-size:.78rem;font-weight:600;color:var(--green);">● Ativo</span></td>
+                    <td><button class="btn-outline btn-sm btn-danger">Remover</button></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6B7280,#4B5563);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;">LO</div>
+                        <div><div style="font-weight:600;font-size:.84rem;">Lucas Oliveira</div><div style="font-size:.72rem;color:var(--gray-400);">Estagiário</div></div>
+                      </div>
+                    </td>
+                    <td style="font-size:.82rem;color:var(--gray-600);">lucas.oliveira@mendesadvogados.com.br</td>
+                    <td><span class="access-badge ab-viewer">Visualizador</span></td>
+                    <td><span style="font-size:.78rem;font-weight:600;color:var(--amber);">● Pendente</span></td>
+                    <td><button class="btn-outline btn-sm btn-danger">Remover</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Form Add User -->
+            <div class="add-user-panel" id="addUserPanel">
+              <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--navy);margin-bottom:14px;">Novo Usuário</div>
+              <div class="fgrid">
+                <div class="field">
+                  <label>Nome Completo *</label>
+                  <input type="text" id="newUserNome" placeholder="Nome do usuário">
+                </div>
+                <div class="field">
+                  <label>E-mail *</label>
+                  <input type="email" id="newUserEmail" placeholder="email@escritorio.com.br">
+                </div>
+                <div class="field">
+                  <label>Tipo de Acesso</label>
+                  <select id="newUserTipo">
+                    <option value="admin">Administrador</option>
+                    <option value="editor" selected>Editor</option>
+                    <option value="viewer">Visualizador</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Cargo</label>
+                  <input type="text" id="newUserCargo" placeholder="Ex.: Estagiário, Advogado…">
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <button class="btn-primary btn-sm" id="btnSaveUser">✅ Adicionar</button>
+                <button class="btn-outline btn-sm" id="btnCancelAddUser">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-usuarios -->
+
+        <!-- ════════════════════════════════════════
+             PERSONALIZAÇÃO
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-personalizacao">
+
+          <!-- Áreas de Atuação -->
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Áreas de Atuação</div>
+              <div class="cfg-card-sub">Áreas jurídicas disponíveis no sistema</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="tag-input-row">
+                <input type="text" class="field" id="tagAreaInput" placeholder="Nova área — pressione Enter" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                <button class="btn-primary btn-sm" onclick="addTagFromInput('tagAreaInput','tagAreaList')">＋ Adicionar</button>
+              </div>
+              <div class="tag-list" id="tagAreaList">
+                <div class="tag-item">Cível <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Trabalhista <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Empresarial <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Criminal <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Família <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Tributário <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Previdenciário <span class="tag-remove">✕</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipos de Processo -->
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Tipos de Processo</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="tag-input-row">
+                <input type="text" id="tagTipoProcessoInput" placeholder="Novo tipo — pressione Enter" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                <button class="btn-primary btn-sm" onclick="addTagFromInput('tagTipoProcessoInput','tagTipoProcessoList')">＋</button>
+              </div>
+              <div class="tag-list" id="tagTipoProcessoList">
+                <div class="tag-item">Ação de Cobrança <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Ação Trabalhista <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Recurso de Apelação <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Execução Fiscal <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Inventário <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Divórcio <span class="tag-remove">✕</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipos de Prazo + Audiência lado a lado -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="cfg-card">
+              <div class="cfg-card-header">
+                <div class="cfg-card-title">Tipos de Prazo</div>
+              </div>
+              <div class="cfg-card-body">
+                <div class="tag-input-row">
+                  <input type="text" id="tagTipoPrazoInput" placeholder="Novo tipo…" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                  <button class="btn-primary btn-sm" onclick="addTagFromInput('tagTipoPrazoInput','tagTipoPrazoList')">＋</button>
+                </div>
+                <div class="tag-list" id="tagTipoPrazoList">
+                  <div class="tag-item">Contestação <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Petição Inicial <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Recurso <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Manifestação <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Alegações Finais <span class="tag-remove">✕</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="cfg-card">
+              <div class="cfg-card-header">
+                <div class="cfg-card-title">Tipos de Audiência</div>
+              </div>
+              <div class="cfg-card-body">
+                <div class="tag-input-row">
+                  <input type="text" id="tagTipoAudienciaInput" placeholder="Novo tipo…" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                  <button class="btn-primary btn-sm" onclick="addTagFromInput('tagTipoAudienciaInput','tagTipoAudienciaList')">＋</button>
+                </div>
+                <div class="tag-list" id="tagTipoAudienciaList">
+                  <div class="tag-item">Instrução <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Conciliação <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Custódia <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Julgamento <span class="tag-remove">✕</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status dos Processos + Modelos lado a lado -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="cfg-card">
+              <div class="cfg-card-header">
+                <div class="cfg-card-title">Status dos Processos</div>
+              </div>
+              <div class="cfg-card-body">
+                <div class="tag-input-row">
+                  <input type="text" id="tagStatusInput" placeholder="Novo status…" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                  <button class="btn-primary btn-sm" onclick="addTagFromInput('tagStatusInput','tagStatusList')">＋</button>
+                </div>
+                <div class="tag-list" id="tagStatusList">
+                  <div class="tag-item">Em Andamento <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Urgente <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Suspenso <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Concluído <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Arquivado <span class="tag-remove">✕</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="cfg-card">
+              <div class="cfg-card-header">
+                <div class="cfg-card-title">Modelos de Documentos</div>
+              </div>
+              <div class="cfg-card-body">
+                <div class="tag-input-row">
+                  <input type="text" id="tagModeloInput" placeholder="Novo modelo…" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                  <button class="btn-primary btn-sm" onclick="addTagFromInput('tagModeloInput','tagModeloList')">＋</button>
+                </div>
+                <div class="tag-list" id="tagModeloList">
+                  <div class="tag-item">Procuração <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Contrato <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Petição <span class="tag-remove">✕</span></div>
+                  <div class="tag-item">Parecer <span class="tag-remove">✕</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-personalizacao -->
+
+        <!-- ════════════════════════════════════════
+             DOCUMENTOS (config)
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-doc-cfg">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Identidade Visual nos Documentos</div>
+              <div class="cfg-card-sub">Configurações aplicadas nos documentos gerados pelo sistema</div>
+            </div>
+            <div class="cfg-card-body">
+              <!-- Logo doc -->
+              <div class="upload-row">
+                <div class="logo-rect" id="docLogoPreview">
+                  <span style="font-size:.72rem;color:var(--gray-400);">Sem logo</span>
+                </div>
+                <div class="upload-info">
+                  <strong>Logo nos Documentos</strong>
+                  <span>Impressa no cabeçalho de contratos, petições e procurações</span>
+                  <div class="upload-btns">
+                    <button class="btn-primary btn-sm" onclick="document.getElementById('docLogoInput').click()">📁 Enviar logo</button>
+                    <input type="file" id="docLogoInput" accept="image/*" style="display:none;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="fgrid">
+                <div class="field fcol">
+                  <label>Cabeçalho Padrão</label>
+                  <textarea id="docCabecalho" placeholder="Ex.: Mendes &amp; Associados Advocacia&#10;Av. Paulista, 1000 — São Paulo/SP&#10;OAB/SP 12.345">Mendes &amp; Associados Advocacia
+Av. Paulista, 1000 — Cj. 502 — São Paulo/SP — CEP 01310-100
+Tel: (11) 3456-7890 | contato@mendesadvogados.com.br</textarea>
+                </div>
+                <div class="field fcol">
+                  <label>Rodapé Padrão</label>
+                  <textarea id="docRodape" placeholder="Ex.: Documento gerado pelo JurisFlow — Confidencial">Documento produzido por Mendes &amp; Associados Advocacia — Confidencial
+OAB/SP 12.345 | Todos os direitos reservados</textarea>
+                </div>
+                <div class="field fcol">
+                  <label>Assinatura do Advogado</label>
+                  <textarea id="docAssinatura" placeholder="Ex.: Dr. Carlos Eduardo Mendes&#10;OAB/SP 12.345&#10;Advogado">Dr. Carlos Eduardo Mendes
+OAB/SP 12.345 — Advogado Sênior</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Textos Padrão</div>
+              <div class="cfg-card-sub">Textos pré-preenchidos ao criar novos documentos</div>
+            </div>
+            <div class="cfg-card-body" style="display:flex;flex-direction:column;gap:16px;">
+              <div class="field">
+                <label>Texto Padrão de Procuração</label>
+                <textarea id="docProcuracao" rows="4" placeholder="Pelo presente instrumento, [CLIENTE], qualificado(a) abaixo, nomeia e constitui seu bastante procurador…">Pelo presente instrumento particular de procuração, [CLIENTE], [QUALIFICAÇÃO], nomeia e constitui seu bastante procurador o Dr. Carlos Eduardo Mendes, advogado inscrito na OAB/SP sob o nº 12.345, para o foro em geral, com poderes para [PODERES].</textarea>
+              </div>
+              <div class="field">
+                <label>Texto Padrão de Contrato de Honorários</label>
+                <textarea id="docContrato" rows="4" placeholder="Pelo presente instrumento, as partes qualificadas abaixo celebram o presente Contrato de Prestação de Serviços Advocatícios…">Pelo presente instrumento, as partes qualificadas abaixo celebram o presente Contrato de Prestação de Serviços Advocatícios, que se regerá pelas cláusulas a seguir estabelecidas.</textarea>
+              </div>
+              <div class="field">
+                <label>Texto Padrão de Petição</label>
+                <textarea id="docPeticao" rows="4" placeholder="Excelentíssimo(a) Senhor(a) Doutor(a) Juiz(íza) de Direito…">Excelentíssimo(a) Senhor(a) Doutor(a) Juiz(íza) de Direito da [VARA], da Comarca de [COMARCA].
+
+[CLIENTE], por seu advogado que esta subscreve (OAB/SP 12.345), vem, respeitosamente, à presença de Vossa Excelência, expor e requerer o que segue.</textarea>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-doc-cfg -->
+
+        <!-- ════════════════════════════════════════
+             FINANCEIRO (config)
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-fin-cfg">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Configurações Gerais</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field">
+                  <label>Meta Mensal de Honorários</label>
+                  <input type="text" value="R$ 50.000,00" id="finMeta" placeholder="R$ 0,00">
+                </div>
+                <div class="field">
+                  <label>Moeda Padrão</label>
+                  <select id="finMoeda">
+                    <option selected>BRL — Real Brasileiro (R$)</option>
+                    <option>USD — Dólar Americano ($)</option>
+                    <option>EUR — Euro (€)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Formas de Pagamento</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="tag-input-row">
+                <input type="text" id="tagFormaPagtoInput" placeholder="Nova forma — pressione Enter" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                <button class="btn-primary btn-sm" onclick="addTagFromInput('tagFormaPagtoInput','tagFormaPagtoList')">＋</button>
+              </div>
+              <div class="tag-list" id="tagFormaPagtoList">
+                <div class="tag-item">PIX <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Transferência <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Boleto <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Cartão de Crédito <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Dinheiro <span class="tag-remove">✕</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Categorias Financeiras</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="tag-input-row">
+                <input type="text" id="tagCatFinInput" placeholder="Nova categoria — pressione Enter" style="height:40px;padding:0 13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--gray-50);outline:none;flex:1;">
+                <button class="btn-primary btn-sm" onclick="addTagFromInput('tagCatFinInput','tagCatFinList')">＋</button>
+              </div>
+              <div class="tag-list" id="tagCatFinList">
+                <div class="tag-item">Honorários <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Custas Processuais <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Reembolso <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Êxito <span class="tag-remove">✕</span></div>
+                <div class="tag-item">Consultoria <span class="tag-remove">✕</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Cobranças Automáticas</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="fgrid">
+                <div class="field">
+                  <label>Lembrete de Cobrança</label>
+                  <select>
+                    <option>No dia do vencimento</option>
+                    <option selected>3 dias antes do vencimento</option>
+                    <option>5 dias antes do vencimento</option>
+                    <option>7 dias antes do vencimento</option>
+                  </select>
+                </div>
+                <div class="field fcol" style="grid-column:unset;">
+                  <label>Mensagem Padrão de Cobrança</label>
+                </div>
+                <div class="field fcol">
+                  <textarea id="finMsgCobranca" rows="3">Olá, [CLIENTE]. Lembramos que o honorário referente a [DESCRIÇÃO] no valor de [VALOR] vence em [DATA]. Para facilitar, chave PIX: cpf@mendesadvogados.com.br. Qualquer dúvida, entre em contato. Grato, Dr. Carlos Mendes.</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-fin-cfg -->
+
+        <!-- ════════════════════════════════════════
+             DADOS
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-dados">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Gerenciamento de Dados</div>
+              <div class="cfg-card-sub">Exporte, importe e gerencie os dados do sistema</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="data-grid">
+
+                <div class="data-card">
+                  <div class="dc-icon" style="background:#EEF3FF;">📤</div>
+                  <div class="dc-text">
+                    <h4>Exportar Dados</h4>
+                    <p>Baixe todos os seus dados em formato JSON ou CSV para uso externo ou arquivamento.</p>
+                    <button class="btn-primary btn-sm" data-action-type="export">Exportar agora</button>
+                  </div>
+                </div>
+
+                <div class="data-card">
+                  <div class="dc-icon" style="background:#ECFDF5;">📥</div>
+                  <div class="dc-text">
+                    <h4>Importar Dados</h4>
+                    <p>Importe clientes, processos ou documentos a partir de um arquivo JSON ou CSV.</p>
+                    <button class="btn-primary btn-sm" data-action-type="import">Selecionar arquivo</button>
+                  </div>
+                </div>
+
+                <div class="data-card">
+                  <div class="dc-icon" style="background:rgba(201,168,76,.1);">💾</div>
+                  <div class="dc-text">
+                    <h4>Fazer Backup</h4>
+                    <p>Cria um backup completo do sistema e envia por e-mail automaticamente.</p>
+                    <button class="btn-primary btn-sm" data-action-type="backup">Gerar backup</button>
+                  </div>
+                </div>
+
+                <div class="data-card">
+                  <div class="dc-icon" style="background:#FFFBEB;">🔄</div>
+                  <div class="dc-text">
+                    <h4>Restaurar Backup</h4>
+                    <p>Restaura o sistema a partir de um arquivo de backup gerado anteriormente.</p>
+                    <button class="btn-outline btn-sm" data-action-type="restore">Selecionar backup</button>
+                  </div>
+                </div>
+
+                <div class="data-card" style="border-color:#FEE2E2;">
+                  <div class="dc-icon" style="background:#FEF2F2;">🗑️</div>
+                  <div class="dc-text">
+                    <h4>Limpar Dados de Teste</h4>
+                    <p>Remove todos os dados fictícios inseridos durante a configuração inicial do sistema.</p>
+                    <button class="btn-outline btn-sm btn-danger" data-action-type="clear">Limpar dados de teste</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-dados -->
+
+        <!-- ════════════════════════════════════════
+             INTEGRAÇÕES
+        ════════════════════════════════════════ -->
+        <div class="cfg-section" id="sec-integracoes">
+
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Integrações e Conexões</div>
+              <div class="cfg-card-sub">Conecte o JurisFlow com outras plataformas</div>
+            </div>
+            <div class="cfg-card-body">
+              <div class="int-grid">
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:#EEF3FF;">📅</div>
+                  <div class="int-name">Google Agenda</div>
+                  <div class="int-desc">Sincronize prazos e audiências com seu Google Calendar automaticamente.</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-off">● Desconectado</span>
+                    <button class="btn-outline btn-sm" data-integration="Google Agenda">Conectar</button>
+                  </div>
+                </div>
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:#ECFDF5;">💬</div>
+                  <div class="int-name">WhatsApp</div>
+                  <div class="int-desc">Envie lembretes e cobranças automáticas via WhatsApp Business.</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-soon">⏳ Em breve</span>
+                    <button class="btn-outline btn-sm" disabled style="opacity:.5;cursor:not-allowed;">Em breve</button>
+                  </div>
+                </div>
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:#FEF2F2;">📧</div>
+                  <div class="int-name">E-mail (SMTP)</div>
+                  <div class="int-desc">Configure seu servidor de e-mail para envio automático de notificações.</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-on">● Conectado</span>
+                    <button class="btn-outline btn-sm" data-integration="E-mail">Configurar</button>
+                  </div>
+                </div>
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:#FFFBEB;">☁️</div>
+                  <div class="int-name">Google Drive</div>
+                  <div class="int-desc">Armazene e sincronize documentos automaticamente na nuvem.</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-off">● Desconectado</span>
+                    <button class="btn-outline btn-sm" data-integration="Google Drive">Conectar</button>
+                  </div>
+                </div>
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:#F5F3FF;">✍️</div>
+                  <div class="int-name">Assinatura Digital</div>
+                  <div class="int-desc">Assine documentos eletronicamente com validade jurídica (ICP-Brasil).</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-off">● Desconectado</span>
+                    <button class="btn-outline btn-sm" data-integration="Assinatura Digital">Configurar</button>
+                  </div>
+                </div>
+
+                <div class="int-card">
+                  <div class="int-icon" style="background:rgba(201,168,76,.1);">🤖</div>
+                  <div class="int-name">IA — Resumo de Documentos</div>
+                  <div class="int-desc">Gere resumos automáticos de petições, contratos e laudos com inteligência artificial.</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                    <span class="int-status is-soon">⏳ Em breve</span>
+                    <button class="btn-outline btn-sm" disabled style="opacity:.5;cursor:not-allowed;">Em breve</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sec-integracoes -->
+
+        <!-- ════════════════════════════════════════
+             FOOTER FIXO
+        ════════════════════════════════════════ -->
+        <div class="cfg-footer">
+          <div class="cfg-footer-left">Última atualização: 20 de Maio de 2026, 09:30</div>
+          <div class="cfg-footer-btns">
+            <button class="btn-outline" id="btnCancelar">↩ Cancelar alterações</button>
+            <button class="btn-outline" id="btnRestaurar">↺ Restaurar padrão</button>
+            <button class="btn-primary" id="btnSalvar">💾 Salvar configurações</button>
+          </div>
+        </div>
+
+      </div><!-- /settingsContent -->
+    </div><!-- /settings-layout -->
+  </main>
+</div><!-- /main-wrapper -->
+
+<script src="dashboard.js"></script>
+<script>
+(function () {
+
+  /* ── Navegação interna ── */
+  const navBtns = document.querySelectorAll('.snav-item[data-target]');
+  const sections = document.querySelectorAll('.cfg-section');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navBtns.forEach(b => b.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('sec-' + btn.dataset.target)?.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  /* ── Upload de avatar ── */
+  document.getElementById('avatarInput')?.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('avatarPreview').innerHTML =
+        `<img src="${e.target.result}" alt="Avatar">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  /* ── Upload de logos ── */
+  ['logoInput', 'docLogoInput'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      const previewId = id === 'logoInput' ? 'logoPreview' : 'docLogoPreview';
+      reader.onload = e => {
+        document.getElementById(previewId).innerHTML =
+          `<img src="${e.target.result}" alt="Logo">`;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  /* ── Força da senha ── */
+  document.getElementById('novaSenha')?.addEventListener('input', function () {
+    const v = this.value;
+    let strength = 0;
+    if (v.length >= 8) strength++;
+    if (/[A-Z]/.test(v)) strength++;
+    if (/[0-9]/.test(v)) strength++;
+    if (/[^A-Za-z0-9]/.test(v)) strength++;
+
+    const fill = document.getElementById('strengthFill');
+    const text = document.getElementById('strengthText');
+    const colors = ['#EF4444', '#F59E0B', '#10B981', '#059669'];
+    const labels = ['Fraca', 'Moderada', 'Boa', 'Forte'];
+
+    if (v) {
+      fill.style.width = (strength / 4 * 100) + '%';
+      fill.style.background = colors[strength - 1] || colors[0];
+      text.textContent = labels[strength - 1] || labels[0];
+      text.style.color = colors[strength - 1] || colors[0];
+    } else {
+      fill.style.width = '0';
+      text.textContent = '';
+    }
+  });
+
+  /* ── Alterar senha ── */
+  document.getElementById('btnAlterarSenha')?.addEventListener('click', () => {
+    const atual = document.getElementById('senhaAtual').value;
+    const nova = document.getElementById('novaSenha').value;
+    const conf = document.getElementById('confirmaSenha').value;
+    if (!atual || !nova || !conf) {
+      window.JurisFlow.showToast('⚠️ Preencha todos os campos de senha.', 'warning'); return;
+    }
+    if (nova !== conf) {
+      window.JurisFlow.showToast('❌ Nova senha e confirmação não coincidem.', 'error'); return;
+    }
+    if (nova.length < 8) {
+      window.JurisFlow.showToast('❌ A senha deve ter pelo menos 8 caracteres.', 'error'); return;
+    }
+    window.JurisFlow.showToast('✅ Senha alterada com sucesso!', 'success');
+    ['senhaAtual', 'novaSenha', 'confirmaSenha'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('strengthFill').style.width = '0';
+    document.getElementById('strengthText').textContent = '';
+  });
+
+  /* ── Tamanho da fonte ── */
+  let fontSize = 100;
+  document.getElementById('fontMinus')?.addEventListener('click', () => {
+    if (fontSize > 80) { fontSize -= 10; document.getElementById('fontSizeVal').textContent = fontSize + '%'; }
+  });
+  document.getElementById('fontPlus')?.addEventListener('click', () => {
+    if (fontSize < 120) { fontSize += 10; document.getElementById('fontSizeVal').textContent = fontSize + '%'; }
+  });
+
+  /* ── Tema ── */
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  /* ── Cores ── */
+  document.querySelectorAll('.color-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+    });
+  });
+
+  /* ── Tags ── */
+  window.addTagFromInput = function (inputId, listId) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    if (!input || !list || !input.value.trim()) return;
+    const tag = document.createElement('div');
+    tag.className = 'tag-item';
+    tag.innerHTML = `${input.value.trim()} <span class="tag-remove">✕</span>`;
+    list.appendChild(tag);
+    input.value = '';
+    input.focus();
+  };
+
+  document.querySelectorAll('.tag-input-row input').forEach(input => {
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const listId = this.id.replace('Input', 'List');
+        window.addTagFromInput(this.id, listId);
+      }
+    });
+  });
+
+  document.querySelectorAll('.tag-list').forEach(list => {
+    list.addEventListener('click', e => {
+      if (e.target.classList.contains('tag-remove')) e.target.closest('.tag-item').remove();
+    });
+  });
+
+  /* ── Usuários ── */
+  document.getElementById('btnAddUser')?.addEventListener('click', () => {
+    const panel = document.getElementById('addUserPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+  });
+  document.getElementById('btnCancelAddUser')?.addEventListener('click', () => {
+    document.getElementById('addUserPanel').style.display = 'none';
+  });
+  document.getElementById('btnSaveUser')?.addEventListener('click', () => {
+    const nome = document.getElementById('newUserNome').value.trim();
+    if (!nome) { window.JurisFlow.showToast('⚠️ Informe o nome do usuário.', 'warning'); return; }
+    window.JurisFlow.showToast(`✅ Usuário "${nome}" adicionado com sucesso!`, 'success');
+    document.getElementById('addUserPanel').style.display = 'none';
+    ['newUserNome', 'newUserEmail', 'newUserCargo'].forEach(id => { document.getElementById(id).value = ''; });
+  });
+
+  /* ── Footer ── */
+  document.getElementById('btnSalvar')?.addEventListener('click', () => {
+    window.JurisFlow.showToast('✅ Configurações salvas com sucesso!', 'success');
+  });
+  document.getElementById('btnCancelar')?.addEventListener('click', () => {
+    if (confirm('Deseja descartar as alterações não salvas?'))
+      window.JurisFlow.showToast('↩ Alterações descartadas.', 'info');
+  });
+  document.getElementById('btnRestaurar')?.addEventListener('click', () => {
+    if (confirm('Restaurar TODAS as configurações para o padrão de fábrica? Esta ação não pode ser desfeita.'))
+      window.JurisFlow.showToast('↺ Configurações restauradas ao padrão.', 'warning');
+  });
+
+  /* ── Ações de dados ── */
+  document.querySelectorAll('[data-action-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const msgs = {
+        export:  '📤 Exportando dados… o arquivo será baixado em instantes.',
+        import:  '📥 Selecione o arquivo de importação.',
+        backup:  '💾 Backup iniciado! Você receberá um e-mail quando concluir.',
+        restore: '⚠️ Restaurando backup… o sistema será reiniciado.',
+        clear:   '🗑️ Dados de teste removidos com sucesso!',
+      };
+      const type = btn.dataset.actionType;
+      window.JurisFlow.showToast(msgs[type], type === 'restore' ? 'warning' : 'success');
+    });
+  });
+
+  /* ── Integrações ── */
+  document.querySelectorAll('[data-integration]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.JurisFlow.showToast(`🔗 Conectando ao ${btn.dataset.integration}…`, 'info');
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Cliente — JurisFlow</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="novo-cliente.css">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-icon">⚖</div>
+        <div>
+          <div class="brand-name">JurisFlow</div>
+          <div class="brand-tagline">Sistema Jurídico</div>
+        </div>
+      </div>
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Recolher menu">◀</button>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Carlos Mendes</div>
+        <div class="user-role">OAB 12.345/SP</div>
+      </div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Novo Cliente</div>
+      <div class="page-subtitle">Preencha os dados para cadastrar um novo cliente</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:8px;"></span>
+      <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">CM</div>
+        <div class="topbar-user-name">Dr. Mendes</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Page Header -->
+    <div class="form-page-header">
+      <div class="fph-breadcrumb">
+        <a href="clientes.html" class="fph-back">← Clientes</a>
+        <span class="fph-sep">/</span>
+        <span>Novo Cliente</span>
+      </div>
+      <div class="fph-row">
+        <div>
+          <h1 class="fph-title">👤 Novo Cliente</h1>
+          <p class="fph-subtitle">Preencha as informações abaixo. Os campos marcados com <span style="color:var(--red)">*</span> são obrigatórios.</p>
+        </div>
+        <div class="fph-actions">
+          <button type="button" class="btn-form-cancel" id="btnCancelar">Cancelar</button>
+          <button class="btn-form-save" id="btnSalvar"><span>✓</span> Salvar Cliente</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="form-steps" id="formSteps">
+      <div class="fstep active" data-step="0"><span class="fstep-dot">1</span><span class="fstep-label">Dados Pessoais</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="1"><span class="fstep-dot">2</span><span class="fstep-label">Contato</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="2"><span class="fstep-dot">3</span><span class="fstep-label">Endereço</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="3"><span class="fstep-dot">4</span><span class="fstep-label">Jurídico</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="4"><span class="fstep-dot">5</span><span class="fstep-label">Documentos</span></div>
+    </div>
+
+    <form id="formNovoCliente" novalidate>
+
+      <!-- ── Seção 1: Dados Pessoais ── -->
+      <div class="fcard" id="sec1">
+        <div class="fcard-header">
+          <div class="fcard-icon blue">👤</div>
+          <div>
+            <div class="fcard-title">Dados Pessoais</div>
+            <div class="fcard-sub">Informações de identificação do cliente</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg col-2">
+            <label class="flabel req">Nome Completo</label>
+            <input type="text" class="finput" id="nomeCompleto" placeholder="Ex: Ana Paula Lima" required>
+            <span class="ferr">Nome é obrigatório</span>
+          </div>
+          <div class="fg">
+            <label class="flabel req">CPF / CNPJ</label>
+            <input type="text" class="finput" id="cpfCnpj" placeholder="000.000.000-00" data-mask="cpf" required>
+            <span class="ferr">Documento inválido</span>
+          </div>
+          <div class="fg">
+            <label class="flabel">RG</label>
+            <input type="text" class="finput" id="rg" placeholder="00.000.000-0">
+          </div>
+          <div class="fg">
+            <label class="flabel">Data de Nascimento</label>
+            <input type="date" class="finput" id="dataNasc">
+          </div>
+          <div class="fg">
+            <label class="flabel">Sexo</label>
+            <select class="finput" id="sexo">
+              <option value="">Selecione</option>
+              <option>Masculino</option>
+              <option>Feminino</option>
+              <option>Outro</option>
+              <option>Prefiro não informar</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Estado Civil</label>
+            <select class="finput" id="estadoCivil">
+              <option value="">Selecione</option>
+              <option>Solteiro(a)</option>
+              <option>Casado(a)</option>
+              <option>Divorciado(a)</option>
+              <option>Viúvo(a)</option>
+              <option>União Estável</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Profissão</label>
+            <input type="text" class="finput" id="profissao" placeholder="Ex: Engenheiro Civil">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 2: Contato ── -->
+      <div class="fcard" id="sec2">
+        <div class="fcard-header">
+          <div class="fcard-icon gold">📞</div>
+          <div>
+            <div class="fcard-title">Contato</div>
+            <div class="fcard-sub">Telefones e meios de comunicação</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel req">Telefone Principal</label>
+            <input type="text" class="finput" id="telefone1" placeholder="(11) 99999-9999" data-mask="phone" required>
+            <span class="ferr">Telefone é obrigatório</span>
+          </div>
+          <div class="fg">
+            <label class="flabel">Telefone Secundário</label>
+            <input type="text" class="finput" id="telefone2" placeholder="(11) 99999-9999" data-mask="phone">
+          </div>
+          <div class="fg">
+            <label class="flabel">WhatsApp</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">💬</span>
+              <input type="text" class="finput has-pfx" id="whatsapp" placeholder="(11) 99999-9999" data-mask="phone">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel req">E-mail</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">✉️</span>
+              <input type="email" class="finput has-pfx" id="email" placeholder="cliente@email.com" required>
+            </div>
+            <span class="ferr">E-mail inválido</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 3: Endereço ── -->
+      <div class="fcard" id="sec3">
+        <div class="fcard-header">
+          <div class="fcard-icon green">📍</div>
+          <div>
+            <div class="fcard-title">Endereço</div>
+            <div class="fcard-sub">Localização e endereço de correspondência</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel">CEP</label>
+            <div class="finput-cep-wrap">
+              <input type="text" class="finput" id="cep" placeholder="00000-000" data-mask="cep">
+              <button type="button" class="btn-cep" id="btnBuscarCep">🔍 Buscar</button>
+            </div>
+          </div>
+          <div class="fg col-2">
+            <label class="flabel">Rua / Logradouro</label>
+            <input type="text" class="finput" id="rua" placeholder="Ex: Av. Paulista">
+          </div>
+          <div class="fg">
+            <label class="flabel">Número</label>
+            <input type="text" class="finput" id="numero" placeholder="Ex: 1234">
+          </div>
+          <div class="fg">
+            <label class="flabel">Complemento</label>
+            <input type="text" class="finput" id="complemento" placeholder="Ex: Apto 42">
+          </div>
+          <div class="fg">
+            <label class="flabel">Bairro</label>
+            <input type="text" class="finput" id="bairro" placeholder="Ex: Centro">
+          </div>
+          <div class="fg">
+            <label class="flabel">Cidade</label>
+            <input type="text" class="finput" id="cidade" placeholder="Ex: São Paulo">
+          </div>
+          <div class="fg">
+            <label class="flabel">Estado</label>
+            <select class="finput" id="estado">
+              <option value="">Selecione</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+              <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+              <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+              <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+              <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+              <option selected>SP</option><option>SE</option><option>TO</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 4: Dados Jurídicos ── -->
+      <div class="fcard" id="sec4">
+        <div class="fcard-header">
+          <div class="fcard-icon navy">⚖️</div>
+          <div>
+            <div class="fcard-title">Dados Jurídicos</div>
+            <div class="fcard-sub">Classificação e status no sistema</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel">Área Jurídica</label>
+            <select class="finput" id="areaJuridica">
+              <option value="">Selecione</option>
+              <option>Cível</option><option>Criminal</option><option>Trabalhista</option>
+              <option>Família</option><option>Previdenciário</option><option>Empresarial</option>
+              <option>Tributário</option><option>Imobiliário</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Tipo de Cliente</label>
+            <select class="finput" id="tipoCliente">
+              <option value="">Selecione</option>
+              <option>Pessoa Física</option><option>Pessoa Jurídica</option>
+              <option>Menor Representado</option><option>Espólio</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Status do Cliente</label>
+            <div class="status-sel" id="statusSelector">
+              <button type="button" class="sstbtn active" data-status="ativo">
+                <span class="sdot green"></span> Ativo
+              </button>
+              <button type="button" class="sstbtn" data-status="pendente">
+                <span class="sdot amber"></span> Pendente
+              </button>
+              <button type="button" class="sstbtn" data-status="inativo">
+                <span class="sdot gray"></span> Inativo
+              </button>
+            </div>
+            <input type="hidden" id="statusCliente" value="ativo">
+          </div>
+          <div class="fg col-2">
+            <label class="flabel">Observação Rápida</label>
+            <input type="text" class="finput" id="obsRapida" placeholder="Ex: Cliente indicado pelo Dr. João, caso urgente">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 5: Documentos ── -->
+      <div class="fcard" id="sec5">
+        <div class="fcard-header">
+          <div class="fcard-icon amber">📎</div>
+          <div>
+            <div class="fcard-title">Documentos</div>
+            <div class="fcard-sub">Anexe os documentos necessários do cliente</div>
+          </div>
+        </div>
+
+        <div class="upload-zone" id="uploadArea">
+          <div class="upload-ico">📂</div>
+          <div class="upload-ttl">Arraste arquivos aqui</div>
+          <div class="upload-hint">ou clique para selecionar — PDF, DOC, JPG, PNG (máx. 10 MB por arquivo)</div>
+          <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none">
+          <button type="button" class="btn-upload" id="btnUpload">+ Adicionar Documento</button>
+        </div>
+
+        <div class="doc-chips">
+          <span class="doc-chip">📋 RG</span>
+          <span class="doc-chip">📋 CPF</span>
+          <span class="doc-chip">📜 Procuração</span>
+          <span class="doc-chip">📄 Contrato</span>
+          <span class="doc-chip">📎 Outro</span>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <!-- ── Seção 6: Observações ── -->
+      <div class="fcard" id="sec6">
+        <div class="fcard-header">
+          <div class="fcard-icon gray">📝</div>
+          <div>
+            <div class="fcard-title">Observações</div>
+            <div class="fcard-sub">Anotações e informações complementares</div>
+          </div>
+        </div>
+        <div class="fg" style="margin:0;">
+          <label class="flabel">Observações Gerais</label>
+          <textarea class="finput ftextarea" id="observacoes" placeholder="Descreva informações relevantes: histórico, particularidades do caso, orientações especiais…"></textarea>
+          <div class="char-ctr"><span id="obsCount">0</span> / 1000 caracteres</div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="form-footer">
+        <button type="button" class="btn-form-cancel" id="btnCancelarBottom">← Voltar</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button type="button" class="btn-form-draft" id="btnRascunho">Salvar Rascunho</button>
+          <button type="submit" class="btn-form-save" id="btnSalvarBottom">
+            <span class="bfs-icon">✓</span>
+            <span class="bfs-text">Salvar Cliente</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </main>
+</div>
+
+<script src="dashboard.js"></script>
+<script src="novo-cliente.js"></script>
+</body>
+</html>

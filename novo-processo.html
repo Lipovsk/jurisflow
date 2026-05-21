@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Processo — JurisFlow</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="novo-cliente.css">
+  <link rel="stylesheet" href="novo-processo.css">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-icon">⚖</div>
+        <div>
+          <div class="brand-name">JurisFlow</div>
+          <div class="brand-tagline">Sistema Jurídico</div>
+        </div>
+      </div>
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Recolher menu">◀</button>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item active" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Carlos Mendes</div>
+        <div class="user-role">OAB 12.345/SP</div>
+      </div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Novo Processo</div>
+      <div class="page-subtitle">Cadastro de novo processo jurídico</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:8px;"></span>
+      <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">CM</div>
+        <div class="topbar-user-name">Dr. Mendes</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Page Header -->
+    <div class="form-page-header">
+      <div class="fph-breadcrumb">
+        <a href="processos.html" class="fph-back">← Processos</a>
+        <span class="fph-sep">/</span>
+        <span>Novo Processo</span>
+      </div>
+      <div class="fph-row">
+        <div>
+          <h1 class="fph-title">📁 Novo Processo</h1>
+          <p class="fph-subtitle">Preencha as informações do processo. Campos com <span style="color:var(--red)">*</span> são obrigatórios.</p>
+        </div>
+        <div class="fph-actions">
+          <button type="button" class="btn-form-cancel" id="btnCancelar">Cancelar</button>
+          <button class="btn-form-save" id="btnSalvar"><span>✓</span> Salvar Processo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="form-steps" id="formSteps">
+      <div class="fstep active" data-step="0"><span class="fstep-dot">1</span><span class="fstep-label">Informações</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="1"><span class="fstep-dot">2</span><span class="fstep-label">Tribunal</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="2"><span class="fstep-dot">3</span><span class="fstep-label">Datas</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="3"><span class="fstep-dot">4</span><span class="fstep-label">Financeiro</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="4"><span class="fstep-dot">5</span><span class="fstep-label">Documentos</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="5"><span class="fstep-dot">6</span><span class="fstep-label">Timeline</span></div>
+    </div>
+
+    <form id="formNovoProcesso" novalidate>
+
+      <!-- ── Seção 1: Informações Principais ── -->
+      <div class="fcard" id="sec1">
+        <div class="fcard-header">
+          <div class="fcard-icon blue">📁</div>
+          <div>
+            <div class="fcard-title">Informações Principais</div>
+            <div class="fcard-sub">Dados essenciais de identificação do processo</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel">Número do Processo</label>
+            <input type="text" class="finput" id="numProcesso" placeholder="0000000-00.0000.0.00.0000" data-mask="processo">
+            <span class="ferr">Formato inválido</span>
+          </div>
+
+          <!-- Cliente Vinculado com autocomplete -->
+          <div class="fg col-2">
+            <label class="flabel req">Cliente Vinculado</label>
+            <div class="autocomplete-wrap" id="clienteWrap">
+              <div class="finput-icon-wrap">
+                <span class="finput-pfx">👤</span>
+                <input type="text" class="finput has-pfx" id="clienteBusca" placeholder="Digite o nome ou CPF do cliente…" autocomplete="off" required>
+              </div>
+              <div class="ac-dropdown" id="acDropdown"></div>
+            </div>
+            <input type="hidden" id="clienteId" value="">
+            <span class="ferr">Selecione um cliente</span>
+          </div>
+
+          <div class="fg">
+            <label class="flabel req">Área Jurídica</label>
+            <select class="finput" id="areaJuridica" required>
+              <option value="">Selecione</option>
+              <option>Cível</option>
+              <option>Criminal</option>
+              <option>Trabalhista</option>
+              <option>Família</option>
+              <option>Previdenciário</option>
+              <option>Empresarial</option>
+              <option>Tributário</option>
+              <option>Imobiliário</option>
+            </select>
+            <span class="ferr">Área é obrigatória</span>
+          </div>
+
+          <div class="fg">
+            <label class="flabel">Tipo de Ação</label>
+            <input type="text" class="finput" id="tipoAcao" placeholder="Ex: Ação de Indenização, Divórcio…">
+          </div>
+
+          <!-- Status com badges -->
+          <div class="fg col-3">
+            <label class="flabel req">Status do Processo</label>
+            <div class="proc-status-sel" id="procStatusSel">
+              <button type="button" class="pstbtn active" data-status="andamento">
+                <span class="sdot blue"></span> Em Andamento
+              </button>
+              <button type="button" class="pstbtn" data-status="audiencia">
+                <span class="sdot amber"></span> Aguardando Audiência
+              </button>
+              <button type="button" class="pstbtn urgent" data-status="urgente">
+                <span class="sdot red"></span> Urgente
+              </button>
+              <button type="button" class="pstbtn" data-status="encerrado">
+                <span class="sdot gray"></span> Encerrado
+              </button>
+            </div>
+            <input type="hidden" id="statusProcesso" value="andamento">
+          </div>
+
+          <!-- Prioridade -->
+          <div class="fg">
+            <label class="flabel">Prioridade</label>
+            <div class="priority-sel" id="prioritySel">
+              <button type="button" class="pribtn" data-p="baixa">🟢 Baixa</button>
+              <button type="button" class="pribtn active" data-p="media">🟡 Média</button>
+              <button type="button" class="pribtn" data-p="alta">🔴 Alta</button>
+            </div>
+            <input type="hidden" id="prioridade" value="media">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 2: Tribunal e Vara ── -->
+      <div class="fcard" id="sec2">
+        <div class="fcard-header">
+          <div class="fcard-icon navy">🏛️</div>
+          <div>
+            <div class="fcard-title">Tribunal e Vara</div>
+            <div class="fcard-sub">Informações sobre o juízo competente</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg col-2">
+            <label class="flabel">Tribunal</label>
+            <select class="finput" id="tribunal">
+              <option value="">Selecione</option>
+              <option>TJSP — Tribunal de Justiça de São Paulo</option>
+              <option>TJRJ — Tribunal de Justiça do Rio de Janeiro</option>
+              <option>TJMG — Tribunal de Justiça de Minas Gerais</option>
+              <option>TRT — Tribunal Regional do Trabalho</option>
+              <option>TRF — Tribunal Regional Federal</option>
+              <option>STJ — Superior Tribunal de Justiça</option>
+              <option>STF — Supremo Tribunal Federal</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Comarca</label>
+            <input type="text" class="finput" id="comarca" placeholder="Ex: São Paulo">
+          </div>
+          <div class="fg">
+            <label class="flabel">Vara / Câmara</label>
+            <input type="text" class="finput" id="vara" placeholder="Ex: 3ª Vara Cível">
+          </div>
+          <div class="fg col-2">
+            <label class="flabel">Juiz(a) Responsável</label>
+            <input type="text" class="finput" id="juiz" placeholder="Ex: Dr. Paulo Rodrigues">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 3: Datas Importantes ── -->
+      <div class="fcard" id="sec3">
+        <div class="fcard-header">
+          <div class="fcard-icon amber">📅</div>
+          <div>
+            <div class="fcard-title">Datas Importantes</div>
+            <div class="fcard-sub">Controle de prazos e audiências</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel req">Data de Abertura</label>
+            <input type="date" class="finput" id="dataAbertura" required>
+            <span class="ferr">Data de abertura é obrigatória</span>
+          </div>
+          <div class="fg">
+            <label class="flabel">Data da Audiência</label>
+            <div class="date-with-alert">
+              <input type="date" class="finput" id="dataAudiencia">
+              <div class="date-alert" id="audienciaAlert" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Prazo Final</label>
+            <div class="date-with-alert">
+              <input type="date" class="finput" id="prazoFinal">
+              <div class="date-alert urgent" id="prazoAlert" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Última Movimentação</label>
+            <input type="date" class="finput" id="ultMovimentacao">
+          </div>
+        </div>
+
+        <!-- Alerta de prazo próximo -->
+        <div class="prazo-banner" id="prazoBanner" style="display:none;">
+          <span>⚠️</span>
+          <span id="prazoBannerText"></span>
+        </div>
+      </div>
+
+      <!-- ── Seção 4: Financeiro ── -->
+      <div class="fcard" id="sec4">
+        <div class="fcard-header">
+          <div class="fcard-icon gold">💰</div>
+          <div>
+            <div class="fcard-title">Financeiro</div>
+            <div class="fcard-sub">Valores e forma de pagamento dos honorários</div>
+          </div>
+        </div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel">Valor da Causa</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">R$</span>
+              <input type="text" class="finput has-pfx" id="valorCausa" placeholder="0,00" data-mask="currency">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Honorários</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">R$</span>
+              <input type="text" class="finput has-pfx" id="honorarios" placeholder="0,00" data-mask="currency">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flabel">Status Financeiro</label>
+            <select class="finput" id="statusFinanceiro">
+              <option value="">Selecione</option>
+              <option>Em dia</option>
+              <option>Parcialmente pago</option>
+              <option>Pendente</option>
+              <option>Inadimplente</option>
+              <option>Isento</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel">Forma de Pagamento</label>
+            <select class="finput" id="formaPagamento">
+              <option value="">Selecione</option>
+              <option>À vista</option>
+              <option>Parcelado</option>
+              <option>Êxito</option>
+              <option>Mensal</option>
+              <option>Contrato fixo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 5: Documentos ── -->
+      <div class="fcard" id="sec5">
+        <div class="fcard-header">
+          <div class="fcard-icon amber">📎</div>
+          <div>
+            <div class="fcard-title">Documentos do Processo</div>
+            <div class="fcard-sub">Petições, contratos e peças processuais</div>
+          </div>
+        </div>
+
+        <div class="upload-zone" id="uploadArea">
+          <div class="upload-ico">📂</div>
+          <div class="upload-ttl">Arraste os arquivos aqui</div>
+          <div class="upload-hint">ou clique para selecionar — PDF, DOC, JPG, PNG (máx. 10 MB)</div>
+          <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none">
+          <button type="button" class="btn-upload" id="btnUpload">+ Adicionar Documento</button>
+        </div>
+
+        <div class="doc-chips">
+          <span class="doc-chip">📜 Petição Inicial</span>
+          <span class="doc-chip">📋 Procuração</span>
+          <span class="doc-chip">📄 Contrato</span>
+          <span class="doc-chip">⚖️ Sentença</span>
+          <span class="doc-chip">📎 Outro</span>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <!-- ── Seção 6: Timeline ── -->
+      <div class="fcard" id="sec6">
+        <div class="fcard-header">
+          <div class="fcard-icon green">📋</div>
+          <div>
+            <div class="fcard-title">Timeline do Processo</div>
+            <div class="fcard-sub">Histórico de eventos e movimentações</div>
+          </div>
+          <div style="margin-left:auto;">
+            <button type="button" class="btn-add-event" id="btnAddEvento">+ Evento</button>
+          </div>
+        </div>
+
+        <!-- Timeline inicial (pré-populada) -->
+        <div class="timeline" id="timeline">
+          <div class="tl-item" data-type="criado">
+            <div class="tl-dot blue"></div>
+            <div class="tl-content">
+              <div class="tl-title">Processo criado</div>
+              <div class="tl-meta">Hoje · Dr. Carlos Mendes</div>
+            </div>
+            <div class="tl-badge">Sistema</div>
+          </div>
+        </div>
+
+        <!-- Formulário de novo evento -->
+        <div class="tl-add-form" id="tlAddForm" style="display:none;">
+          <div class="fgrid" style="grid-template-columns:1fr 1fr auto;">
+            <div class="fg">
+              <label class="flabel">Descrição do Evento</label>
+              <input type="text" class="finput" id="tlEventoDesc" placeholder="Ex: Audiência realizada, Petição enviada…">
+            </div>
+            <div class="fg">
+              <label class="flabel">Data</label>
+              <input type="date" class="finput" id="tlEventoData">
+            </div>
+            <div class="fg" style="justify-content:flex-end;padding-top:22px;">
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-tl-cancel" id="btnTlCancel">✕</button>
+                <button type="button" class="btn-tl-add" id="btnTlAdd">Adicionar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Seção 7: Observações ── -->
+      <div class="fcard" id="sec7">
+        <div class="fcard-header">
+          <div class="fcard-icon gray">📝</div>
+          <div>
+            <div class="fcard-title">Observações</div>
+            <div class="fcard-sub">Detalhes, estratégia e notas internas</div>
+          </div>
+        </div>
+        <div class="fg" style="margin:0;">
+          <label class="flabel">Observações do Caso</label>
+          <textarea class="finput ftextarea" id="observacoes" placeholder="Descreva detalhes relevantes: estratégia do caso, pontos fortes e fracos, orientações, histórico…"></textarea>
+          <div class="char-ctr"><span id="obsCount">0</span> / 1000 caracteres</div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="form-footer">
+        <button type="button" class="btn-form-cancel" id="btnCancelarBottom">← Voltar</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button type="button" class="btn-form-draft" id="btnRascunho">Salvar Rascunho</button>
+          <button type="submit" class="btn-form-save" id="btnSalvarBottom">
+            <span class="bfs-icon">✓</span>
+            <span class="bfs-text">Salvar Processo</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </main>
+</div>
+
+<script src="dashboard.js"></script>
+<script src="novo-processo.js"></script>
+</body>
+</html>

@@ -17,10 +17,15 @@
 <aside class="sidebar" id="sidebar">
 
   <div class="sidebar-brand">
-    <div class="brand-icon">⚖</div>
-    <div>
-      <div class="brand-name">JurisFlow</div>
-      <div class="brand-tagline">Sistema Jurídico</div>
+    <div class="sidebar-brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-icon">⚖</div>
+        <div>
+          <div class="brand-name">JurisFlow</div>
+          <div class="brand-tagline">Sistema Jurídico</div>
+        </div>
+      </div>
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Recolher menu">◀</button>
     </div>
   </div>
 
@@ -80,11 +85,33 @@
     <button class="sidebar-toggle" id="sidebarToggle">☰</button>
     <div class="topbar-left">
       <div class="page-title" id="greeting">Bom dia, Dr. Mendes 👋</div>
-      <div class="page-subtitle">Sexta-feira, 20 de Maio de 2026</div>
+      <div class="page-subtitle" id="topbarDate"></div>
     </div>
+
+    <!-- Botões rápidos -->
+    <div class="topbar-quick-actions" id="topbarQuickActions">
+      <button class="qbtn qbtn-secondary" id="btnNovoClienteTopbar">
+        <span>👤</span> Novo Cliente
+      </button>
+      <button class="qbtn qbtn-primary" id="btnNovoProcessoTopbar">
+        <span>📁</span> Novo Processo
+      </button>
+    </div>
+
     <div class="topbar-right">
-      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
-      <button class="topbar-btn" id="searchBtn" title="Busca rápida">🔍</button>
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:8px;"></span>
+
+      <!-- Barra de pesquisa global -->
+      <div class="search-global" id="searchGlobal">
+        <div class="search-global-inner">
+          <span class="si">🔍</span>
+          <input type="text" id="searchGlobalInput" placeholder="Buscar cliente, processo, CPF…" autocomplete="off" spellcheck="false">
+          <div class="search-kbd"><kbd>Ctrl</kbd><kbd>K</kbd></div>
+        </div>
+        <div class="search-overlay" id="searchOverlay"></div>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+
       <button class="topbar-btn" id="notifBtn" title="Notificações">
         🔔
         <span class="notif-dot"></span>
