@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clientes — JurisFlow</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     .page-toolbar {
       display: flex; align-items: center; gap: 12px;
@@ -201,7 +201,7 @@
     <div class="nav-section-label">Principal</div>
     <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
     <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
-    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
     <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
     <div class="nav-section-label">Financeiro</div>
     <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
@@ -377,92 +377,132 @@
   </div>
 </div>
 
-<script src="dashboard.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/dashboard.js"></script>
 <script>
 (function(){
-  const clientes = [
-    { nome:'Maria Aparecida Souza', tipo:'Pessoa Física', iniciais:'MA', cor:'linear-gradient(135deg,#2563EB,#1D4ED8)', area:'civel', processos:2, contato:'Ontem', status:'ativo' },
-    { nome:'Construtora Beta Ltda', tipo:'Pessoa Jurídica', iniciais:'CB', cor:'linear-gradient(135deg,#10B981,#059669)', area:'empresarial', processos:1, contato:'Hoje', status:'ativo' },
-    { nome:'João Paulo Ferreira', tipo:'Pessoa Física', iniciais:'JP', cor:'linear-gradient(135deg,#F59E0B,#D97706)', area:'trabalhista', processos:1, contato:'há 3 dias', status:'aguardando' },
-    { nome:'Tecno Solutions S/A', tipo:'Pessoa Jurídica', iniciais:'TS', cor:'linear-gradient(135deg,#8B5CF6,#7C3AED)', area:'empresarial', processos:3, contato:'há 3 dias', status:'ativo' },
-    { nome:'Roberto Alves Costa', tipo:'Pessoa Física', iniciais:'RA', cor:'linear-gradient(135deg,#6B7280,#4B5563)', area:'criminal', processos:1, contato:'há 5 dias', status:'ativo' },
-    { nome:'Ana Lima Rodrigues', tipo:'Pessoa Física', iniciais:'AL', cor:'linear-gradient(135deg,#EC4899,#DB2777)', area:'familia', processos:2, contato:'há 1 dia', status:'ativo' },
-    { nome:'Holding Nobre Ltda', tipo:'Pessoa Jurídica', iniciais:'HN', cor:'linear-gradient(135deg,#0D9488,#0F766E)', area:'empresarial', processos:4, contato:'há 7 dias', status:'ativo' },
-    { nome:'Carlos Eduardo Pinto', tipo:'Pessoa Física', iniciais:'CE', cor:'linear-gradient(135deg,#F97316,#EA580C)', area:'civel', processos:1, contato:'há 2 dias', status:'aguardando' },
-    { nome:'Fernanda Melo Braga', tipo:'Pessoa Física', iniciais:'FM', cor:'linear-gradient(135deg,#14B8A6,#0D9488)', area:'trabalhista', processos:1, contato:'há 15 dias', status:'inativo' },
-    { nome:'Grupo Águia S/A', tipo:'Pessoa Jurídica', iniciais:'GA', cor:'linear-gradient(135deg,#6366F1,#4F46E5)', area:'empresarial', processos:2, contato:'há 10 dias', status:'ativo' },
+  const COLORS = [
+    'linear-gradient(135deg,#2563EB,#1D4ED8)','linear-gradient(135deg,#10B981,#059669)',
+    'linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#8B5CF6,#7C3AED)',
+    'linear-gradient(135deg,#EC4899,#DB2777)','linear-gradient(135deg,#6B7280,#4B5563)',
+    'linear-gradient(135deg,#F97316,#EA580C)','linear-gradient(135deg,#0D9488,#0F766E)',
+    'linear-gradient(135deg,#6366F1,#4F46E5)','linear-gradient(135deg,#14B8A6,#0D9488)',
   ];
-
-  const areaMap = {
-    civel:'area-civel', trabalhista:'area-trabalhista',
-    empresarial:'area-empresarial', criminal:'area-criminal', familia:'area-familia'
-  };
-  const areaLabel = {
-    civel:'Cível', trabalhista:'Trabalhista',
-    empresarial:'Empresarial', criminal:'Criminal', familia:'Família'
-  };
+  function getCor(id) {
+    const n = (id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+    return COLORS[n % COLORS.length];
+  }
+  function getIniciais(nome) {
+    if (!nome) return '?';
+    const p = nome.trim().split(' ').filter(Boolean);
+    return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
+  }
+  function relDate(iso) {
+    if (!iso) return '—';
+    const d = Math.floor((Date.now()-new Date(iso))/86400000);
+    if (d===0) return 'Hoje'; if (d===1) return 'Ontem';
+    if (d<7) return `há ${d} dias`; if (d<30) return `há ${Math.floor(d/7)} sem.`;
+    if (d<365) return `há ${Math.floor(d/30)} mes.`; return `há ${Math.floor(d/365)} ano(s)`;
+  }
+  function normArea(a) {
+    if (!a) return '';
+    const m = {'Cível':'civel','Trabalhista':'trabalhista','Empresarial':'empresarial','Criminal':'criminal','Família':'familia','Familia':'familia','familia':'familia','civel':'civel','trabalhista':'trabalhista','empresarial':'empresarial','criminal':'criminal'};
+    return m[a] || a.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  }
+  const areaMap   = {civel:'area-civel',trabalhista:'area-trabalhista',empresarial:'area-empresarial',criminal:'area-criminal',familia:'area-familia'};
+  const areaLabel = {civel:'Cível',trabalhista:'Trabalhista',empresarial:'Empresarial',criminal:'Criminal',familia:'Família'};
   const statusMap = {
-    ativo:{ cls:'status-ativo', label:'Ativo', dot:'dot-green' },
-    aguardando:{ cls:'status-aguarda', label:'Aguardando', dot:'dot-amber' },
-    inativo:{ cls:'status-inativo', label:'Inativo', dot:'dot-gray' },
+    ativo:    {label:'Ativo',    dot:'dot-green'},
+    pendente: {label:'Pendente', dot:'dot-amber'},
+    aguardando:{label:'Aguardando',dot:'dot-amber'},
+    inativo:  {label:'Inativo',  dot:'dot-gray'},
   };
 
-  function renderTable(list){
-    const tbody = document.getElementById('clientsBody');
+  function renderTable(list) {
+    const procs = window.JurisFlow.db.getProcessos();
     document.getElementById('tableCount').textContent = list.length + ' clientes encontrados';
-    tbody.innerHTML = list.map(c => {
-      const s = statusMap[c.status];
+    document.getElementById('clientsBody').innerHTML = list.map(c => {
+      const an = normArea(c.areaJuridica);
+      const s  = statusMap[c.status] || statusMap.ativo;
+      const np = procs.filter(p=>p.clienteId===c.id).length;
       return `<tr>
-        <td>
-          <div class="client-cell">
-            <div class="tbl-avatar" style="background:${c.cor}">${c.iniciais}</div>
-            <div><div class="tbl-name">${c.nome}</div><div class="tbl-type">${c.tipo}</div></div>
-          </div>
-        </td>
-        <td><span class="area-badge ${areaMap[c.area]}">${areaLabel[c.area]}</span></td>
-        <td style="font-weight:600;">${c.processos}</td>
-        <td style="color:var(--gray-400);font-size:.82rem;">${c.contato}</td>
-        <td>
-          <div class="status-dot">
-            <div class="dot ${s.dot}"></div>
-            <span class="${s.cls}" style="font-size:.78rem;font-weight:600;">${s.label}</span>
-          </div>
-        </td>
-        <td><button class="btn-outline">Ver Perfil</button></td>
+        <td><div class="client-cell">
+          <div class="tbl-avatar" style="background:${getCor(c.id)}">${getIniciais(c.nome)}</div>
+          <div><div class="tbl-name">${c.nome}</div><div class="tbl-type">${c.tipoCliente||'Pessoa Física'}</div></div>
+        </div></td>
+        <td><span class="area-badge ${areaMap[an]||''}">${areaLabel[an]||c.areaJuridica||'—'}</span></td>
+        <td style="font-weight:600;">${np}</td>
+        <td style="color:var(--gray-400);font-size:.82rem;">${relDate(c.dataCadastro)}</td>
+        <td><div class="status-dot"><div class="dot ${s.dot}"></div><span style="font-size:.78rem;font-weight:600;">${s.label}</span></div></td>
+        <td><button class="btn-outline btn-ver-perfil" data-id="${c.id}">Ver Perfil</button></td>
       </tr>`;
     }).join('');
   }
 
+  function updateCards() {
+    const all = window.JurisFlow.db.getClientes();
+    const cards = document.querySelectorAll('.summary-value[data-count]');
+    if(cards[0]) cards[0].textContent = all.length;
+    if(cards[1]) cards[1].textContent = all.filter(c=>c.status==='ativo').length;
+    if(cards[2]) cards[2].textContent = all.filter(c=>c.status==='pendente'||c.status==='aguardando').length;
+    if(cards[3]) cards[3].textContent = all.filter(c=>c.status==='inativo').length;
+  }
+
+  updateCards();
+  let clientes = window.JurisFlow.db.getClientes();
   renderTable(clientes);
 
-  // Busca + filtros
-  function applyFilters(){
-    const q = document.getElementById('searchInput').value.toLowerCase();
+  function applyFilters() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
     const st = document.getElementById('filterStatus').value;
     const ar = document.getElementById('filterArea').value;
-    renderTable(clientes.filter(c =>
-      (!q || c.nome.toLowerCase().includes(q)) &&
-      (!st || c.status === st) &&
-      (!ar || c.area === ar)
-    ));
+    renderTable(clientes.filter(c => {
+      const an = normArea(c.areaJuridica);
+      return (!q || c.nome.toLowerCase().includes(q)||(c.cpfCnpj||'').includes(q)||(c.email||'').toLowerCase().includes(q)) &&
+             (!st || c.status === st) && (!ar || an === ar);
+    }));
   }
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterStatus').addEventListener('change', applyFilters);
   document.getElementById('filterArea').addEventListener('change', applyFilters);
 
-  // Modal
-  const modal = document.getElementById('clienteModal');
+  // Ver Perfil → página de detalhes
+  document.getElementById('clientsBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-ver-perfil');
+    if (btn) window.location.href = 'detalhes-cliente.html?id=' + btn.dataset.id;
+  });
+
   document.getElementById('btnNovoCliente').addEventListener('click', () => window.location.href = 'novo-cliente.html');
-  document.getElementById('modalCloseBtn').addEventListener('click', () => modal.classList.remove('open'));
-  document.getElementById('btnCancelar').addEventListener('click', () => modal.classList.remove('open'));
-  modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('open'); });
-  document.addEventListener('keydown', e => { if(e.key==='Escape') modal.classList.remove('open'); });
+
+  // Modal de adição rápida
+  const modal = document.getElementById('clienteModal');
+  function closeModal() {
+    modal.classList.remove('open');
+    document.querySelector('#clienteModal .modal-head h3').textContent = 'Novo Cliente';
+    document.getElementById('btnSalvarCliente').textContent = 'Salvar Cliente';
+    ['fNome','fEmail','fTel','fObs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  }
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('btnCancelar').addEventListener('click', closeModal);
+  modal.addEventListener('click', e=>{if(e.target===modal)closeModal();});
+  document.addEventListener('keydown', e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
 
   document.getElementById('btnSalvarCliente').addEventListener('click', () => {
     const nome = document.getElementById('fNome').value.trim();
-    if(!nome){ alert('Informe o nome do cliente.'); return; }
-    window.JurisFlow.showToast('✅ Cliente "' + nome + '" cadastrado com sucesso!', 'success');
-    modal.classList.remove('open');
+    if (!nome) { alert('Informe o nome do cliente.'); return; }
+    const c = {
+      nome, tipoCliente: document.getElementById('fTipo').value,
+      areaJuridica: document.getElementById('fArea').value,
+      email: document.getElementById('fEmail').value.trim(),
+      telefone1: document.getElementById('fTel').value.trim(),
+      obsRapida: document.getElementById('fObs').value.trim(),
+      status: 'ativo', dataCadastro: new Date().toISOString(),
+    };
+    window.JurisFlow.db.saveCliente(c);
+    clientes = window.JurisFlow.db.getClientes();
+    renderTable(clientes); updateCards();
+    window.JurisFlow.showToast('✅ Cliente "'+nome+'" cadastrado!','success');
+    closeModal();
   });
 })();
 </script>

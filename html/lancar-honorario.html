@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lançar Honorário — JurisFlow</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/novo-cliente.css">
+  <link rel="stylesheet" href="../css/lancar-honorario.css">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-icon">⚖</div>
+        <div>
+          <div class="brand-name">JurisFlow</div>
+          <div class="brand-tagline">Sistema Jurídico</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item active" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Carlos Mendes</div>
+        <div class="user-role">OAB 12.345/SP</div>
+      </div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Lançar Honorário</div>
+      <div class="page-subtitle">Registro de honorários advocatícios</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:8px;"></span>
+      <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">CM</div>
+        <div class="topbar-user-name">Dr. Mendes</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Page Header -->
+    <div class="form-page-header">
+      <div class="fph-breadcrumb">
+        <a href="financeiro.html" class="fph-back">← Financeiro</a>
+        <span class="fph-sep">/</span>
+        <span>Lançar Honorário</span>
+      </div>
+      <div class="fph-row">
+        <div>
+          <h1 class="fph-title">💰 Lançar Honorário</h1>
+          <p class="fph-subtitle">Preencha os dados do honorário. Campos com <span style="color:var(--red)">*</span> são obrigatórios.</p>
+        </div>
+        <div class="fph-actions">
+          <button type="button" class="btn-form-cancel" id="btnCancelar">Cancelar</button>
+          <button type="button" class="btn-form-save" id="btnSalvar"><span>✓</span> Lançar Honorário</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="form-steps" id="formSteps">
+      <div class="fstep active" data-step="0"><span class="fstep-dot">1</span><span class="fstep-label">Identificação</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="1"><span class="fstep-dot">2</span><span class="fstep-label">Tipo</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="2"><span class="fstep-dot">3</span><span class="fstep-label">Valores</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="3"><span class="fstep-dot">4</span><span class="fstep-label">Pagamento</span></div>
+      <div class="fstep-line"></div>
+      <div class="fstep" data-step="4"><span class="fstep-dot">5</span><span class="fstep-label">Finalizar</span></div>
+    </div>
+
+    <form id="formHonorario" novalidate>
+
+      <!-- ── Seção 1: Identificação ── -->
+      <div class="fcard" id="sec1">
+        <div class="fcard-header">
+          <div class="fcard-icon blue">👤</div>
+          <div>
+            <div class="fcard-title">Identificação</div>
+            <div class="fcard-sub">Vincule o cliente e o processo relacionado</div>
+          </div>
+        </div>
+        <div class="fgrid">
+
+          <!-- Cliente -->
+          <div class="fg col-2">
+            <label class="flabel req">Cliente</label>
+            <div class="autocomplete-wrap" id="clienteWrap">
+              <div class="finput-icon-wrap">
+                <span class="finput-pfx">👤</span>
+                <input type="text" class="finput has-pfx" id="clienteBusca"
+                  placeholder="Digite o nome ou CPF do cliente…" autocomplete="off" required>
+              </div>
+              <div class="ac-dropdown" id="acDropdown"></div>
+            </div>
+            <input type="hidden" id="clienteId" value="">
+            <span class="ferr">Selecione um cliente da lista</span>
+          </div>
+
+          <!-- Processo (opcional) -->
+          <div class="fg">
+            <label class="flabel">Processo Vinculado <span style="font-weight:400;color:var(--gray-400);text-transform:none;font-size:.72rem;">(opcional)</span></label>
+            <div class="autocomplete-wrap" id="processoWrap">
+              <div class="finput-icon-wrap">
+                <span class="finput-pfx">📁</span>
+                <input type="text" class="finput has-pfx" id="processoBusca"
+                  placeholder="Buscar processo…" autocomplete="off">
+              </div>
+              <div class="ac-dropdown" id="acDropdownProc"></div>
+            </div>
+            <input type="hidden" id="processoId" value="">
+          </div>
+
+          <!-- Competência -->
+          <div class="fg">
+            <label class="flabel req">Competência</label>
+            <div class="competencia-row">
+              <select class="finput" id="compMes" required>
+                <option value="">Mês</option>
+                <option value="01">Janeiro</option>
+                <option value="02">Fevereiro</option>
+                <option value="03">Março</option>
+                <option value="04">Abril</option>
+                <option value="05" selected>Maio</option>
+                <option value="06">Junho</option>
+                <option value="07">Julho</option>
+                <option value="08">Agosto</option>
+                <option value="09">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+              <select class="finput" id="compAno" required>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+            <span class="ferr">Selecione a competência</span>
+          </div>
+
+          <!-- Responsável -->
+          <div class="fg col-2">
+            <label class="flabel">Advogado Responsável</label>
+            <select class="finput" id="responsavel">
+              <option value="cm" selected>Dr. Carlos Mendes — OAB 12.345/SP</option>
+              <option value="as">Dra. Ana Souza — OAB 67.890/SP</option>
+              <option value="rm">Dr. Rodrigo Maia — OAB 24.680/RJ</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Seção 2: Tipo de Honorário ── -->
+      <div class="fcard" id="sec2">
+        <div class="fcard-header">
+          <div class="fcard-icon gold">⚖️</div>
+          <div>
+            <div class="fcard-title">Tipo de Honorário</div>
+            <div class="fcard-sub">Como os honorários foram acordados</div>
+          </div>
+        </div>
+
+        <div class="fg col-3" style="margin-bottom:18px;">
+          <label class="flabel req">Modalidade</label>
+          <div class="tipo-hon-grid" id="tipoHonGrid">
+            <button type="button" class="thbtn active" data-tipo="fixo">
+              <span class="thbtn-ico">📋</span>
+              Contrato Fixo
+            </button>
+            <button type="button" class="thbtn" data-tipo="exito">
+              <span class="thbtn-ico">🏆</span>
+              Por Êxito
+            </button>
+            <button type="button" class="thbtn" data-tipo="consulta">
+              <span class="thbtn-ico">💬</span>
+              Consulta
+            </button>
+            <button type="button" class="thbtn" data-tipo="hora">
+              <span class="thbtn-ico">⏱️</span>
+              Hora Trabalhada
+            </button>
+            <button type="button" class="thbtn" data-tipo="retainer">
+              <span class="thbtn-ico">🔄</span>
+              Retainer Mensal
+            </button>
+            <button type="button" class="thbtn" data-tipo="adhoc">
+              <span class="thbtn-ico">📌</span>
+              Avulso / Ad Hoc
+            </button>
+          </div>
+          <input type="hidden" id="tipoHonorario" value="fixo">
+        </div>
+
+        <!-- Campos dinâmicos por tipo -->
+        <div id="campoHora" style="display:none;">
+          <div class="fgrid">
+            <div class="fg">
+              <label class="flabel">Horas Trabalhadas</label>
+              <div class="finput-icon-wrap">
+                <span class="finput-pfx">h</span>
+                <input type="number" class="finput has-pfx" id="horasTrabalhadas" placeholder="0" min="0" step="0.5">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="flabel">Valor por Hora</label>
+              <div class="finput-icon-wrap">
+                <span class="finput-pfx">R$</span>
+                <input type="text" class="finput has-pfx" id="valorHora" placeholder="0,00" data-mask="currency">
+              </div>
+            </div>
+            <div class="fg" style="justify-content:flex-end;padding-top:22px;">
+              <div style="font-size:.78rem;color:var(--gray-400);">Valor total será calculado automaticamente</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-top:0;" id="campoDescricaoServico">
+          <label class="flabel req">Descrição dos Serviços</label>
+          <textarea class="finput ftextarea" id="descServicos" rows="3"
+            placeholder="Descreva os serviços prestados: audiências, petições, consultas, diligências…" required></textarea>
+          <div class="char-ctr"><span id="descCount">0</span> / 500 caracteres</div>
+          <span class="ferr">Descreva os serviços prestados</span>
+        </div>
+
+      </div>
+
+      <!-- ── Seção 3: Valores ── -->
+      <div class="fcard" id="sec3">
+        <div class="fcard-header">
+          <div class="fcard-icon green">💵</div>
+          <div>
+            <div class="fcard-title">Valores</div>
+            <div class="fcard-sub">Defina o valor bruto, desconto e total</div>
+          </div>
+        </div>
+        <div class="fgrid">
+
+          <div class="fg">
+            <label class="flabel req">Valor Bruto</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">R$</span>
+              <input type="text" class="finput has-pfx" id="valorBruto"
+                placeholder="0,00" data-mask="currency" required>
+            </div>
+            <span class="ferr">Informe o valor do honorário</span>
+          </div>
+
+          <div class="fg">
+            <label class="flabel">Desconto</label>
+            <div class="desconto-wrap">
+              <div class="finput-icon-wrap" style="flex:1;">
+                <span class="finput-pfx" id="descPfx">%</span>
+                <input type="text" class="finput has-pfx" id="desconto" placeholder="0">
+              </div>
+              <button type="button" class="desc-type-btn" id="descTypeBtn" data-mode="pct">%</button>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label class="flabel">Acréscimos / Juros</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">R$</span>
+              <input type="text" class="finput has-pfx" id="acrescimos" placeholder="0,00" data-mask="currency">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Resumo de valores -->
+        <div class="valor-resumo" id="valorResumo">
+          <div class="vr-row">
+            <span class="vr-label">Valor Bruto</span>
+            <span class="vr-value" id="vrBruto">R$ 0,00</span>
+          </div>
+          <div class="vr-row">
+            <span class="vr-label">Desconto</span>
+            <span class="vr-value" id="vrDesconto" style="color:var(--green);">— R$ 0,00</span>
+          </div>
+          <div class="vr-row">
+            <span class="vr-label">Acréscimos</span>
+            <span class="vr-value" id="vrAcrescimos" style="color:var(--amber);">+ R$ 0,00</span>
+          </div>
+          <div class="vr-divider"></div>
+          <div class="vr-total">
+            <span class="vr-label">Total Líquido</span>
+            <span class="vr-value" id="vrTotal">R$ 0,00</span>
+          </div>
+          <div class="vr-parcela-hint" id="vrParcelaHint" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ── Seção 4: Pagamento ── -->
+      <div class="fcard" id="sec4">
+        <div class="fcard-header">
+          <div class="fcard-icon amber">💳</div>
+          <div>
+            <div class="fcard-title">Forma de Pagamento</div>
+            <div class="fcard-sub">Como e quando o pagamento será realizado</div>
+          </div>
+        </div>
+        <div class="fgrid">
+
+          <div class="fg col-3">
+            <label class="flabel req">Meio de Pagamento</label>
+            <div class="pgto-grid" id="pgtoGrid">
+              <button type="button" class="pgbtn active" data-pgto="pix">⚡ PIX</button>
+              <button type="button" class="pgbtn" data-pgto="boleto">🧾 Boleto</button>
+              <button type="button" class="pgbtn" data-pgto="ted">🏦 TED / DOC</button>
+              <button type="button" class="pgbtn" data-pgto="cartao">💳 Cartão</button>
+              <button type="button" class="pgbtn" data-pgto="dinheiro">💵 Dinheiro</button>
+              <button type="button" class="pgbtn" data-pgto="cheque">📑 Cheque</button>
+            </div>
+            <input type="hidden" id="formaPagamento" value="pix">
+          </div>
+
+          <div class="fg">
+            <label class="flabel req">Data de Vencimento</label>
+            <input type="date" class="finput" id="dataVencimento" required>
+            <span class="ferr">Informe a data de vencimento</span>
+          </div>
+
+          <div class="fg col-2">
+            <label class="flabel">Parcelamento</label>
+            <div class="parcelas-wrap" id="parcelasWrap">
+              <button type="button" class="parbtn active" data-p="1">1x</button>
+              <button type="button" class="parbtn" data-p="2">2x</button>
+              <button type="button" class="parbtn" data-p="3">3x</button>
+              <button type="button" class="parbtn" data-p="4">4x</button>
+              <button type="button" class="parbtn" data-p="5">5x</button>
+              <button type="button" class="parbtn" data-p="6">6x</button>
+              <button type="button" class="parbtn" data-p="10">10x</button>
+              <button type="button" class="parbtn" data-p="12">12x</button>
+            </div>
+            <input type="hidden" id="numeroParcelas" value="1">
+          </div>
+
+          <!-- Alerta de parcelamento -->
+          <div class="fg col-3" id="parcelamentoInfo" style="display:none;">
+            <div style="padding:12px 16px;background:var(--amber-soft);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius-sm);font-size:.82rem;color:#92400E;display:flex;align-items:center;gap:8px;">
+              <span>📅</span>
+              <span id="parcelamentoTexto"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Seção 5: Status e Finalização ── -->
+      <div class="fcard" id="sec5">
+        <div class="fcard-header">
+          <div class="fcard-icon navy">✅</div>
+          <div>
+            <div class="fcard-title">Status e Finalização</div>
+            <div class="fcard-sub">Defina o status inicial e notificações</div>
+          </div>
+        </div>
+
+        <div class="fgrid">
+
+          <div class="fg col-3">
+            <label class="flabel req">Status Inicial</label>
+            <div class="status-hon-sel" id="statusHonSel">
+              <button type="button" class="shbtn active pendente" data-s="pendente">
+                <span class="sdot amber"></span> Pendente
+              </button>
+              <button type="button" class="shbtn parcial" data-s="parcial">
+                <span class="sdot blue"></span> Parcialmente Pago
+              </button>
+              <button type="button" class="shbtn pago" data-s="pago">
+                <span class="sdot green"></span> Pago
+              </button>
+              <button type="button" class="shbtn inadimpl" data-s="inadimpl">
+                <span class="sdot red"></span> Inadimplente
+              </button>
+            </div>
+            <input type="hidden" id="statusHonorario" value="pendente">
+          </div>
+
+          <!-- Data de recebimento (aparece quando Pago) -->
+          <div class="fg" id="campoDataPgto" style="display:none;">
+            <label class="flabel">Data de Recebimento</label>
+            <input type="date" class="finput" id="dataRecebimento">
+          </div>
+
+          <!-- Valor recebido (aparece quando Parcialmente Pago) -->
+          <div class="fg" id="campoValorParcial" style="display:none;">
+            <label class="flabel">Valor Já Recebido</label>
+            <div class="finput-icon-wrap">
+              <span class="finput-pfx">R$</span>
+              <input type="text" class="finput has-pfx" id="valorRecebido" placeholder="0,00" data-mask="currency">
+            </div>
+          </div>
+
+          <div class="fg col-3">
+            <label class="flabel">Notificação ao Cliente</label>
+            <label class="notif-toggle" id="notifToggle">
+              <input type="checkbox" id="enviarNotif">
+              <div class="nt-switch"></div>
+              <div>
+                <div class="nt-text">Enviar cobrança por e-mail ao cliente</div>
+                <div class="nt-sub">O cliente receberá um e-mail com os detalhes do honorário e link de pagamento</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="fg col-3">
+            <label class="flabel">Observações Internas</label>
+            <textarea class="finput ftextarea" id="observacoes" rows="3"
+              placeholder="Notas internas sobre este honorário: acordos especiais, histórico de negociação, instruções de cobrança…"></textarea>
+            <div class="char-ctr"><span id="obsCount">0</span> / 600 caracteres</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Preview Card ── -->
+      <div class="preview-card" id="previewCard">
+        <div class="pc-header">
+          <div class="pc-title">Resumo do Lançamento</div>
+          <div class="pc-badge" id="pcBadgeTipo">Contrato Fixo</div>
+        </div>
+        <div class="pc-grid">
+          <div class="pc-item">
+            <div class="pc-item-label">Cliente</div>
+            <div class="pc-item-value" id="pcCliente">—</div>
+          </div>
+          <div class="pc-item">
+            <div class="pc-item-label">Competência</div>
+            <div class="pc-item-value" id="pcCompetencia">Maio / 2026</div>
+          </div>
+          <div class="pc-item">
+            <div class="pc-item-label">Total Líquido</div>
+            <div class="pc-item-value gold" id="pcTotal">R$ 0,00</div>
+          </div>
+          <div class="pc-item">
+            <div class="pc-item-label">Vencimento</div>
+            <div class="pc-item-value" id="pcVencimento">—</div>
+          </div>
+          <div class="pc-item">
+            <div class="pc-item-label">Forma de Pagamento</div>
+            <div class="pc-item-value" id="pcPgto">PIX</div>
+          </div>
+          <div class="pc-item">
+            <div class="pc-item-label">Status</div>
+            <div class="pc-item-value" id="pcStatus">Pendente</div>
+          </div>
+        </div>
+        <div class="pc-footer" id="pcParcelas"></div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="form-footer">
+        <button type="button" class="btn-form-cancel" id="btnCancelarBottom">← Voltar</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button type="button" class="btn-form-draft" id="btnRascunho">Salvar Rascunho</button>
+          <button type="submit" class="btn-form-save" id="btnSalvarBottom">
+            <span class="bfs-icon">✓</span>
+            <span class="bfs-text">Lançar Honorário</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </main>
+</div>
+
+<script src="../js/storage.js"></script>
+<script src="../js/dashboard.js"></script>
+<script src="../js/lancar-honorario.js"></script>
+</body>
+</html>

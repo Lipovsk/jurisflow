@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda — JurisFlow</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     .agenda-layout { display:grid; grid-template-columns:320px 1fr; gap:24px; }
     .btn-primary {
@@ -432,7 +432,7 @@
     <div class="nav-section-label">Principal</div>
     <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
     <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
-    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
     <a class="nav-item active" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
     <div class="nav-section-label">Financeiro</div>
     <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
@@ -503,7 +503,7 @@
             <div class="qd-title">⚡ Próximos Prazos</div>
             <div class="qd-sub">Esta semana</div>
           </div>
-          <div class="deadline-item">
+          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Contestação — Maria Aparecida Souza · Prazo: Hoje','warning')">
             <div class="dl-strip" style="background:#DC2626;"></div>
             <div class="dl-info">
               <div class="dl-title">Contestação — Proc. 0012345-88</div>
@@ -511,7 +511,7 @@
             </div>
             <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
           </div>
-          <div class="deadline-item">
+          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Recurso de Apelação — Construtora Beta Ltda · Prazo: Hoje','warning')">
             <div class="dl-strip" style="background:#DC2626;"></div>
             <div class="dl-info">
               <div class="dl-title">Recurso de Apelação — TJ/SP</div>
@@ -519,7 +519,7 @@
             </div>
             <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
           </div>
-          <div class="deadline-item">
+          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Petição Inicial Trabalhista — João Paulo Ferreira · Prazo: 22/05','info')">
             <div class="dl-strip" style="background:#D97706;"></div>
             <div class="dl-info">
               <div class="dl-title">Petição Inicial Trabalhista</div>
@@ -527,7 +527,7 @@
             </div>
             <div class="dl-date" style="background:#FFFBEB;color:#D97706;">22/05</div>
           </div>
-          <div class="deadline-item">
+          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Manifestação — Tecno Solutions S/A · Prazo: 23/05','info')">
             <div class="dl-strip" style="background:#D97706;"></div>
             <div class="dl-info">
               <div class="dl-title">Manifestação — Proc. 0098761-22</div>
@@ -535,7 +535,7 @@
             </div>
             <div class="dl-date" style="background:#FFFBEB;color:#D97706;">23/05</div>
           </div>
-          <div class="deadline-item">
+          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Alegações Finais — Roberto Alves Costa · Prazo: 26/05','info')">
             <div class="dl-strip" style="background:#2563EB;"></div>
             <div class="dl-info">
               <div class="dl-title">Alegações Finais — Proc. 0056789</div>
@@ -555,9 +555,9 @@
             <div class="timeline-sub">20 a 26 de Maio de 2026</div>
           </div>
           <div class="tab-row">
-            <button class="tab-btn active" onclick="filterTl('')">Todos</button>
-            <button class="tab-btn" onclick="filterTl('Audiência')">Audiências</button>
-            <button class="tab-btn" onclick="filterTl('Prazo')">Prazos</button>
+            <button class="tab-btn active" onclick="filterTl('',this)">Todos</button>
+            <button class="tab-btn" onclick="filterTl('Audiência',this)">Audiências</button>
+            <button class="tab-btn" onclick="filterTl('Prazo',this)">Prazos</button>
           </div>
         </div>
         <div class="timeline-body" id="tlBody">
@@ -914,7 +914,7 @@
 
 </div><!-- /dw-panel -->
 
-<script src="dashboard.js"></script>
+<script src="../js/dashboard.js"></script>
 <script>
 (function(){
   // Mini calendar
@@ -1258,10 +1258,10 @@
       document.getElementById('ncData').classList.remove('error'));
   })();
 
-  // Timeline filter
-  window.filterTl = function(tipo){
+  // Timeline filter — recebe o botão diretamente (compatível com todos os browsers)
+  window.filterTl = function(tipo, btn){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    event.target.classList.add('active');
+    if (btn) btn.classList.add('active');
     document.querySelectorAll('#tlBody .tl-item').forEach(item=>{
       item.style.display = (!tipo || item.dataset.tipo===tipo) ? '' : 'none';
     });

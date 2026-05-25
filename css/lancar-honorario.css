@@ -1,0 +1,323 @@
+/* ============================================================
+   JurisFlow — Lançar Honorário CSS
+   ============================================================ */
+
+/* ── Tipo de Honorário Selector ──────────────────────────── */
+.tipo-hon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.thbtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+  text-align: center;
+  line-height: 1.3;
+}
+.thbtn:hover {
+  border-color: var(--navy);
+  background: var(--white);
+  color: var(--navy);
+}
+.thbtn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.thbtn-ico { font-size: 1.3rem; }
+
+/* ── Forma de Pagamento ──────────────────────────────────── */
+.pgto-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pgbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+}
+.pgbtn:hover { border-color: var(--gray-400); background: var(--white); }
+.pgbtn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+/* ── Parcelamento ────────────────────────────────────────── */
+.parcelas-wrap {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.parbtn {
+  width: 44px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.parbtn:hover { border-color: var(--gray-400); }
+.parbtn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--white);
+}
+
+/* ── Resumo Financeiro ───────────────────────────────────── */
+.valor-resumo {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vr-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .83rem;
+}
+.vr-label { color: var(--gray-600); }
+.vr-value { font-weight: 600; color: var(--gray-800); }
+.vr-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 2px 0;
+}
+.vr-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+}
+.vr-total .vr-label { font-weight: 600; color: var(--navy); }
+.vr-total .vr-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  color: var(--navy);
+}
+.vr-parcela-hint {
+  font-size: .73rem;
+  color: var(--gray-400);
+  text-align: right;
+  margin-top: -4px;
+}
+
+/* ── Preview Card ────────────────────────────────────────── */
+.preview-card {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  color: var(--white);
+  margin-bottom: 16px;
+  display: none;
+  animation: fcardIn .3s ease both;
+}
+.preview-card.visible { display: block; }
+.pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.pc-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.pc-badge {
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(201,168,76,.25);
+  color: var(--gold-light);
+  border: 1px solid rgba(201,168,76,.3);
+}
+.pc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+}
+.pc-item {}
+.pc-item-label {
+  font-size: .7rem;
+  color: rgba(255,255,255,.5);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.pc-item-value {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-top: 3px;
+}
+.pc-item-value.gold {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--gold-light);
+}
+.pc-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.12);
+  font-size: .75rem;
+  color: rgba(255,255,255,.45);
+}
+
+/* ── Status Inicial ──────────────────────────────────────── */
+.status-hon-sel {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.shbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  transition: all .2s ease;
+}
+.shbtn:hover { border-color: var(--gray-400); }
+.shbtn.active.pendente   { background: var(--amber-soft); border-color: var(--amber); color: #92400E; }
+.shbtn.active.pago       { background: var(--green-soft); border-color: var(--green); color: #065F46; }
+.shbtn.active.parcial    { background: var(--blue-soft); border-color: var(--blue-accent); color: var(--blue-accent); }
+.shbtn.active.inadimpl   { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+
+/* ── Notificação toggle ──────────────────────────────────── */
+.notif-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--blue-soft);
+  border: 1px solid rgba(37,99,235,.15);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.notif-toggle:hover { background: #E0EAFF; }
+.notif-toggle input { display: none; }
+.nt-switch {
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--gray-200);
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.nt-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform .2s;
+}
+.notif-toggle.on .nt-switch { background: var(--blue-accent); }
+.notif-toggle.on .nt-switch::after { transform: translateX(18px); }
+.nt-text { font-size: .83rem; font-weight: 500; color: var(--blue-accent); }
+.nt-sub  { font-size: .73rem; color: var(--gray-400); margin-top: 1px; }
+
+/* ── Desconto input row ──────────────────────────────────── */
+.desconto-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.desconto-wrap .finput { flex: 1; }
+.desc-type-btn {
+  padding: 10px 12px;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  min-width: 42px;
+  text-align: center;
+}
+.desc-type-btn:hover {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+
+/* ── Competência ─────────────────────────────────────────── */
+.competencia-row {
+  display: flex;
+  gap: 8px;
+}
+.competencia-row .finput { flex: 1; }
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fcardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .tipo-hon-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .tipo-hon-grid { grid-template-columns: repeat(2, 1fr); }
+  .pc-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .tipo-hon-grid { grid-template-columns: 1fr 1fr; }
+}

@@ -2,17 +2,16 @@
  * JurisFlow — Novo Processo
  */
 
-// ── Mock data for client search ───────────────────────────
-const CLIENTES_MOCK = [
-  { id: 1, nome: 'Ana Lima',         cpf: '123.456.789-00', iniciais: 'AL' },
-  { id: 2, nome: 'Roberto Sousa',    cpf: '987.654.321-00', iniciais: 'RS' },
-  { id: 3, nome: 'Maria Fernanda',   cpf: '456.123.789-00', iniciais: 'MF' },
-  { id: 4, nome: 'João Carlos',      cpf: '321.654.987-00', iniciais: 'JC' },
-  { id: 5, nome: 'Carla Pereira',    cpf: '741.852.963-00', iniciais: 'CP' },
-  { id: 6, nome: 'Marcos Almeida',   cpf: '159.753.456-00', iniciais: 'MA' },
-  { id: 7, nome: 'Fernanda Costa',   cpf: '258.369.147-00', iniciais: 'FC' },
-  { id: 8, nome: 'Paulo Rodrigues',  cpf: '369.258.741-00', iniciais: 'PR' },
-];
+function getIniciais(nome) {
+  if (!nome) return '?';
+  const p = nome.trim().split(' ').filter(Boolean);
+  return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
+}
+
+function getClientesMock() {
+  const list = window.JurisFlow?.db?.getClientes() || [];
+  return list.map(c => ({ id: c.id, nome: c.nome, cpf: c.cpfCnpj || '', iniciais: getIniciais(c.nome) }));
+}
 
 // ── Masks ─────────────────────────────────────────────────
 function maskCurrency(v) {
@@ -110,8 +109,8 @@ function initClienteAutocomplete() {
       dropdown.querySelectorAll('.ac-item').forEach(item => {
         item.addEventListener('mousedown', e => {
           e.preventDefault();
-          const id = parseInt(item.dataset.id);
-          const client = CLIENTES_MOCK.find(c => c.id === id);
+          const clientId = item.dataset.id;
+          const client = getClientesMock().find(c => c.id === clientId);
           if (client) selectCliente(client);
         });
       });
@@ -136,7 +135,7 @@ function initClienteAutocomplete() {
     hiddenId.value = '';
     selectedCliente = null;
     if (!q) { dropdown.classList.remove('active'); return; }
-    const results = CLIENTES_MOCK.filter(c =>
+    const results = getClientesMock().filter(c =>
       c.nome.toLowerCase().includes(q) || c.cpf.includes(q)
     );
     openDropdown(results, q);
@@ -410,10 +409,43 @@ function initFormSubmit() {
         if (t) t.textContent = 'Salvando…';
       }
     });
+    const g = id => document.getElementById(id);
+    const v = id => g(id)?.value?.trim() || '';
+
+    const clienteEl = g('clienteBusca');
+    const clienteId = g('clienteId')?.value || '';
+    const clienteNome = clienteEl?.value?.trim() || '';
+
+    const processo = {
+      numero:          v('numProcesso'),
+      clienteId,
+      clienteNome,
+      areaJuridica:    v('areaJuridica'),
+      tipoAcao:        v('tipoAcao'),
+      status:          v('statusProcesso') || 'andamento',
+      prioridade:      v('prioridade') || 'media',
+      tribunal:        v('tribunal'),
+      comarca:         v('comarca'),
+      vara:            v('vara'),
+      juiz:            v('juiz'),
+      dataAbertura:    v('dataAbertura'),
+      dataAudiencia:   v('dataAudiencia'),
+      prazoFinal:      v('prazoFinal'),
+      valorCausa:      v('valorCausa'),
+      honorarios:      v('honorarios'),
+      statusFinanceiro:v('statusFinanceiro'),
+      formaPagamento:  v('formaPagamento'),
+      observacoes:     v('observacoes'),
+      andamento:       0,
+      dataCadastro:    new Date().toISOString(),
+    };
+
+    window.JurisFlow?.db?.saveProcesso(processo);
+
     setTimeout(() => {
-      window.JurisFlow?.showToast('Processo salvo com sucesso!', 'success');
+      window.JurisFlow?.showToast('✅ Processo salvo com sucesso!', 'success');
       setTimeout(() => { window.location.href = 'processos.html'; }, 1400);
-    }, 1100);
+    }, 800);
   }
 
   form?.addEventListener('submit', doSave);

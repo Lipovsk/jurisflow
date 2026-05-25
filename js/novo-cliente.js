@@ -227,16 +227,49 @@ function initFormSubmit() {
       document.querySelector('.fg.has-error .finput')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+
+    const g = id => document.getElementById(id);
+    const v = id => g(id)?.value?.trim() || '';
+
+    const cliente = {
+      nome:        v('nomeCompleto'),
+      cpfCnpj:     v('cpfCnpj'),
+      rg:          v('rg'),
+      dataNasc:    v('dataNasc'),
+      sexo:        v('sexo'),
+      estadoCivil: v('estadoCivil'),
+      profissao:   v('profissao'),
+      telefone1:   v('telefone1'),
+      telefone2:   v('telefone2'),
+      whatsapp:    v('whatsapp'),
+      email:       v('email'),
+      cep:         v('cep'),
+      rua:         v('rua'),
+      numero:      v('numero'),
+      complemento: v('complemento'),
+      bairro:      v('bairro'),
+      cidade:      v('cidade'),
+      estado:      v('estado'),
+      areaJuridica:v('areaJuridica'),
+      tipoCliente: v('tipoCliente'),
+      status:      v('statusCliente') || 'ativo',
+      obsRapida:   v('obsRapida'),
+      observacoes: v('observacoes'),
+      dataCadastro: new Date().toISOString(),
+    };
+
+    window.JurisFlow?.db?.saveCliente(cliente);
+
     const allBtns = [
       document.getElementById('btnSalvar'),
       document.getElementById('btnSalvarBottom'),
     ];
-    allBtns.forEach(b => { if (b) { b.disabled = true; b.querySelector('.bfs-text') && (b.querySelector('.bfs-text').textContent = 'Salvando…'); } });
+    allBtns.forEach(b => { if (b) { b.disabled = true; const t = b.querySelector('.bfs-text'); if (t) t.textContent = 'Salvando…'; } });
 
     setTimeout(() => {
-      window.JurisFlow?.showToast('Cliente salvo com sucesso!', 'success');
+      window.JurisFlow?.showToast('✅ Cliente salvo com sucesso!', 'success');
       setTimeout(() => { window.location.href = 'clientes.html'; }, 1400);
-    }, 1100);
+    }, 800);
   }
 
   form?.addEventListener('submit', doSave);

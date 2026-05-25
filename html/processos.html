@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Processos — JurisFlow</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     .page-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .search-box { position:relative; flex:1; min-width:220px; }
@@ -107,6 +107,57 @@
       .summary-row { grid-template-columns:1fr 1fr; }
       td:nth-child(4),th:nth-child(4),td:nth-child(5),th:nth-child(5) { display:none; }
     }
+
+    /* Modal detalhes */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:200;
+      background:rgba(13,27,42,.45); backdrop-filter:blur(4px);
+      display:flex; align-items:center; justify-content:center;
+      padding:20px; opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal-box {
+      background:var(--white); border-radius:var(--radius-lg);
+      width:100%; max-width:580px; box-shadow:var(--shadow-lg);
+      transform:translateY(20px);
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .modal-overlay.open .modal-box { transform:translateY(0); }
+    .modal-head {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px 26px; border-bottom:1px solid var(--gray-100);
+    }
+    .modal-head h3 { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:var(--navy); }
+    .modal-close-btn {
+      width:32px; height:32px; border:none; background:var(--gray-100);
+      border-radius:6px; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; color:var(--gray-600); font-size:1rem; transition:background .15s;
+    }
+    .modal-close-btn:hover { background:var(--gray-200); }
+    .modal-body { padding:22px 26px; display:flex; flex-direction:column; gap:14px; }
+    .pm-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .pm-field { display:flex; flex-direction:column; gap:3px; }
+    .pm-label { font-size:.7rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.04em; }
+    .pm-value { font-size:.85rem; font-weight:500; color:var(--gray-800); }
+    .pm-num   { font-family:'DM Mono',monospace; font-size:.76rem; color:var(--gray-600); }
+    .modal-footer {
+      padding:14px 26px; border-top:1px solid var(--gray-100);
+      display:flex; justify-content:flex-end; gap:10px;
+    }
+    .btn-modal-sec {
+      padding:8px 18px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:500;
+      cursor:pointer; background:var(--white); border:1.5px solid var(--gray-200);
+      color:var(--gray-600); transition:all .15s;
+    }
+    .btn-modal-sec:hover { border-color:var(--gray-400); }
+    .btn-modal-pri {
+      padding:8px 18px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:600;
+      cursor:pointer; background:var(--navy); border:none; color:var(--white);
+      transition:background .15s;
+    }
+    .btn-modal-pri:hover { background:var(--navy-light); }
   </style>
 </head>
 <body>
@@ -122,7 +173,7 @@
     <div class="nav-section-label">Principal</div>
     <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
     <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
-    <a class="nav-item active" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item active" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
     <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
     <div class="nav-section-label">Financeiro</div>
     <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
@@ -236,24 +287,54 @@
   </main>
 </div>
 
-<script src="dashboard.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/dashboard.js"></script>
 <script>
 (function(){
-  const processos = [
-    { num:'0012345-88.2024.8.26.0100', assunto:'Contestação — Ação de Cobrança', cliente:'Maria Aparecida Souza', area:'civel', prazo:'20/05', prazoTipo:'red', audiencia:'Sim — 20/05 09h', andamento:65, status:'urgente' },
-    { num:'0045678-22.2023.5.02.0001', assunto:'Recurso de Apelação', cliente:'Construtora Beta Ltda', area:'empresarial', prazo:'20/05', prazoTipo:'red', audiencia:'—', andamento:80, status:'urgente' },
-    { num:'0078901-55.2024.5.15.0005', assunto:'Petição Inicial — Ação Trabalhista', cliente:'João Paulo Ferreira', area:'trabalhista', prazo:'22/05', prazoTipo:'amber', audiencia:'22/05 14h30', andamento:20, status:'andamento' },
-    { num:'0098761-22.2024.8.26.0300', assunto:'Manifestação — Fase de Liquidação', cliente:'Tecno Solutions S/A', area:'empresarial', prazo:'23/05', prazoTipo:'amber', audiencia:'—', andamento:50, status:'andamento' },
-    { num:'0056789-11.2023.8.26.0200', assunto:'Alegações Finais — Processo Criminal', cliente:'Roberto Alves Costa', area:'criminal', prazo:'26/05', prazoTipo:'green', audiencia:'—', andamento:90, status:'andamento' },
-    { num:'0034512-44.2024.8.26.0050', assunto:'Ação de Divórcio Litigioso', cliente:'Ana Lima Rodrigues', area:'civel', prazo:'01/06', prazoTipo:'green', audiencia:'01/06 10h', andamento:35, status:'andamento' },
-    { num:'0067890-33.2024.5.02.0010', assunto:'Reclamação Trabalhista — Horas Extras', cliente:'Holding Nobre Ltda', area:'trabalhista', prazo:'10/06', prazoTipo:'green', audiencia:'—', andamento:15, status:'suspenso' },
-    { num:'0011223-77.2024.8.26.0400', assunto:'Execução Fiscal — IPTU', cliente:'Carlos Eduardo Pinto', area:'civel', prazo:'15/06', prazoTipo:'green', audiencia:'—', andamento:45, status:'andamento' },
-    { num:'0099887-66.2023.8.26.0500', assunto:'Ação Revisional de Contrato', cliente:'Grupo Águia S/A', area:'empresarial', prazo:'20/06', prazoTipo:'green', audiencia:'20/06 09h', andamento:70, status:'andamento' },
-    { num:'0055443-11.2022.8.26.0100', assunto:'Indenização por Dano Moral', cliente:'Fernanda Melo Braga', area:'civel', prazo:'—', prazoTipo:'green', audiencia:'—', andamento:100, status:'concluido' },
-  ];
+  'use strict';
 
-  const areaMap = { civel:'area-civel', trabalhista:'area-trabalhista', empresarial:'area-empresarial', criminal:'area-criminal' };
-  const areaLabel = { civel:'Cível', trabalhista:'Trabalhista', empresarial:'Empresarial', criminal:'Criminal' };
+  function normArea(a) {
+    if (!a) return '';
+    const m = {'Cível':'civel','Trabalhista':'trabalhista','Empresarial':'empresarial','Criminal':'criminal','Família':'familia','Familia':'familia'};
+    if (m[a]) return m[a];
+    const s = a.toLowerCase();
+    if (s.includes('civ'))    return 'civel';
+    if (s.includes('trab'))   return 'trabalhista';
+    if (s.includes('empres')) return 'empresarial';
+    if (s.includes('crim'))   return 'criminal';
+    if (s.includes('fam'))    return 'familia';
+    return s;
+  }
+
+  function prazoInfo(iso) {
+    if (!iso) return { text:'—', type:'green' };
+    const d = new Date(iso);
+    const now = new Date(); now.setHours(0,0,0,0);
+    const diff = Math.round((d - now) / 86400000);
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const text = dd + '/' + mm;
+    if (diff < 0)   return { text, type:'red' };
+    if (diff <= 7)  return { text, type:'red' };
+    if (diff <= 30) return { text, type:'amber' };
+    return { text, type:'green' };
+  }
+
+  function fmtAudiencia(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '—';
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const hh = String(d.getHours()).padStart(2,'0');
+      const min = String(d.getMinutes()).padStart(2,'0');
+      return dd + '/' + mm + (hh !== '00' || min !== '00' ? ' ' + hh + 'h' + (min !== '00' ? min : '') : '');
+    } catch(e) { return '—'; }
+  }
+
+  const areaMap = { civel:'area-civel', trabalhista:'area-trabalhista', empresarial:'area-empresarial', criminal:'area-criminal', familia:'area-familia' };
+  const areaLabel = { civel:'Cível', trabalhista:'Trabalhista', empresarial:'Empresarial', criminal:'Criminal', familia:'Família' };
   const statusMap = {
     andamento:{ cls:'sp-andamento', label:'Em andamento' },
     urgente:  { cls:'sp-urgente',   label:'⚠ Urgente' },
@@ -261,47 +342,72 @@
     suspenso: { cls:'sp-suspenso',  label:'Suspenso' },
   };
 
-  function render(list){
-    document.getElementById('procCount').textContent = list.length + ' processos encontrados';
+  function updateCards(list) {
+    const now = new Date(); now.setHours(0,0,0,0);
+    const yr = now.getFullYear(), mo = now.getMonth();
+    const total     = list.filter(p => p.status !== 'concluido').length;
+    const urgentes  = list.filter(p => { if (!p.prazoFinal) return false; const d = Math.round((new Date(p.prazoFinal) - now) / 86400000); return d >= 0 && d <= 7; }).length;
+    const aguardando = list.filter(p => p.status === 'suspenso').length;
+    const concluidos = list.filter(p => p.status === 'concluido' && new Date(p.dataCadastro||'').getFullYear() === yr).length;
+    const audiencias = list.filter(p => { if (!p.dataAudiencia) return false; const d = new Date(p.dataAudiencia); return d.getFullYear() === yr && d.getMonth() === mo; }).length;
+    document.querySelectorAll('.sc-num[data-count]').forEach((el, i) => { el.textContent = [total, urgentes, aguardando, concluidos, audiencias][i] ?? el.textContent; });
+  }
+
+  let allProcessos = [];
+
+  function render(list) {
+    document.getElementById('procCount').textContent = list.length + ' processo' + (list.length !== 1 ? 's' : '') + ' encontrado' + (list.length !== 1 ? 's' : '');
     document.getElementById('procBody').innerHTML = list.map(p => {
-      const s = statusMap[p.status];
-      const prazoClass = { red:'prazo-red', amber:'prazo-amber', green:'prazo-green' }[p.prazoTipo];
+      const area = normArea(p.areaJuridica);
+      const prazo = prazoInfo(p.prazoFinal);
+      const pCls  = { red:'prazo-red', amber:'prazo-amber', green:'prazo-green' }[prazo.type];
+      const s = statusMap[p.status] || statusMap.andamento;
+      const and = p.andamento || 0;
       return `<tr>
         <td>
-          <div class="proc-num">${p.num}</div>
-          <div class="proc-title" style="margin-top:3px;">${p.assunto}</div>
+          <div class="proc-num">${p.numero || '—'}</div>
+          <div class="proc-title" style="margin-top:3px;">${p.tipoAcao || '—'}</div>
         </td>
-        <td><div class="proc-client" style="font-size:.83rem;color:var(--gray-800);">${p.cliente}</div></td>
-        <td><span class="area-badge ${areaMap[p.area]}">${areaLabel[p.area]}</span></td>
-        <td>${p.prazo !== '—' ? `<span class="prazo-chip ${prazoClass}">${p.prazo}</span>` : '<span style="color:var(--gray-400)">—</span>'}</td>
-        <td style="font-size:.78rem;color:var(--gray-600);">${p.audiencia}</td>
+        <td style="font-size:.83rem;color:var(--gray-800);">${p.clienteNome || '—'}</td>
+        <td><span class="area-badge ${areaMap[area]||'area-civel'}">${areaLabel[area]||p.areaJuridica}</span></td>
+        <td>${prazo.text !== '—' ? '<span class="prazo-chip ' + pCls + '">' + prazo.text + '</span>' : '<span style="color:var(--gray-400)">—</span>'}</td>
+        <td style="font-size:.78rem;color:var(--gray-600);">${fmtAudiencia(p.dataAudiencia)}</td>
         <td>
           <div class="progress-wrap">
-            <div class="progress-bar"><div class="progress-fill" style="width:${p.andamento}%"></div></div>
-            <span style="font-size:.72rem;font-weight:600;color:var(--gray-600);min-width:28px;">${p.andamento}%</span>
+            <div class="progress-bar"><div class="progress-fill" style="width:${and}%"></div></div>
+            <span style="font-size:.72rem;font-weight:600;color:var(--gray-600);min-width:28px;">${and}%</span>
           </div>
         </td>
         <td><span class="status-proc ${s.cls}">${s.label}</span></td>
-        <td><button class="btn-icon" title="Detalhes">👁</button></td>
+        <td><button class="btn-icon btn-det-proc" data-id="${p.id}" title="Ver Detalhes">👁</button></td>
       </tr>`;
-    }).join('');
+    }).join('') || '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--gray-400);">Nenhum processo encontrado</td></tr>';
   }
 
-  render(processos);
-
-  function applyFilters(){
-    const q = document.getElementById('searchInput').value.toLowerCase();
+  function applyFilters() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
     const st = document.getElementById('filterStatus').value;
     const ar = document.getElementById('filterArea').value;
-    render(processos.filter(p =>
-      (!q || p.num.includes(q) || p.assunto.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q)) &&
-      (!st || p.status === st) &&
-      (!ar || p.area === ar)
+    render(allProcessos.filter(p =>
+      (!q || (p.numero||'').toLowerCase().includes(q) || (p.tipoAcao||'').toLowerCase().includes(q) || (p.clienteNome||'').toLowerCase().includes(q)) &&
+      (!st || (p.status||'andamento') === st) &&
+      (!ar || normArea(p.areaJuridica) === ar)
     ));
   }
+
+  allProcessos = window.JurisFlow?.db?.getProcessos() || [];
+  render(allProcessos);
+  updateCards(allProcessos);
+
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterStatus').addEventListener('change', applyFilters);
   document.getElementById('filterArea').addEventListener('change', applyFilters);
+
+  document.getElementById('procBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-det-proc');
+    if (btn) window.location.href = 'detalhes-processo.html?id=' + btn.dataset.id;
+  });
+
 })();
 </script>
 </body>

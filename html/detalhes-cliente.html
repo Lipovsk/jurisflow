@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil do Cliente — JurisFlow</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--gray-400); }
+    .breadcrumb a { color:var(--gray-400); text-decoration:none; transition:color .15s; }
+    .breadcrumb a:hover { color:var(--navy); }
+    .breadcrumb .sep { color:var(--gray-300); }
+
+    .profile-header {
+      background:var(--white); border:1px solid var(--gray-100);
+      border-radius:var(--radius-lg); box-shadow:var(--shadow-sm);
+      padding:28px 32px; display:flex; align-items:center; gap:24px;
+      animation:fadeUp .3s ease both;
+    }
+    .profile-avatar-big {
+      width:72px; height:72px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.5rem; font-weight:700; color:var(--white); flex-shrink:0;
+    }
+    .profile-name { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; color:var(--navy); }
+    .profile-meta { display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap; }
+    .profile-cpf  { font-size:.78rem; color:var(--gray-400); font-family:'DM Mono',monospace; }
+    .profile-since { font-size:.78rem; color:var(--gray-400); }
+    .profile-actions { margin-left:auto; display:flex; gap:10px; flex-shrink:0; }
+    .btn-act {
+      height:38px; padding:0 18px; border-radius:var(--radius-sm);
+      font-family:'DM Sans',sans-serif; font-size:.83rem; font-weight:600;
+      cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .2s;
+    }
+    .btn-outline-act { background:var(--white); border:1.5px solid var(--gray-200); color:var(--gray-700); }
+    .btn-outline-act:hover { border-color:var(--navy); color:var(--navy); }
+    .btn-navy-act { background:var(--navy); border:none; color:var(--white); }
+    .btn-navy-act:hover { background:var(--navy-light); }
+
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .info-card {
+      background:var(--white); border:1px solid var(--gray-100);
+      border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden;
+      animation:fadeUp .35s ease both;
+    }
+    .ic-header {
+      padding:15px 22px; border-bottom:1px solid var(--gray-100);
+      font-family:'Playfair Display',serif; font-size:.92rem; font-weight:600; color:var(--navy);
+    }
+    .ic-body { padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .ic-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .ic-field { display:flex; flex-direction:column; gap:3px; }
+    .ic-label { font-size:.67rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; }
+    .ic-value { font-size:.84rem; color:var(--gray-800); font-weight:500; }
+    .ic-value.nd { color:var(--gray-300); font-style:italic; font-weight:400; }
+
+    .area-badge { display:inline-block; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
+    .area-civel     { background:#EEF3FF; color:#2563EB; }
+    .area-trabalhista{ background:#FFFBEB; color:#D97706; }
+    .area-empresarial{ background:#ECFDF5; color:#059669; }
+    .area-criminal  { background:#FEF2F2; color:#DC2626; }
+    .area-familia   { background:#F5F3FF; color:#7C3AED; }
+
+    .status-badge { display:inline-block; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+    .sb-ativo    { background:#ECFDF5; color:#059669; }
+    .sb-inativo  { background:#F1F5F9; color:#64748B; }
+    .sb-pendente { background:#FFFBEB; color:#D97706; }
+
+    .section-card {
+      background:var(--white); border:1px solid var(--gray-100);
+      border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden;
+      animation:fadeUp .4s ease both;
+    }
+    .sc-head {
+      padding:16px 22px; border-bottom:1px solid var(--gray-100);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .sc-title { font-family:'Playfair Display',serif; font-size:.92rem; font-weight:600; color:var(--navy); }
+    .sc-count { font-size:.75rem; color:var(--gray-400); background:var(--gray-50); padding:3px 10px; border-radius:20px; font-weight:600; }
+
+    .proc-row {
+      display:flex; align-items:center; gap:14px;
+      padding:13px 22px; border-bottom:1px solid var(--gray-100);
+      transition:background .15s; cursor:pointer;
+    }
+    .proc-row:last-child { border-bottom:none; }
+    .proc-row:hover { background:var(--gray-50); }
+    .proc-icon { width:36px; height:36px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1rem; background:var(--gray-50); flex-shrink:0; }
+    .proc-row-info { flex:1; min-width:0; }
+    .proc-row-num { font-family:'DM Mono',monospace; font-size:.72rem; color:var(--gray-400); }
+    .proc-row-title { font-size:.84rem; font-weight:600; color:var(--navy); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .proc-row-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+    .sp-andamento { background:#EEF3FF; color:#2563EB; }
+    .sp-urgente   { background:#FEF2F2; color:#DC2626; }
+    .sp-concluido { background:#ECFDF5; color:#059669; }
+    .sp-suspenso  { background:#F1F5F9; color:#64748B; }
+    .status-proc  { display:inline-flex; align-items:center; font-size:.72rem; font-weight:600; padding:3px 9px; border-radius:20px; }
+
+    .hon-row {
+      display:flex; align-items:center; gap:14px;
+      padding:13px 22px; border-bottom:1px solid var(--gray-100);
+      transition:background .15s;
+    }
+    .hon-row:last-child { border-bottom:none; }
+    .hon-row:hover { background:var(--gray-50); }
+    .hon-info { flex:1; min-width:0; }
+    .hon-tipo { font-size:.84rem; font-weight:600; color:var(--navy); }
+    .hon-sub  { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
+    .hon-val  { font-size:.88rem; font-weight:700; margin-right:8px; }
+    .hon-status { font-size:.68rem; font-weight:600; padding:3px 9px; border-radius:20px; }
+    .hs-pago     { background:#ECFDF5; color:#059669; }
+    .hs-pendente { background:#FFFBEB; color:#D97706; }
+    .hs-inadimpl { background:#FEF2F2; color:#DC2626; }
+
+    .empty-state { padding:32px; text-align:center; color:var(--gray-400); font-size:.84rem; }
+    .not-found { text-align:center; padding:60px 24px; }
+    .not-found h2 { font-family:'Playfair Display',serif; color:var(--navy); margin-bottom:12px; }
+    .not-found p  { color:var(--gray-400); margin-bottom:20px; }
+    .not-found a  { color:var(--blue-accent); font-weight:600; text-decoration:none; }
+
+    @media (max-width:900px) {
+      .info-grid { grid-template-columns:1fr; }
+      .profile-header { flex-wrap:wrap; }
+      .profile-actions { margin-left:0; width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">⚖</div>
+    <div><div class="brand-name">JurisFlow</div><div class="brand-tagline">Sistema Jurídico</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span class="nav-badge">5</span></a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title" id="pageTitle">Perfil do Cliente</div>
+      <div class="page-subtitle">Informações completas e histórico</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
+      <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+    </div>
+  </header>
+
+  <main class="page-content" id="mainContent">
+    <div class="empty-state">Carregando...</div>
+  </main>
+</div>
+
+<script src="../js/storage.js"></script>
+<script src="../js/dashboard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  const CORES = [
+    'linear-gradient(135deg,#2563EB,#1D4ED8)','linear-gradient(135deg,#10B981,#059669)',
+    'linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#8B5CF6,#7C3AED)',
+    'linear-gradient(135deg,#F97316,#EA580C)','linear-gradient(135deg,#0D9488,#0F766E)',
+    'linear-gradient(135deg,#6B7280,#4B5563)','linear-gradient(135deg,#EC4899,#DB2777)',
+  ];
+  function getCor(id) {
+    const n = (id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+    return CORES[n % CORES.length];
+  }
+  function getIniciais(nome) {
+    if (!nome) return '?';
+    const p = nome.trim().split(/\s+/).filter(Boolean);
+    if (p.length === 1) return p[0].slice(0,2).toUpperCase();
+    return (p[0][0] + p[p.length-1][0]).toUpperCase();
+  }
+  function normArea(a) {
+    if (!a) return '';
+    const m = {'Cível':'civel','Trabalhista':'trabalhista','Empresarial':'empresarial','Criminal':'criminal','Família':'familia','Familia':'familia'};
+    if (m[a]) return m[a];
+    const s = a.toLowerCase();
+    if (s.includes('civ'))    return 'civel';
+    if (s.includes('trab'))   return 'trabalhista';
+    if (s.includes('empres')) return 'empresarial';
+    if (s.includes('crim'))   return 'criminal';
+    if (s.includes('fam'))    return 'familia';
+    return s;
+  }
+  function fmtData(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    } catch(e) { return '—'; }
+  }
+  function fmtMoeda(v) {
+    if (!v && v !== 0) return '—';
+    const n = parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+    return 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function fmtCompetencia(c) {
+    if (!c) return '—';
+    const parts = c.split('-');
+    if (parts.length < 2) return c;
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return (meses[parseInt(parts[1],10)-1] || parts[1]) + '/' + parts[0];
+  }
+  function v(val) { return val || '—'; }
+
+  const areaMap   = {civel:'area-civel',trabalhista:'area-trabalhista',empresarial:'area-empresarial',criminal:'area-criminal',familia:'area-familia'};
+  const areaLabel = {civel:'Cível',trabalhista:'Trabalhista',empresarial:'Empresarial',criminal:'Criminal',familia:'Família'};
+  const statusProcMap = {
+    andamento:{ cls:'sp-andamento', label:'Em andamento' },
+    urgente:  { cls:'sp-urgente',   label:'⚠ Urgente' },
+    concluido:{ cls:'sp-concluido', label:'Concluído' },
+    suspenso: { cls:'sp-suspenso',  label:'Suspenso' },
+  };
+  const honStatusMap   = { pago:'hs-pago', pendente:'hs-pendente', inadimpl:'hs-inadimpl' };
+  const honStatusLabel = { pago:'Pago', pendente:'Pendente', inadimpl:'Inadimplente' };
+  const tipoHonLabel   = { fixo:'Honorário Fixo', retainer:'Retainer', exito:'Êxito', consulta:'Consulta', parcelado:'Parcelado' };
+
+  const db = window.JurisFlow?.db;
+  const main = document.getElementById('mainContent');
+
+  if (!db) {
+    main.innerHTML = '<div class="not-found"><h2>Erro</h2><p>Sistema de dados não carregado.</p><a href="clientes.html">← Voltar</a></div>';
+    return;
+  }
+
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) {
+    main.innerHTML = '<div class="not-found"><h2>Cliente não encontrado</h2><p>Nenhum ID informado.</p><a href="clientes.html">← Voltar para Clientes</a></div>';
+    return;
+  }
+
+  const cliente = db.getCliente(id);
+  if (!cliente) {
+    main.innerHTML = '<div class="not-found"><h2>Cliente não encontrado</h2><p>Este cliente pode ter sido removido.</p><a href="clientes.html">← Voltar para Clientes</a></div>';
+    return;
+  }
+
+  const processos  = db.getProcessosByCliente(id);
+  const honorarios = db.getHonorariosByCliente(id);
+
+  document.getElementById('pageTitle').textContent = cliente.nome;
+  document.title = cliente.nome + ' — JurisFlow';
+
+  const area     = normArea(cliente.areaJuridica);
+  const aClasse  = areaMap[area]  || 'area-civel';
+  const aLabel   = areaLabel[area] || cliente.areaJuridica || '—';
+  const stCls    = { ativo:'sb-ativo', inativo:'sb-inativo', pendente:'sb-pendente' }[cliente.status] || 'sb-ativo';
+  const stLabel  = { ativo:'Ativo', inativo:'Inativo', pendente:'Pendente' }[cliente.status] || 'Ativo';
+
+  function procRows() {
+    if (!processos.length) return '<div class="empty-state">Nenhum processo vinculado</div>';
+    return processos.map(p => {
+      const pa = normArea(p.areaJuridica);
+      const ps = statusProcMap[p.status] || statusProcMap.andamento;
+      return `<div class="proc-row" onclick="window.location.href='detalhes-processo.html?id=${p.id}'">
+        <div class="proc-icon">📁</div>
+        <div class="proc-row-info">
+          <div class="proc-row-num">${p.numero || '—'}</div>
+          <div class="proc-row-title">${p.tipoAcao || '—'}</div>
+        </div>
+        <div class="proc-row-right">
+          <span class="area-badge ${areaMap[pa]||'area-civel'}">${areaLabel[pa]||p.areaJuridica}</span>
+          <span class="status-proc ${ps.cls}">${ps.label}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function honRows() {
+    if (!honorarios.length) return '<div class="empty-state">Nenhum honorário registrado</div>';
+    return honorarios.map(h => {
+      const sCls   = honStatusMap[h.status]   || 'hs-pendente';
+      const sLabel = honStatusLabel[h.status] || h.status;
+      const tipo   = tipoHonLabel[h.tipoHonorario] || h.tipoHonorario || '—';
+      const cor    = h.status === 'pago' ? 'var(--green)' : h.status === 'inadimpl' ? 'var(--red)' : 'var(--amber)';
+      return `<div class="hon-row">
+        <div class="hon-info">
+          <div class="hon-tipo">${tipo}</div>
+          <div class="hon-sub">${fmtCompetencia(h.competencia)} · ${h.processoNumero || '—'}</div>
+        </div>
+        <span class="hon-val" style="color:${cor};">${fmtMoeda(h.valorTotal)}</span>
+        <span class="hon-status ${sCls}">${sLabel}</span>
+      </div>`;
+    }).join('');
+  }
+
+  main.innerHTML = `
+    <div class="breadcrumb">
+      <a href="clientes.html">👤 Clientes</a>
+      <span class="sep">›</span>
+      <span>${cliente.nome}</span>
+    </div>
+
+    <div class="profile-header">
+      <div class="profile-avatar-big" style="background:${getCor(cliente.id)};">${getIniciais(cliente.nome)}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="profile-name">${cliente.nome}</div>
+        <div class="profile-meta">
+          ${cliente.cpfCnpj ? `<span class="profile-cpf">${cliente.cpfCnpj}</span>` : ''}
+          <span class="area-badge ${aClasse}">${aLabel}</span>
+          <span class="status-badge ${stCls}">${stLabel}</span>
+          <span class="profile-since">Cliente desde ${fmtData(cliente.dataCadastro)}</span>
+        </div>
+      </div>
+      <div class="profile-actions">
+        <button class="btn-act btn-outline-act" onclick="window.location.href='clientes.html'">← Voltar</button>
+        <button class="btn-act btn-navy-act" onclick="window.JurisFlow?.showToast('Edição disponível em breve','info')">✏️ Editar</button>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-header">📞 Contato</div>
+        <div class="ic-body">
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">Telefone</div>
+              <div class="ic-value ${!cliente.telefone1?'nd':''}">${v(cliente.telefone1)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">Tel. 2</div>
+              <div class="ic-value ${!cliente.telefone2?'nd':''}">${v(cliente.telefone2)}</div>
+            </div>
+          </div>
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">WhatsApp</div>
+              <div class="ic-value ${!cliente.whatsapp?'nd':''}">${v(cliente.whatsapp)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">E-mail</div>
+              <div class="ic-value ${!cliente.email?'nd':''}">${v(cliente.email)}</div>
+            </div>
+          </div>
+          <div class="ic-field">
+            <div class="ic-label">Endereço</div>
+            <div class="ic-value ${!cliente.rua?'nd':''}">${
+              cliente.rua
+                ? (cliente.rua + (cliente.numero ? ', '+cliente.numero : '') + (cliente.complemento ? ' '+cliente.complemento : '') + (cliente.bairro ? ' — '+cliente.bairro : ''))
+                : '—'
+            }</div>
+          </div>
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">Cidade / UF</div>
+              <div class="ic-value ${!cliente.cidade?'nd':''}">${v(cliente.cidade)}${cliente.estado?' / '+cliente.estado:''}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">CEP</div>
+              <div class="ic-value ${!cliente.cep?'nd':''}">${v(cliente.cep)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="ic-header">⚖️ Dados Jurídicos</div>
+        <div class="ic-body">
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">Tipo</div>
+              <div class="ic-value">${v(cliente.tipoCliente)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">Área Jurídica</div>
+              <div class="ic-value">${v(cliente.areaJuridica)}</div>
+            </div>
+          </div>
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">CPF / CNPJ</div>
+              <div class="ic-value" style="font-family:'DM Mono',monospace;font-size:.8rem;">${v(cliente.cpfCnpj)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">RG</div>
+              <div class="ic-value ${!cliente.rg?'nd':''}">${v(cliente.rg)}</div>
+            </div>
+          </div>
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">Nascimento</div>
+              <div class="ic-value ${!cliente.dataNasc?'nd':''}">${v(cliente.dataNasc)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">Estado Civil</div>
+              <div class="ic-value ${!cliente.estadoCivil?'nd':''}">${v(cliente.estadoCivil)}</div>
+            </div>
+          </div>
+          <div class="ic-row">
+            <div class="ic-field">
+              <div class="ic-label">Profissão</div>
+              <div class="ic-value ${!cliente.profissao?'nd':''}">${v(cliente.profissao)}</div>
+            </div>
+            <div class="ic-field">
+              <div class="ic-label">Sexo</div>
+              <div class="ic-value ${!cliente.sexo?'nd':''}">${v(cliente.sexo)}</div>
+            </div>
+          </div>
+          ${cliente.obsRapida ? `<div class="ic-field"><div class="ic-label">Obs. Rápida</div><div class="ic-value">${cliente.obsRapida}</div></div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="sc-head">
+        <span class="sc-title">📁 Processos</span>
+        <span class="sc-count">${processos.length}</span>
+      </div>
+      ${procRows()}
+    </div>
+
+    <div class="section-card">
+      <div class="sc-head">
+        <span class="sc-title">💰 Honorários</span>
+        <span class="sc-count">${honorarios.length}</span>
+      </div>
+      ${honRows()}
+    </div>
+  `;
+})();
+</script>
+</body>
+</html>

@@ -230,32 +230,6 @@ function initTopbarDate() {
   });
 }
 
-// ─── Sidebar Collapse ─────────────────────────────────────────────────────────
-function initSidebarCollapse() {
-  const btn     = $('#sidebarCollapseBtn');
-  const sidebar = $('#sidebar');
-  const wrapper = $('.main-wrapper');
-  if (!btn || !sidebar) return;
-
-  const stored = localStorage.getItem('jf_sidebar_collapsed') === 'true';
-  if (stored) {
-    sidebar.classList.add('collapsed');
-    wrapper?.classList.add('sidebar-collapsed');
-  }
-
-  // Tooltips nos nav-items a partir do texto
-  $$('.nav-item[data-page]').forEach(item => {
-    const text = item.textContent.trim().replace(/\s+/g, ' ');
-    item.setAttribute('data-tooltip', text);
-  });
-
-  btn.addEventListener('click', () => {
-    const isNowCollapsed = sidebar.classList.toggle('collapsed');
-    wrapper?.classList.toggle('sidebar-collapsed', isNowCollapsed);
-    localStorage.setItem('jf_sidebar_collapsed', isNowCollapsed);
-  });
-}
-
 // ─── Global Search ────────────────────────────────────────────────────────────
 const SEARCH_DATA = [
   { type: 'cliente',  icon: '👤', name: 'Ana Lima',          sub: 'CPF 123.456.789-00 · Ativo' },
@@ -597,7 +571,6 @@ function initStatProgressBars() {
 // ─── Inicialização ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
-  initSidebarCollapse();
   initTopbar();
   initClock();
   initGreeting();
