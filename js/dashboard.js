@@ -627,4 +627,7 @@ const API = {
 };
 
 // Exporta para uso em outros módulos
-window.JurisFlow = { AppState, API, showToast, navigateTo };
+// Exporta sem sobrescrever o .db do storage.js
+window.JurisFlow = Object.assign(window.JurisFlow || {}, {
+  AppState, API, showToast, navigateTo
+});
