@@ -1,7 +1,7 @@
-package com.jurisflow.jurisflow.model;
+package com.jurisflow.jurisflow.controller;
 
 import com.jurisflow.jurisflow.model.Cliente;
-import com.jurisflow.repository.ClienteRepository;
+import com.jurisflow.jurisflow.repository.ClienteRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

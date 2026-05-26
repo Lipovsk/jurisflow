@@ -1,7 +1,7 @@
-package com.jurisflow.jurisflow.controller;
+package com.jurisflow.jurisflow.repository;
 
 import com.jurisflow.jurisflow.model.Cliente;
-import com.jurisflow.jurisflow.repository.ClienteRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 }

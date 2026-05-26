@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,21 @@
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     .page-toolbar {
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       flex-wrap: wrap;
     }
+
     .search-box {
-      position: relative; flex: 1; min-width: 220px;
+      position: relative;
+      flex: 1;
+      min-width: 220px;
     }
+
     .search-box input {
-      width: 100%; height: 40px;
+      width: 100%;
+      height: 40px;
       padding: 0 16px 0 40px;
       border: 1px solid var(--gray-200);
       border-radius: var(--radius-sm);
@@ -25,45 +33,95 @@
       outline: none;
       transition: border-color .2s;
     }
-    .search-box input:focus { border-color: var(--navy-light); }
-    .search-box .search-icon {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-      color: var(--gray-400); font-size: .85rem; pointer-events: none;
+
+    .search-box input:focus {
+      border-color: var(--navy-light);
     }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      font-size: .85rem;
+      pointer-events: none;
+    }
+
     .filter-select {
-      height: 40px; padding: 0 14px;
+      height: 40px;
+      padding: 0 14px;
       border: 1px solid var(--gray-200);
       border-radius: var(--radius-sm);
       font-family: 'DM Sans', sans-serif;
-      font-size: .83rem; color: var(--gray-800);
-      background: var(--white); cursor: pointer; outline: none;
+      font-size: .83rem;
+      color: var(--gray-800);
+      background: var(--white);
+      cursor: pointer;
+      outline: none;
     }
+
     .btn-primary {
-      height: 40px; padding: 0 20px;
+      height: 40px;
+      padding: 0 20px;
       background: var(--navy);
       color: var(--white);
-      border: none; border-radius: var(--radius-sm);
+      border: none;
+      border-radius: var(--radius-sm);
       font-family: 'DM Sans', sans-serif;
-      font-size: .85rem; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; gap: 8px;
-      transition: all .2s; white-space: nowrap;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+      white-space: nowrap;
     }
-    .btn-primary:hover { background: var(--navy-light); transform: translateY(-1px); }
+
+    .btn-primary:hover {
+      background: var(--navy-light);
+      transform: translateY(-1px);
+    }
+
     .clients-summary {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
       margin-bottom: 4px;
     }
+
     .summary-card {
       background: var(--white);
       border: 1px solid var(--gray-100);
       border-radius: var(--radius-md);
       padding: 18px 20px;
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
       box-shadow: var(--shadow-sm);
     }
-    .summary-label { font-size: .72rem; color: var(--gray-400); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-    .summary-value { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--navy); }
-    .summary-sub { font-size: .72rem; color: var(--gray-400); }
+
+    .summary-label {
+      font-size: .72rem;
+      color: var(--gray-400);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .summary-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .summary-sub {
+      font-size: .72rem;
+      color: var(--gray-400);
+    }
+
     .clients-table-card {
       background: var(--white);
       border: 1px solid var(--gray-100);
@@ -72,366 +130,569 @@
       overflow: hidden;
       animation: fadeUp .4s ease both;
     }
+
     .table-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 20px 24px;
       border-bottom: 1px solid var(--gray-100);
     }
-    .table-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; color: var(--navy); }
-    .table-count { font-size: .78rem; color: var(--gray-400); margin-top: 2px; }
-    table { width: 100%; border-collapse: collapse; }
+
+    .table-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .table-count {
+      font-size: .78rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
     thead th {
-      padding: 12px 20px; text-align: left;
-      font-size: .7rem; font-weight: 600;
-      color: var(--gray-400); text-transform: uppercase; letter-spacing: .08em;
+      padding: 12px 20px;
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .08em;
       background: var(--gray-50);
       border-bottom: 1px solid var(--gray-100);
     }
+
     tbody tr {
       border-bottom: 1px solid var(--gray-100);
       transition: background .15s;
     }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--gray-50); }
-    td { padding: 14px 20px; font-size: .84rem; color: var(--gray-800); vertical-align: middle; }
-    .client-cell { display: flex; align-items: center; gap: 12px; }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    td {
+      padding: 14px 20px;
+      font-size: .84rem;
+      color: var(--gray-800);
+      vertical-align: middle;
+    }
+
+    .client-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .tbl-avatar {
-      width: 38px; height: 38px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .78rem; font-weight: 700; color: var(--white);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--white);
       flex-shrink: 0;
     }
-    .tbl-name { font-weight: 600; color: var(--navy); }
-    .tbl-type { font-size: .73rem; color: var(--gray-400); margin-top: 2px; }
-    .area-badge {
-      display: inline-block; font-size: .68rem; font-weight: 600;
-      padding: 3px 9px; border-radius: 20px;
-      text-transform: uppercase; letter-spacing: .04em;
+
+    .tbl-name {
+      font-weight: 600;
+      color: var(--navy);
     }
-    .area-civel    { background: #EEF3FF; color: #2563EB; }
-    .area-trabalhista { background: #FFFBEB; color: #D97706; }
-    .area-empresarial { background: #ECFDF5; color: #059669; }
-    .area-criminal { background: #FEF2F2; color: #DC2626; }
-    .area-familia  { background: #F5F3FF; color: #7C3AED; }
+
+    .tbl-type {
+      font-size: .73rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .area-badge {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .area-civel {
+      background: #EEF3FF;
+      color: #2563EB;
+    }
+
+    .area-trabalhista {
+      background: #FFFBEB;
+      color: #D97706;
+    }
+
+    .area-empresarial {
+      background: #ECFDF5;
+      color: #059669;
+    }
+
+    .area-criminal {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+
+    .area-familia {
+      background: #F5F3FF;
+      color: #7C3AED;
+    }
+
     .btn-outline {
-      padding: 6px 14px; border: 1px solid var(--gray-200);
-      border-radius: var(--radius-sm); background: var(--white);
-      font-family: 'DM Sans', sans-serif; font-size: .78rem;
-      font-weight: 500; color: var(--navy); cursor: pointer;
+      padding: 6px 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--navy);
+      cursor: pointer;
       transition: all .15s;
     }
-    .btn-outline:hover { border-color: var(--navy); background: var(--gray-50); }
-    .status-dot {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .78rem; font-weight: 500;
+
+    .btn-outline:hover {
+      border-color: var(--navy);
+      background: var(--gray-50);
     }
-    .dot { width: 7px; height: 7px; border-radius: 50%; }
-    .dot-green  { background: var(--green); }
-    .dot-amber  { background: var(--amber); }
-    .dot-gray   { background: var(--gray-400); }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .dot-green {
+      background: var(--green);
+    }
+
+    .dot-amber {
+      background: var(--amber);
+    }
+
+    .dot-gray {
+      background: var(--gray-400);
+    }
 
     /* Modal */
     .modal-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(13,27,42,.45); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px; opacity: 0; pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(13, 27, 42, .45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity .2s;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
     .modal-box {
-      background: var(--white); border-radius: var(--radius-lg);
-      width: 100%; max-width: 540px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 540px;
       box-shadow: var(--shadow-lg);
       transform: translateY(20px);
-      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
     }
-    .modal-overlay.open .modal-box { transform: translateY(0); }
+
+    .modal-overlay.open .modal-box {
+      transform: translateY(0);
+    }
+
     .modal-head {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 22px 28px; border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--gray-100);
     }
-    .modal-head h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; color: var(--navy); }
+
+    .modal-head h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
     .modal-close-btn {
-      width: 32px; height: 32px; border: none; background: var(--gray-100);
-      border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      color: var(--gray-600); font-size: 1rem; transition: background .15s;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-600);
+      font-size: 1rem;
+      transition: background .15s;
     }
-    .modal-close-btn:hover { background: var(--gray-200); }
-    .modal-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    .field label { font-size: .78rem; font-weight: 500; color: var(--gray-600); }
-    .field input, .field select {
-      height: 42px; padding: 0 14px;
+
+    .modal-close-btn:hover {
+      background: var(--gray-200);
+    }
+
+    .modal-body {
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--gray-600);
+    }
+
+    .field input,
+    .field select {
+      height: 42px;
+      padding: 0 14px;
       border: 1px solid var(--gray-200);
       border-radius: var(--radius-sm);
-      font-family: 'DM Sans', sans-serif; font-size: .85rem; color: var(--gray-800);
-      background: var(--gray-50); outline: none; transition: border-color .2s;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color .2s;
     }
-    .field input:focus, .field select:focus { border-color: var(--navy-light); background: var(--white); }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--navy-light);
+      background: var(--white);
+    }
+
     .modal-footer {
-      padding: 16px 28px; border-top: 1px solid var(--gray-100);
-      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 16px 28px;
+      border-top: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
     }
+
     @media (max-width: 900px) {
-      .clients-summary { grid-template-columns: repeat(2, 1fr); }
-      .form-row { grid-template-columns: 1fr; }
+      .clients-summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
     }
+
     @media (max-width: 600px) {
-      .clients-summary { grid-template-columns: 1fr 1fr; }
-      td:nth-child(3), th:nth-child(3),
-      td:nth-child(4), th:nth-child(4) { display: none; }
+      .clients-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      td:nth-child(3),
+      th:nth-child(3),
+      td:nth-child(4),
+      th:nth-child(4) {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<div id="sidebarOverlay" class="sidebar-overlay"></div>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    <div class="brand-icon">⚖</div>
-    <div>
-      <div class="brand-name">JurisFlow</div>
-      <div class="brand-tagline">Sistema Jurídico</div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚖</div>
+      <div>
+        <div class="brand-name">JurisFlow</div>
+        <div class="brand-tagline">Sistema Jurídico</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+      <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
+      <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+      <div class="nav-section-label">Financeiro</div>
+      <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+      <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+      <div class="nav-section-label">Sistema</div>
+      <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span>
+        Configurações</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card" data-action="logout">
+        <div class="user-avatar">CM</div>
+        <div class="user-info">
+          <div class="user-name">Dr. Carlos Mendes</div>
+          <div class="user-role">OAB 12.345/SP</div>
+        </div>
+        <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      <div class="topbar-left">
+        <div class="page-title">Clientes</div>
+        <div class="page-subtitle">Gestão completa da carteira de clientes</div>
+      </div>
+      <div class="topbar-right">
+        <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
+        <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="topbar-avatar">CM</div>
+          <div class="topbar-user-name">Dr. Mendes</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Summary cards -->
+      <div class="clients-summary">
+        <div class="summary-card">
+          <div class="summary-label">Total de Clientes</div>
+          <div class="summary-value" data-count="48">0</div>
+          <div class="summary-sub">+4 este mês</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Clientes Ativos</div>
+          <div class="summary-value" data-count="41">0</div>
+          <div class="summary-sub">85% da carteira</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Aguardando Retorno</div>
+          <div class="summary-value" data-count="5">0</div>
+          <div class="summary-sub">Contato pendente</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Inativos</div>
+          <div class="summary-value" data-count="2">0</div>
+          <div class="summary-sub">Sem processo aberto</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="page-toolbar" style="margin-bottom:4px;">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Buscar cliente por nome, CPF ou e-mail..." />
+        </div>
+        <select class="filter-select" id="filterStatus">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativo</option>
+          <option value="aguardando">Aguardando</option>
+          <option value="inativo">Inativo</option>
+        </select>
+        <select class="filter-select" id="filterArea">
+          <option value="">Todas as áreas</option>
+          <option value="civel">Cível</option>
+          <option value="trabalhista">Trabalhista</option>
+          <option value="empresarial">Empresarial</option>
+          <option value="criminal">Criminal</option>
+          <option value="familia">Família</option>
+        </select>
+        <button class="btn-primary" id="btnNovoCliente">＋ Novo Cliente</button>
+      </div>
+
+      <!-- Table -->
+      <div class="clients-table-card">
+        <div class="table-header">
+          <div>
+            <div class="table-title">Carteira de Clientes</div>
+            <div class="table-count" id="tableCount">48 clientes encontrados</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Área Jurídica</th>
+                <th>Processos</th>
+                <th>Último Contato</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="clientsBody">
+              <!-- Preenchido pelo JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal Novo Cliente -->
+  <div class="modal-overlay" id="clienteModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Novo Cliente</h3>
+        <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field">
+            <label>Nome Completo *</label>
+            <input type="text" placeholder="Ex.: Maria da Silva" id="fNome" />
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select id="fTipo">
+              <option>Pessoa Física</option>
+              <option>Pessoa Jurídica</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>CPF / CNPJ</label>
+            <input type="text" placeholder="000.000.000-00" id="fDoc" />
+          </div>
+          <div class="field">
+            <label>Área Jurídica</label>
+            <select id="fArea">
+              <option>Cível</option>
+              <option>Trabalhista</option>
+              <option>Empresarial</option>
+              <option>Criminal</option>
+              <option>Família</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>E-mail</label>
+            <input type="email" placeholder="cliente@email.com" id="fEmail" />
+          </div>
+          <div class="field">
+            <label>Telefone</label>
+            <input type="text" placeholder="(11) 9 0000-0000" id="fTel" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Observações</label>
+          <input type="text" placeholder="Informações relevantes sobre o cliente..." id="fObs" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" id="btnCancelar">Cancelar</button>
+        <button class="btn-primary" id="btnSalvarCliente">Salvar Cliente</button>
+      </div>
     </div>
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Principal</div>
-    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
-    <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
-    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
-    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
-    <div class="nav-section-label">Financeiro</div>
-    <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
-    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
-    <div class="nav-section-label">Sistema</div>
-    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
-  </nav>
-  <div class="sidebar-bottom">
-    <div class="user-card" data-action="logout">
-      <div class="user-avatar">CM</div>
-      <div class="user-info">
-        <div class="user-name">Dr. Carlos Mendes</div>
-        <div class="user-role">OAB 12.345/SP</div>
-      </div>
-      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
-    </div>
-  </div>
-</aside>
 
-<div class="main-wrapper">
-  <header class="topbar">
-    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-    <div class="topbar-left">
-      <div class="page-title">Clientes</div>
-      <div class="page-subtitle">Gestão completa da carteira de clientes</div>
-    </div>
-    <div class="topbar-right">
-      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
-      <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
-      <div class="topbar-divider"></div>
-      <div class="topbar-user">
-        <div class="topbar-avatar">CM</div>
-        <div class="topbar-user-name">Dr. Mendes</div>
-      </div>
-    </div>
-  </header>
+  <script src="../js/storage.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      (function () {
+        const COLORS = [
+          'linear-gradient(135deg,#2563EB,#1D4ED8)', 'linear-gradient(135deg,#10B981,#059669)',
+          'linear-gradient(135deg,#F59E0B,#D97706)', 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+          'linear-gradient(135deg,#EC4899,#DB2777)', 'linear-gradient(135deg,#6B7280,#4B5563)',
+          'linear-gradient(135deg,#F97316,#EA580C)', 'linear-gradient(135deg,#0D9488,#0F766E)',
+          'linear-gradient(135deg,#6366F1,#4F46E5)', 'linear-gradient(135deg,#14B8A6,#0D9488)',
+        ];
+        function getCor(id) {
+          const n = String(id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+          return COLORS[n % COLORS.length];
+        }
+        function getIniciais(nome) {
+          if (!nome) return '?';
+          const p = nome.trim().split(' ').filter(Boolean);
+          return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
+        }
+        function relDate(iso) {
+          if (!iso) return '—';
+          const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+          if (d === 0) return 'Hoje'; if (d === 1) return 'Ontem';
+          if (d < 7) return `há ${d} dias`; if (d < 30) return `há ${Math.floor(d / 7)} sem.`;
+          if (d < 365) return `há ${Math.floor(d / 30)} mes.`; return `há ${Math.floor(d / 365)} ano(s)`;
+        }
+        function normArea(a) {
+          if (!a) return '';
+          const m = {
+            'Cível': 'civel', 'Trabalhista': 'trabalhista', 'Empresarial': 'empresarial',
+            'Criminal': 'criminal', 'Família': 'familia', 'Familia': 'familia',
+            'familia': 'familia', 'civel': 'civel', 'trabalhista': 'trabalhista',
+            'empresarial': 'empresarial', 'criminal': 'criminal'
+          };
+          return m[a] || a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+        const areaMap = { civel: 'area-civel', trabalhista: 'area-trabalhista', empresarial: 'area-empresarial', criminal: 'area-criminal', familia: 'area-familia' };
+        const areaLabel = { civel: 'Cível', trabalhista: 'Trabalhista', empresarial: 'Empresarial', criminal: 'Criminal', familia: 'Família' };
+        const statusMap = {
+          ativo: { label: 'Ativo', dot: 'dot-green' },
+          pendente: { label: 'Aguardando', dot: 'dot-amber' },
+          aguardando: { label: 'Aguardando', dot: 'dot-amber' },
+          inativo: { label: 'Inativo', dot: 'dot-gray' },
+        };
 
-  <main class="page-content">
-
-    <!-- Summary cards -->
-    <div class="clients-summary">
-      <div class="summary-card">
-        <div class="summary-label">Total de Clientes</div>
-        <div class="summary-value" data-count="48">0</div>
-        <div class="summary-sub">+4 este mês</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Clientes Ativos</div>
-        <div class="summary-value" data-count="41">0</div>
-        <div class="summary-sub">85% da carteira</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Aguardando Retorno</div>
-        <div class="summary-value" data-count="5">0</div>
-        <div class="summary-sub">Contato pendente</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Inativos</div>
-        <div class="summary-value" data-count="2">0</div>
-        <div class="summary-sub">Sem processo aberto</div>
-      </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="page-toolbar" style="margin-bottom:4px;">
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Buscar cliente por nome, CPF ou e-mail..." />
-      </div>
-      <select class="filter-select" id="filterStatus">
-        <option value="">Todos os status</option>
-        <option value="ativo">Ativo</option>
-        <option value="aguardando">Aguardando</option>
-        <option value="inativo">Inativo</option>
-      </select>
-      <select class="filter-select" id="filterArea">
-        <option value="">Todas as áreas</option>
-        <option value="civel">Cível</option>
-        <option value="trabalhista">Trabalhista</option>
-        <option value="empresarial">Empresarial</option>
-        <option value="criminal">Criminal</option>
-        <option value="familia">Família</option>
-      </select>
-      <button class="btn-primary" id="btnNovoCliente">＋ Novo Cliente</button>
-    </div>
-
-    <!-- Table -->
-    <div class="clients-table-card">
-      <div class="table-header">
-        <div>
-          <div class="table-title">Carteira de Clientes</div>
-          <div class="table-count" id="tableCount">48 clientes encontrados</div>
-        </div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Área Jurídica</th>
-              <th>Processos</th>
-              <th>Último Contato</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="clientsBody">
-            <!-- Preenchido pelo JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<!-- Modal Novo Cliente -->
-<div class="modal-overlay" id="clienteModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>Novo Cliente</h3>
-      <button class="modal-close-btn" id="modalCloseBtn">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="field">
-          <label>Nome Completo *</label>
-          <input type="text" placeholder="Ex.: Maria da Silva" id="fNome" />
-        </div>
-        <div class="field">
-          <label>Tipo</label>
-          <select id="fTipo">
-            <option>Pessoa Física</option>
-            <option>Pessoa Jurídica</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label>CPF / CNPJ</label>
-          <input type="text" placeholder="000.000.000-00" id="fDoc" />
-        </div>
-        <div class="field">
-          <label>Área Jurídica</label>
-          <select id="fArea">
-            <option>Cível</option>
-            <option>Trabalhista</option>
-            <option>Empresarial</option>
-            <option>Criminal</option>
-            <option>Família</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field">
-          <label>E-mail</label>
-          <input type="email" placeholder="cliente@email.com" id="fEmail" />
-        </div>
-        <div class="field">
-          <label>Telefone</label>
-          <input type="text" placeholder="(11) 9 0000-0000" id="fTel" />
-        </div>
-      </div>
-      <div class="field">
-        <label>Observações</label>
-        <input type="text" placeholder="Informações relevantes sobre o cliente..." id="fObs" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-outline" id="btnCancelar">Cancelar</button>
-      <button class="btn-primary" id="btnSalvarCliente">Salvar Cliente</button>
-    </div>
-  </div>
-</div>
-
-<script src="../js/storage.js"></script>
-<script src="../js/dashboard.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  (function () {
-    const COLORS = [
-      'linear-gradient(135deg,#2563EB,#1D4ED8)', 'linear-gradient(135deg,#10B981,#059669)',
-      'linear-gradient(135deg,#F59E0B,#D97706)', 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-      'linear-gradient(135deg,#EC4899,#DB2777)', 'linear-gradient(135deg,#6B7280,#4B5563)',
-      'linear-gradient(135deg,#F97316,#EA580C)', 'linear-gradient(135deg,#0D9488,#0F766E)',
-      'linear-gradient(135deg,#6366F1,#4F46E5)', 'linear-gradient(135deg,#14B8A6,#0D9488)',
-    ];
-    function getCor(id) {
-      const n = (id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-      return COLORS[n % COLORS.length];
-    }
-    function getIniciais(nome) {
-      if (!nome) return '?';
-      const p = nome.trim().split(' ').filter(Boolean);
-      return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
-    }
-    function relDate(iso) {
-      if (!iso) return '—';
-      const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
-      if (d === 0) return 'Hoje'; if (d === 1) return 'Ontem';
-      if (d < 7) return `há ${d} dias`; if (d < 30) return `há ${Math.floor(d / 7)} sem.`;
-      if (d < 365) return `há ${Math.floor(d / 30)} mes.`; return `há ${Math.floor(d / 365)} ano(s)`;
-    }
-    function normArea(a) {
-      if (!a) return '';
-      const m = {
-        'Cível': 'civel', 'Trabalhista': 'trabalhista', 'Empresarial': 'empresarial',
-        'Criminal': 'criminal', 'Família': 'familia', 'Familia': 'familia',
-        'familia': 'familia', 'civel': 'civel', 'trabalhista': 'trabalhista',
-        'empresarial': 'empresarial', 'criminal': 'criminal'
-      };
-      return m[a] || a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    }
-    const areaMap = { civel: 'area-civel', trabalhista: 'area-trabalhista', empresarial: 'area-empresarial', criminal: 'area-criminal', familia: 'area-familia' };
-    const areaLabel = { civel: 'Cível', trabalhista: 'Trabalhista', empresarial: 'Empresarial', criminal: 'Criminal', familia: 'Família' };
-    const statusMap = {
-      ativo:      { label: 'Ativo',       dot: 'dot-green' },
-      pendente:   { label: 'Aguardando',  dot: 'dot-amber' },
-      aguardando: { label: 'Aguardando',  dot: 'dot-amber' },
-      inativo:    { label: 'Inativo',     dot: 'dot-gray'  },
-    };
-
-    function renderTable(list) {
-      const procs = window.JurisFlow.db.getProcessos();
-      document.getElementById('tableCount').textContent = list.length + ' clientes encontrados';
-      document.getElementById('clientsBody').innerHTML = list.map(c => {
-        const an = normArea(c.areaJuridica);
-        const s = statusMap[c.status] || statusMap.ativo;
-        const np = procs.filter(p => p.clienteId === c.id).length;
-        return `<tr>
+        function renderTable(list) {
+          const procs = [];
+          document.getElementById('tableCount').textContent = list.length + ' clientes encontrados';
+          document.getElementById('clientsBody').innerHTML = list.map(c => {
+            const an = normArea(c.areaJuridica);
+            const s = statusMap[c.status] || statusMap.ativo;
+            const np = procs.filter(p => p.clienteId === c.id).length;
+            return `<tr>
           <td><div class="client-cell">
             <div class="tbl-avatar" style="background:${getCor(c.id)}">${getIniciais(c.nome)}</div>
             <div><div class="tbl-name">${c.nome}</div><div class="tbl-type">${c.tipoCliente || 'Pessoa Física'}</div></div>
@@ -442,78 +703,147 @@ document.addEventListener('DOMContentLoaded', function () {
           <td><div class="status-dot"><div class="dot ${s.dot}"></div><span style="font-size:.78rem;font-weight:600;">${s.label}</span></div></td>
           <td><button class="btn-outline btn-ver-perfil" data-id="${c.id}">Ver Perfil</button></td>
         </tr>`;
-      }).join('');
-    }
+          }).join('');
+        }
 
-    function updateCards() {
-      const all = window.JurisFlow.db.getClientes();
-      const cards = document.querySelectorAll('.summary-value[data-count]');
-      if (cards[0]) cards[0].textContent = all.length;
-      if (cards[1]) cards[1].textContent = all.filter(c => c.status === 'ativo').length;
-      if (cards[2]) cards[2].textContent = all.filter(c => c.status === 'pendente' || c.status === 'aguardando').length;
-      if (cards[3]) cards[3].textContent = all.filter(c => c.status === 'inativo').length;
-    }
+        function updateCards() {
+          const all = clientes;
+          const cards = document.querySelectorAll('.summary-value[data-count]');
+          if (cards[0]) cards[0].textContent = all.length;
+          if (cards[1]) cards[1].textContent = all.filter(c => c.status === 'ativo').length;
+          if (cards[2]) cards[2].textContent = all.filter(c => c.status === 'pendente' || c.status === 'aguardando').length;
+          if (cards[3]) cards[3].textContent = all.filter(c => c.status === 'inativo').length;
+        }
 
-    updateCards();
-    let clientes = window.JurisFlow.db.getClientes();
-    renderTable(clientes);
+        
+        let clientes = [];
 
-    function applyFilters() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      const st = document.getElementById('filterStatus').value;
-      const ar = document.getElementById('filterArea').value;
-      renderTable(clientes.filter(c => {
-        const an = normArea(c.areaJuridica);
-        return (!q || c.nome.toLowerCase().includes(q) || (c.cpfCnpj || '').includes(q) || (c.email || '').toLowerCase().includes(q)) &&
-          (!st || c.status === st || (st === 'aguardando' && c.status === 'pendente')) &&
-          (!ar || an === ar);
-      }));
-    }
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('filterStatus').addEventListener('change', applyFilters);
-    document.getElementById('filterArea').addEventListener('change', applyFilters);
+        async function carregarClientes() {
 
-    document.getElementById('clientsBody').addEventListener('click', function (e) {
-      const btn = e.target.closest('.btn-ver-perfil');
-      if (btn) window.location.href = 'detalhes-cliente.html?id=' + btn.dataset.id;
+          try {
+
+            const resposta = await fetch('http://localhost:8080/clientes');
+
+            clientes = await resposta.json();
+
+            renderTable(clientes);
+
+            updateCards();
+
+          } catch (erro) {
+
+            console.error('Erro ao carregar clientes:', erro);
+
+           if (window.JurisFlow?.showToast) {
+  window.JurisFlow.showToast(
+    'Erro ao carregar clientes do backend.',
+    'error'
+  );
+} else {
+  alert('Erro ao carregar clientes do backend.');
+}
+          }
+        }
+
+        carregarClientes();
+
+        function applyFilters() {
+          const q = document.getElementById('searchInput').value.toLowerCase();
+          const st = document.getElementById('filterStatus').value;
+          const ar = document.getElementById('filterArea').value;
+          renderTable(clientes.filter(c => {
+            const an = normArea(c.areaJuridica);
+            return (!q || c.nome.toLowerCase().includes(q) || (c.cpfCnpj || '').includes(q) || (c.email || '').toLowerCase().includes(q)) &&
+              (!st || c.status === st || (st === 'aguardando' && c.status === 'pendente')) &&
+              (!ar || an === ar);
+          }));
+        }
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('filterStatus').addEventListener('change', applyFilters);
+        document.getElementById('filterArea').addEventListener('change', applyFilters);
+
+        document.getElementById('clientsBody').addEventListener('click', function (e) {
+          const btn = e.target.closest('.btn-ver-perfil');
+          if (btn) window.location.href = 'detalhes-cliente.html?id=' + btn.dataset.id;
+        });
+
+        document.getElementById('btnNovoCliente').addEventListener('click', () => window.location.href = 'novo-cliente.html');
+
+        const modal = document.getElementById('clienteModal');
+        function closeModal() {
+          modal.classList.remove('open');
+          document.querySelector('#clienteModal .modal-head h3').textContent = 'Novo Cliente';
+          document.getElementById('btnSalvarCliente').textContent = 'Salvar Cliente';
+          ['fNome', 'fEmail', 'fTel', 'fObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        }
+        document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('btnCancelar').addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+
+        document.getElementById('btnSalvarCliente').addEventListener('click', () => {
+          const nome = document.getElementById('fNome').value.trim();
+          if (!nome) { alert('Informe o nome do cliente.'); return; }
+          const c = {
+            nome,
+            tipoCliente: document.getElementById('fTipo').value,
+            areaJuridica: document.getElementById('fArea').value,
+            email: document.getElementById('fEmail').value.trim(),
+            telefone1: document.getElementById('fTel').value.trim(),
+            obsRapida: document.getElementById('fObs').value.trim(),
+            status: 'ativo',
+            dataCadastro: new Date().toISOString(),
+          };
+          fetch('http://localhost:8080/clientes', {
+
+            method: 'POST',
+
+            headers: {
+              'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+
+              nome: c.nome,
+              cpfCnpj: '',
+              telefone: c.telefone1,
+              email: c.email,
+              endereco: '',
+              status: c.status
+
+            })
+
+          })
+            .then(res => res.json())
+            .then(() => {
+
+              carregarClientes();
+
+              updateCards();
+
+              window.JurisFlow?.showToast(
+                '✅ Cliente cadastrado!',
+                'success'
+              );
+
+              closeModal();
+
+            })
+            .catch(err => {
+
+              console.error(err);
+
+              window.JurisFlow.showToast(
+                'Erro ao salvar cliente.',
+                'error'
+              );
+
+            });
+      
+        });
+      })();
     });
-
-    document.getElementById('btnNovoCliente').addEventListener('click', () => window.location.href = 'novo-cliente.html');
-
-    const modal = document.getElementById('clienteModal');
-    function closeModal() {
-      modal.classList.remove('open');
-      document.querySelector('#clienteModal .modal-head h3').textContent = 'Novo Cliente';
-      document.getElementById('btnSalvarCliente').textContent = 'Salvar Cliente';
-      ['fNome', 'fEmail', 'fTel', 'fObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    }
-    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-    document.getElementById('btnCancelar').addEventListener('click', closeModal);
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
-
-    document.getElementById('btnSalvarCliente').addEventListener('click', () => {
-      const nome = document.getElementById('fNome').value.trim();
-      if (!nome) { alert('Informe o nome do cliente.'); return; }
-      const c = {
-        nome,
-        tipoCliente: document.getElementById('fTipo').value,
-        areaJuridica: document.getElementById('fArea').value,
-        email: document.getElementById('fEmail').value.trim(),
-        telefone1: document.getElementById('fTel').value.trim(),
-        obsRapida: document.getElementById('fObs').value.trim(),
-        status: 'ativo',
-        dataCadastro: new Date().toISOString(),
-      };
-      window.JurisFlow.db.saveCliente(c);
-      clientes = window.JurisFlow.db.getClientes();
-      renderTable(clientes);
-      updateCards();
-      window.JurisFlow.showToast('✅ Cliente "' + nome + '" cadastrado!', 'success');
-      closeModal();
-    });
-  })();
-});
-</script>
+  </script>
 </body>
+
 </html>

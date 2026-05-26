@@ -258,7 +258,82 @@ function initFormSubmit() {
       dataCadastro: new Date().toISOString(),
     };
 
-    window.JurisFlow?.db?.saveCliente(cliente);
+    fetch('http://localhost:8080/clientes', {
+
+  method: 'POST',
+
+  headers: {
+    'Content-Type': 'application/json'
+  },
+
+  body: JSON.stringify({
+
+    nome: cliente.nome,
+
+    cpfCnpj: cliente.cpfCnpj,
+
+    telefone: cliente.telefone1,
+
+    email: cliente.email,
+
+    endereco:
+      cliente.rua + ', ' +
+      cliente.numero + ' - ' +
+      cliente.cidade,
+
+    status: cliente.status
+
+  })
+
+})
+.then(res => {
+
+  if (!res.ok) {
+    throw new Error('Erro ao salvar cliente');
+  }
+
+  return res.json();
+
+})
+.then(data => {
+
+  console.log('Cliente salvo:', data);
+
+  const allBtns = [
+    document.getElementById('btnSalvar'),
+    document.getElementById('btnSalvarBottom'),
+  ];
+
+  allBtns.forEach(b => {
+    if (b) {
+      b.disabled = true;
+
+      const t = b.querySelector('.bfs-text');
+
+      if (t) t.textContent = 'Salvo!';
+    }
+  });
+
+  window.JurisFlow?.showToast(
+    '✅ Cliente salvo no backend com sucesso!',
+    'success'
+  );
+
+  setTimeout(() => {
+    window.location.href = 'clientes.html';
+  }, 1400);
+
+})
+.catch(err => {
+
+  console.error(err);
+
+  window.JurisFlow?.showToast(
+    'Erro ao conectar com o backend.',
+    'error'
+  );
+
+});
 
     const allBtns = [
       document.getElementById('btnSalvar'),
