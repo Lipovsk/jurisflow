@@ -15,6 +15,11 @@ public class Processo {
     private String status;
     private String descricao;
 
+    private Double valorHonorario;
+    private String formaPagamento;
+    private Integer parcelasHonorario;
+    private String vencimentoHonorario;
+
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
@@ -69,5 +74,37 @@ public class Processo {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public Double getValorHonorario() {
+        return valorHonorario;
+    }
+
+    public void setValorHonorario(Double valorHonorario) {
+        this.valorHonorario = valorHonorario;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento;
+    }
+
+    public void setFormaPagamento(String formaPagamento) {
+        this.formaPagamento = formaPagamento;
+    }
+
+    public Integer getParcelasHonorario() {
+        return parcelasHonorario;
+    }
+
+    public void setParcelasHonorario(Integer parcelasHonorario) {
+        this.parcelasHonorario = parcelasHonorario;
+    }
+
+    public String getVencimentoHonorario() {
+        return vencimentoHonorario;
+    }
+
+    public void setVencimentoHonorario(String vencimentoHonorario) {
+        this.vencimentoHonorario = vencimentoHonorario;
     }
 }

@@ -48,6 +48,11 @@ public class ProcessoController {
         processo.setDescricao(request.getDescricao());
         processo.setCliente(cliente);
 
+        processo.setValorHonorario(request.getValorHonorario());
+        processo.setFormaPagamento(request.getFormaPagamento());
+        processo.setParcelasHonorario(request.getParcelasHonorario());
+        processo.setVencimentoHonorario(request.getVencimentoHonorario());
+
         return processoRepository.save(processo);
     }
 
@@ -63,6 +68,11 @@ public class ProcessoController {
         private String status;
         private String descricao;
         private Long clienteId;
+
+        private Double valorHonorario;
+        private String formaPagamento;
+        private Integer parcelasHonorario;
+        private String vencimentoHonorario;
 
         public String getNumero() {
             return numero;
@@ -110,6 +120,38 @@ public class ProcessoController {
 
         public void setClienteId(Long clienteId) {
             this.clienteId = clienteId;
+        }
+
+        public Double getValorHonorario() {
+            return valorHonorario;
+        }
+
+        public void setValorHonorario(Double valorHonorario) {
+            this.valorHonorario = valorHonorario;
+        }
+
+        public String getFormaPagamento() {
+            return formaPagamento;
+        }
+
+        public void setFormaPagamento(String formaPagamento) {
+            this.formaPagamento = formaPagamento;
+        }
+
+        public Integer getParcelasHonorario() {
+            return parcelasHonorario;
+        }
+
+        public void setParcelasHonorario(Integer parcelasHonorario) {
+            this.parcelasHonorario = parcelasHonorario;
+        }
+
+        public String getVencimentoHonorario() {
+            return vencimentoHonorario;
+        }
+
+        public void setVencimentoHonorario(String vencimentoHonorario) {
+            this.vencimentoHonorario = vencimentoHonorario;
         }
     }
 }
