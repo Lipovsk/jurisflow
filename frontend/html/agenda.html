@@ -1037,14 +1037,33 @@
     });
 
     // ── Client Autocomplete ───────────────────────────────
-    const CLIENTS_NC = [
-      { id:1, nome:'Ana Lima',        cpf:'123.456.789-00', ini:'AL' },
-      { id:2, nome:'Roberto Sousa',   cpf:'987.654.321-00', ini:'RS' },
-      { id:3, nome:'Maria Fernanda',  cpf:'456.123.789-00', ini:'MF' },
-      { id:4, nome:'João Carlos',     cpf:'321.654.987-00', ini:'JC' },
-      { id:5, nome:'Carla Pereira',   cpf:'741.852.963-00', ini:'CP' },
-      { id:6, nome:'Marcos Almeida',  cpf:'159.753.456-00', ini:'MA' },
-    ];
+    
+let CLIENTS_NC = [];
+
+async function carregarClientesAgenda() {
+  try {
+    const response = await fetch("http://localhost:8080/clientes");
+
+    CLIENTS_NC = await response.json();
+
+    CLIENTS_NC = CLIENTS_NC.map(c => ({
+      id: c.id,
+      nome: c.nome,
+      cpf: c.cpfCnpj || '',
+      ini: c.nome
+        .split(' ')
+        .map(n => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    }));
+
+  } catch (error) {
+    console.error("Erro ao carregar clientes:", error);
+  }
+}
+
+carregarClientesAgenda();
     const clientInput = document.getElementById('ncClienteBusca');
     const acDrop      = document.getElementById('ncAcDrop');
 
@@ -1192,61 +1211,71 @@
       updateSummary();
     }
 
-    function doSave(createAnother) {
-      const titulo = document.getElementById('ncTitulo').value.trim();
-      const data   = document.getElementById('ncData').value;
-      const saveBtn = document.getElementById('dwSave');
+   async function doSave(createAnother) {
+  const titulo = document.getElementById('ncTitulo').value.trim();
+  const data = document.getElementById('ncData').value;
+  const saveBtn = document.getElementById('dwSave');
 
-      if (!titulo) {
-        document.getElementById('ncTitulo').classList.add('error');
-        document.getElementById('ncTitulo').focus();
-        window.JurisFlow?.showToast('Preencha o título do compromisso.', 'warning');
-        return;
-      }
-      if (!data) {
-        document.getElementById('ncData').classList.add('error');
-        document.getElementById('ncData').focus();
-        window.JurisFlow?.showToast('Selecione a data do compromisso.', 'warning');
-        return;
-      }
+  if (!titulo) {
+    document.getElementById('ncTitulo').classList.add('error');
+    document.getElementById('ncTitulo').focus();
+    window.JurisFlow?.showToast('Preencha o título do compromisso.', 'warning');
+    return;
+  }
 
-      saveBtn.disabled = true;
-      saveBtn.querySelector('.dwf-save-text').textContent = 'Salvando…';
+  if (!data) {
+    document.getElementById('ncData').classList.add('error');
+    document.getElementById('ncData').focus();
+    window.JurisFlow?.showToast('Selecione a data do compromisso.', 'warning');
+    return;
+  }
 
-      setTimeout(() => {
-        saveBtn.disabled = false;
-        saveBtn.querySelector('.dwf-save-text').textContent = '✓ Salvar Compromisso';
-        window.JurisFlow?.showToast(`"${titulo}" adicionado à agenda!`, 'success');
+  const compromisso = {
+    titulo: titulo,
+    tipo: document.querySelector('.nc-type.active')?.dataset.type || 'audiencia',
+    data: data,
+    hora: document.getElementById('ncDiaInteiro').checked ? '' : document.getElementById('ncHoraInicio').value,
+    descricao: document.getElementById('ncDescricao').value.trim(),
+    status: document.getElementById('ncStatus').value,
+    prioridade: document.getElementById('ncPrioridade').value,
+    clienteId: Number(document.getElementById('ncClienteId').value) || null,
+    processoId: null
+  };
 
-        // Add to timeline
-        const tipo = document.querySelector('.nc-type.active');
-        const tipoName = tipo ? tipo.querySelector('.nc-type-name').textContent : 'Compromisso';
-        const tipoIcon = tipo ? typeIcons[tipo.dataset.type] : '📋';
-        const cliente  = document.getElementById('ncClienteBusca').value.trim() || 'Sem cliente vinculado';
-        const hora = document.getElementById('ncDiaInteiro').checked ? 'Dia inteiro'
-          : (document.getElementById('ncHoraInicio').value || '');
-        const tlBody = document.getElementById('tlBody');
-        const tlItem = document.createElement('div');
-        tlItem.className = 'tl-item';
-        tlItem.dataset.tipo = tipoName;
-        tlItem.innerHTML = `
-          <div class="tl-left">
-            <div class="tl-dot blue">${tipoIcon}</div>
-            <div class="tl-line"></div>
-          </div>
-          <div class="tl-content">
-            <div class="tl-date-tag">Novo · ${hora || 'Sem horário'}</div>
-            <div class="tl-event-title">${titulo}</div>
-            <div class="tl-event-detail">${cliente}</div>
-            <div class="tl-tags"><span class="tl-tag blue">${tipoName}</span></div>
-          </div>
-        `;
-        if (tlBody) tlBody.insertBefore(tlItem, tlBody.firstChild);
+  try {
+    saveBtn.disabled = true;
+    saveBtn.querySelector('.dwf-save-text').textContent = 'Salvando…';
 
-        if (createAnother) { resetForm(); }
-        else               { closeDrawer(); }
-      }, 850);
+    const response = await fetch('http://localhost:8080/compromissos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(compromisso)
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao salvar compromisso');
     }
+
+    window.JurisFlow?.showToast(`"${titulo}" salvo no backend!`, 'success');
+
+    if (createAnother) {
+      resetForm();
+    } else {
+      closeDrawer();
+    }
+
+    location.reload();
+
+  } catch (error) {
+    console.error(error);
+    window.JurisFlow?.showToast('Erro ao salvar compromisso no backend.', 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.querySelector('.dwf-save-text').textContent = '✓ Salvar Compromisso';
+  }
+}
 
     document.getElementById('dwSave').addEventListener('click',      () => doSave(false));
     document.getElementById('dwSaveOther').addEventListener('click', () => doSave(true));
@@ -1266,6 +1295,63 @@
       item.style.display = (!tipo || item.dataset.tipo===tipo) ? '' : 'none';
     });
   };
+ async function carregarCompromissos() {
+  try {
+    const response = await fetch("http://localhost:8080/compromissos");
+    const compromissos = await response.json();
+
+    const tlBody = document.getElementById("tlBody");
+
+    if (!compromissos.length) {
+      tlBody.innerHTML = `
+        <div class="empty-state">
+          Nenhum compromisso cadastrado
+        </div>
+      `;
+      return;
+    }
+
+    tlBody.innerHTML = compromissos.map(c => `
+      <div class="tl-item" data-tipo="${c.tipo || ''}">
+        <div class="tl-left">
+          <div class="tl-dot ${c.tipo === 'prazo' ? 'red' : 'blue'}">
+            ${c.tipo === 'prazo' ? '⏰' : '📋'}
+          </div>
+          <div class="tl-line"></div>
+        </div>
+
+        <div class="tl-content">
+          <div class="tl-date-tag">
+            ${c.data || 'Sem data'} ${c.hora ? '· ' + c.hora : ''}
+          </div>
+
+          <div class="tl-event-title">
+            ${c.titulo || 'Compromisso sem título'}
+          </div>
+
+          <div class="tl-event-detail">
+            Cliente: ${c.cliente?.nome || '—'} ${c.descricao ? '· ' + c.descricao : ''}
+          </div>
+
+          <div class="tl-tags">
+            <span class="tl-tag ${c.tipo === 'prazo' ? 'red' : 'blue'}">
+              ${c.tipo || 'compromisso'}
+            </span>
+
+            <span class="tl-tag amber">
+              ${c.prioridade || 'media'}
+            </span>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.error("Erro ao carregar compromissos:", error);
+  }
+}
+
+carregarCompromissos();
 })();
 </script>
 </body>

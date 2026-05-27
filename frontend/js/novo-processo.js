@@ -8,9 +8,25 @@ function getIniciais(nome) {
   return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
 }
 
+let clientesBackend = [];
+
+async function carregarClientesBackend() {
+  try {
+    const resposta = await fetch('http://localhost:8080/clientes');
+    clientesBackend = await resposta.json();
+  } catch (erro) {
+    console.error('Erro ao buscar clientes:', erro);
+    clientesBackend = [];
+  }
+}
+
 function getClientesMock() {
-  const list = window.JurisFlow?.db?.getClientes() || [];
-  return list.map(c => ({ id: c.id, nome: c.nome, cpf: c.cpfCnpj || '', iniciais: getIniciais(c.nome) }));
+  return clientesBackend.map(c => ({
+    id: String(c.id),
+    nome: c.nome,
+    cpf: c.cpfCnpj || '',
+    iniciais: getIniciais(c.nome)
+  }));
 }
 
 // ── Masks ─────────────────────────────────────────────────
@@ -440,12 +456,89 @@ function initFormSubmit() {
       dataCadastro:    new Date().toISOString(),
     };
 
-    window.JurisFlow?.db?.saveProcesso(processo);
+  fetch('http://localhost:8080/processos', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    numero: processo.numero,
+    tipoAcao: processo.tipoAcao,
+    areaJuridica: processo.areaJuridica,
+    status: processo.status,
+    descricao: processo.observacoes,
+    clienteId: Number(processo.clienteId)
+  })
+})
+.then(res => {
+  if (!res.ok) {
+    throw new Error('Erro ao salvar processo');
+  }
 
-    setTimeout(() => {
-      window.JurisFlow?.showToast('✅ Processo salvo com sucesso!', 'success');
-      setTimeout(() => { window.location.href = 'processos.html'; }, 1400);
-    }, 800);
+  return res.json();
+})
+.then(async data => {
+  console.log('Processo salvo:', data);
+
+  const compromissosParaCriar = [];
+
+  if (processo.dataAudiencia) {
+    compromissosParaCriar.push({
+      titulo: `Audiência — ${processo.tipoAcao || processo.numero}`,
+      tipo: "audiencia",
+      data: processo.dataAudiencia,
+      hora: "09:00",
+      descricao: `Audiência do processo ${processo.numero}`,
+      status: "agendado",
+      prioridade: processo.prioridade || "media",
+      clienteId: Number(processo.clienteId),
+      processoId: data.id
+    });
+  }
+
+  if (processo.prazoFinal) {
+    compromissosParaCriar.push({
+      titulo: `Prazo — ${processo.tipoAcao || processo.numero}`,
+      tipo: "prazo",
+      data: processo.prazoFinal,
+      hora: "",
+      descricao: `Prazo final do processo ${processo.numero}`,
+      status: "agendado",
+      prioridade: "alta",
+      clienteId: Number(processo.clienteId),
+      processoId: data.id
+    });
+  }
+
+  for (const compromisso of compromissosParaCriar) {
+    await fetch("http://localhost:8080/compromissos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(compromisso)
+    });
+  }
+
+  window.JurisFlow?.showToast('✅ Processo salvo e agenda atualizada!', 'success');
+
+  setTimeout(() => {
+    window.location.href = `detalhes-cliente.html?id=${processo.clienteId}`;
+  }, 1000);
+})
+.catch(erro => {
+  console.error(erro);
+
+  allBtns.forEach(b => {
+    if (b) {
+      b.disabled = false;
+      const t = b.querySelector('.bfs-text');
+      if (t) t.textContent = 'Salvar Processo';
+    }
+  });
+
+  window.JurisFlow?.showToast('Erro ao salvar processo no backend.', 'error');
+});
   }
 
   form?.addEventListener('submit', doSave);
@@ -491,7 +584,9 @@ function initProgressTracker() {
 }
 
 // ── Init ──────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await carregarClientesBackend();
+  
   applyMasks();
   initRealtimeValidation();
   initClienteAutocomplete();

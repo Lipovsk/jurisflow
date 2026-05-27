@@ -488,8 +488,8 @@
       <div class="nav-section-label">Principal</div>
       <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
       <a class="nav-item active" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
-      <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos<span
-          class="nav-badge">5</span></a>
+      <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
+          
       <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
       <div class="nav-section-label">Financeiro</div>
       <a class="nav-item" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
@@ -650,7 +650,8 @@
 
           const cliente = await resposta.json();
 
-          const processos = [];
+          const processosResposta = await fetch(`http://localhost:8080/processos/cliente/${id}`);
+          const processos = await processosResposta.json();
           const honorarios = [];
 
           document.getElementById('pageTitle').textContent = cliente.nome;
@@ -673,7 +674,30 @@
           }[cliente.status] || cliente.status || 'Ativo';
 
           function procRows() {
-            return '<div class="empty-state">Nenhum processo vinculado</div>';
+            if (!processos.length) {
+              return '<div class="empty-state">Nenhum processo vinculado</div>';
+            }
+
+            return processos.map(p => `
+    <div class="proc-row">
+      <div class="proc-icon">📁</div>
+
+      <div class="proc-row-info">
+        <div class="proc-row-num">${p.numero || '—'}</div>
+        <div class="proc-row-title">${p.tipoAcao || '—'}</div>
+      </div>
+
+      <div class="proc-row-right">
+        <span class="area-badge area-trabalhista">
+          ${p.areaJuridica || '—'}
+        </span>
+
+        <span class="status-proc sp-andamento">
+          ${p.status || '—'}
+        </span>
+      </div>
+    </div>
+  `).join('');
           }
 
           function honRows() {

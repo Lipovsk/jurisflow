@@ -5,39 +5,68 @@
 function getIniciais(nome) {
   if (!nome) return '?';
   const p = nome.trim().split(' ').filter(Boolean);
-  return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
+  return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
+}
+
+let clientesBackend = [];
+let processosBackend = [];
+
+async function carregarClientesBackend() {
+  try {
+    const response = await fetch('http://localhost:8080/clientes');
+    clientesBackend = await response.json();
+  } catch (erro) {
+    console.error('Erro clientes:', erro);
+  }
+}
+
+async function carregarProcessosBackend() {
+  try {
+    const response = await fetch('http://localhost:8080/processos');
+    processosBackend = await response.json();
+  } catch (erro) {
+    console.error('Erro processos:', erro);
+  }
 }
 
 function getClientesMock() {
-  const list = window.JurisFlow?.db?.getClientes() || [];
-  return list.map(c => ({ id: c.id, nome: c.nome, cpf: c.cpfCnpj || '', iniciais: getIniciais(c.nome) }));
+  return clientesBackend.map(c => ({
+    id: String(c.id),
+    nome: c.nome,
+    cpf: c.cpfCnpj || '',
+    iniciais: getIniciais(c.nome)
+  }));
 }
 
 function getProcessosMock() {
-  const list = window.JurisFlow?.db?.getProcessos() || [];
-  return list.map(p => ({ id: p.id, num: p.numero, area: p.areaJuridica, clienteId: p.clienteId }));
+  return processosBackend.map(p => ({
+    id: String(p.id),
+    num: p.numero || '',
+    area: p.areaJuridica || '',
+    clienteId: p.cliente?.id || ''
+  }));
 }
 
 const TIPO_LABELS = {
-  fixo:     'Contrato Fixo',
-  exito:    'Por Êxito',
+  fixo: 'Contrato Fixo',
+  exito: 'Por Êxito',
   consulta: 'Consulta',
-  hora:     'Hora Trabalhada',
+  hora: 'Hora Trabalhada',
   retainer: 'Retainer Mensal',
-  adhoc:    'Avulso / Ad Hoc',
+  adhoc: 'Avulso / Ad Hoc',
 };
 
 const PGTO_LABELS = {
-  pix:      'PIX',
-  boleto:   'Boleto',
-  ted:      'TED / DOC',
-  cartao:   'Cartão',
+  pix: 'PIX',
+  boleto: 'Boleto',
+  ted: 'TED / DOC',
+  cartao: 'Cartão',
   dinheiro: 'Dinheiro',
-  cheque:   'Cheque',
+  cheque: 'Cheque',
 };
 
-const MESES = ['', 'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 // ── Currency mask ─────────────────────────────────────────
 function maskCurrency(v) {
@@ -114,9 +143,9 @@ function highlight(text, q) {
 
 // ── Cliente Autocomplete ──────────────────────────────────
 function initClienteAutocomplete() {
-  const input    = document.getElementById('clienteBusca');
+  const input = document.getElementById('clienteBusca');
   const dropdown = document.getElementById('acDropdown');
-  const hidden   = document.getElementById('clienteId');
+  const hidden = document.getElementById('clienteId');
   if (!input) return;
 
   function openDropdown(results, q) {
@@ -143,7 +172,7 @@ function initClienteAutocomplete() {
   }
 
   function selectCliente(c) {
-    input.value  = c.nome;
+    input.value = c.nome;
     hidden.value = c.id;
     dropdown.classList.remove('active');
     input.classList.remove('error');
@@ -178,9 +207,9 @@ function initClienteAutocomplete() {
 
 // ── Processo Autocomplete ─────────────────────────────────
 function initProcessoAutocomplete() {
-  const input    = document.getElementById('processoBusca');
+  const input = document.getElementById('processoBusca');
   const dropdown = document.getElementById('acDropdownProc');
-  const hidden   = document.getElementById('processoId');
+  const hidden = document.getElementById('processoId');
   if (!input) return;
 
   function openDropdown(results, q) {
@@ -227,7 +256,7 @@ function initProcessoAutocomplete() {
 
 // ── Tipo de Honorário ─────────────────────────────────────
 function initTipoHonorario() {
-  const btns   = document.querySelectorAll('.thbtn');
+  const btns = document.querySelectorAll('.thbtn');
   const hidden = document.getElementById('tipoHonorario');
   const campoHora = document.getElementById('campoHora');
 
@@ -263,7 +292,7 @@ function initTipoHonorario() {
 
 // ── Forma de Pagamento ────────────────────────────────────
 function initPagamento() {
-  const btns   = document.querySelectorAll('.pgbtn');
+  const btns = document.querySelectorAll('.pgbtn');
   const hidden = document.getElementById('formaPagamento');
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -277,10 +306,10 @@ function initPagamento() {
 
 // ── Parcelamento ──────────────────────────────────────────
 function initParcelamento() {
-  const btns   = document.querySelectorAll('.parbtn');
+  const btns = document.querySelectorAll('.parbtn');
   const hidden = document.getElementById('numeroParcelas');
-  const info   = document.getElementById('parcelamentoInfo');
-  const texto  = document.getElementById('parcelamentoTexto');
+  const info = document.getElementById('parcelamentoInfo');
+  const texto = document.getElementById('parcelamentoTexto');
 
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -311,9 +340,9 @@ function initParcelamento() {
 
 // ── Status Inicial ────────────────────────────────────────
 function initStatusHonorario() {
-  const btns        = document.querySelectorAll('.shbtn');
-  const hidden      = document.getElementById('statusHonorario');
-  const campoPgto   = document.getElementById('campoDataPgto');
+  const btns = document.querySelectorAll('.shbtn');
+  const hidden = document.getElementById('statusHonorario');
+  const campoPgto = document.getElementById('campoDataPgto');
   const campoParcial = document.getElementById('campoValorParcial');
 
   btns.forEach(btn => {
@@ -322,7 +351,7 @@ function initStatusHonorario() {
       btn.classList.add('active');
       const s = btn.dataset.s;
       if (hidden) hidden.value = s;
-      campoPgto.style.display   = s === 'pago' ? 'block' : 'none';
+      campoPgto.style.display = s === 'pago' ? 'block' : 'none';
       campoParcial.style.display = s === 'parcial' ? 'block' : 'none';
       updatePreview();
     });
@@ -342,15 +371,15 @@ function initNotifToggle() {
 
 // ── Desconto toggle (%/R$) ────────────────────────────────
 function initDescontoToggle() {
-  const btn  = document.getElementById('descTypeBtn');
-  const pfx  = document.getElementById('descPfx');
-  const inp  = document.getElementById('desconto');
+  const btn = document.getElementById('descTypeBtn');
+  const pfx = document.getElementById('descPfx');
+  const inp = document.getElementById('desconto');
   if (!btn) return;
   btn.addEventListener('click', () => {
     const isP = btn.dataset.mode === 'pct';
-    btn.dataset.mode  = isP ? 'val' : 'pct';
-    btn.textContent   = isP ? 'R$' : '%';
-    pfx.textContent   = isP ? 'R$' : '%';
+    btn.dataset.mode = isP ? 'val' : 'pct';
+    btn.textContent = isP ? 'R$' : '%';
+    pfx.textContent = isP ? 'R$' : '%';
     inp.value = '';
     recalcularValores();
   });
@@ -358,11 +387,11 @@ function initDescontoToggle() {
 
 // ── Recalcular Valores ────────────────────────────────────
 function recalcularValores() {
-  const bruto     = parseCurrency(document.getElementById('valorBruto')?.value);
+  const bruto = parseCurrency(document.getElementById('valorBruto')?.value);
   const acrescimo = parseCurrency(document.getElementById('acrescimos')?.value);
-  const descInp   = document.getElementById('desconto')?.value;
-  const descMode  = document.getElementById('descTypeBtn')?.dataset.mode || 'pct';
-  let descValor   = 0;
+  const descInp = document.getElementById('desconto')?.value;
+  const descMode = document.getElementById('descTypeBtn')?.dataset.mode || 'pct';
+  let descValor = 0;
 
   if (descInp) {
     const raw = parseFloat(descInp.replace(',', '.')) || 0;
@@ -371,10 +400,10 @@ function recalcularValores() {
 
   const total = Math.max(0, bruto - descValor + acrescimo);
 
-  document.getElementById('vrBruto').textContent     = `R$ ${formatBRL(bruto)}`;
-  document.getElementById('vrDesconto').textContent  = `— R$ ${formatBRL(descValor)}`;
+  document.getElementById('vrBruto').textContent = `R$ ${formatBRL(bruto)}`;
+  document.getElementById('vrDesconto').textContent = `— R$ ${formatBRL(descValor)}`;
   document.getElementById('vrAcrescimos').textContent = `+ R$ ${formatBRL(acrescimo)}`;
-  document.getElementById('vrTotal').textContent      = `R$ ${formatBRL(total)}`;
+  document.getElementById('vrTotal').textContent = `R$ ${formatBRL(total)}`;
 
   document.getElementById('pcTotal').textContent = `R$ ${formatBRL(total)}`;
 
@@ -395,14 +424,14 @@ function recalcularValores() {
 // ── Preview ───────────────────────────────────────────────
 function updatePreview() {
   const clienteNome = document.getElementById('clienteBusca')?.value;
-  const total       = document.getElementById('vrTotal')?.textContent || 'R$ 0,00';
-  const tipo        = document.getElementById('tipoHonorario')?.value || 'fixo';
-  const pgto        = document.getElementById('formaPagamento')?.value || 'pix';
-  const status      = document.getElementById('statusHonorario')?.value || 'pendente';
-  const mes         = document.getElementById('compMes')?.value;
-  const ano         = document.getElementById('compAno')?.value;
-  const venc        = document.getElementById('dataVencimento')?.value;
-  const parcelas    = parseInt(document.getElementById('numeroParcelas')?.value || 1);
+  const total = document.getElementById('vrTotal')?.textContent || 'R$ 0,00';
+  const tipo = document.getElementById('tipoHonorario')?.value || 'fixo';
+  const pgto = document.getElementById('formaPagamento')?.value || 'pix';
+  const status = document.getElementById('statusHonorario')?.value || 'pendente';
+  const mes = document.getElementById('compMes')?.value;
+  const ano = document.getElementById('compAno')?.value;
+  const venc = document.getElementById('dataVencimento')?.value;
+  const parcelas = parseInt(document.getElementById('numeroParcelas')?.value || 1);
 
   const pc = document.getElementById('previewCard');
 
@@ -412,12 +441,12 @@ function updatePreview() {
   }
   pc.classList.add('visible');
 
-  document.getElementById('pcCliente').textContent     = clienteNome;
-  document.getElementById('pcTotal').textContent       = total;
-  document.getElementById('pcBadgeTipo').textContent   = TIPO_LABELS[tipo] || tipo;
-  document.getElementById('pcPgto').textContent        = PGTO_LABELS[pgto] || pgto;
+  document.getElementById('pcCliente').textContent = clienteNome;
+  document.getElementById('pcTotal').textContent = total;
+  document.getElementById('pcBadgeTipo').textContent = TIPO_LABELS[tipo] || tipo;
+  document.getElementById('pcPgto').textContent = PGTO_LABELS[pgto] || pgto;
   document.getElementById('pcCompetencia').textContent = mes ? `${MESES[parseInt(mes)]} / ${ano}` : '—';
-  document.getElementById('pcVencimento').textContent  = venc
+  document.getElementById('pcVencimento').textContent = venc
     ? new Date(venc + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
 
   const statusLabels = { pendente: 'Pendente', parcial: 'Parc. Pago', pago: 'Pago', inadimpl: 'Inadimplente' };
@@ -436,7 +465,7 @@ function updatePreview() {
 function initCharCounters() {
   const pairs = [
     { ta: 'descServicos', ct: 'descCount', max: 500 },
-    { ta: 'observacoes',  ct: 'obsCount',  max: 600 },
+    { ta: 'observacoes', ct: 'obsCount', max: 600 },
   ];
   pairs.forEach(({ ta, ct, max }) => {
     const el = document.getElementById(ta);
@@ -465,7 +494,7 @@ function initDataVencimento() {
 
 // ── Progress tracker ──────────────────────────────────────
 function initProgressTracker() {
-  const ids   = ['sec1', 'sec2', 'sec3', 'sec4', 'sec5'];
+  const ids = ['sec1', 'sec2', 'sec3', 'sec4', 'sec5'];
   const steps = document.querySelectorAll('.fstep');
   const lines = document.querySelectorAll('.fstep-line');
 
@@ -489,7 +518,7 @@ function initProgressTracker() {
 
 // ── Submit ────────────────────────────────────────────────
 function initFormSubmit() {
-  const form   = document.getElementById('formHonorario');
+  const form = document.getElementById('formHonorario');
   const btnTop = document.getElementById('btnSalvar');
 
   function doSave(e) {
@@ -518,29 +547,86 @@ function initFormSubmit() {
     const v = id => g(id)?.value?.trim() || '';
 
     const totalEl = g('vrTotal');
-    const totalStr = totalEl ? totalEl.textContent.replace('R$ ','').replace(/\./g,'').replace(',','.') : '0';
+    const totalStr = totalEl ? totalEl.textContent.replace('R$ ', '').replace(/\./g, '').replace(',', '.') : '0';
 
     const honorario = {
-      clienteId:       g('clienteId')?.value || '',
-      clienteNome:     v('clienteBusca'),
-      processoId:      g('processoId')?.value || '',
-      processoNumero:  v('processoBusca'),
-      tipoHonorario:   v('tipoHonorario') || 'fixo',
-      competencia:     (v('compAno') && v('compMes')) ? v('compAno') + '-' + v('compMes').padStart(2,'0') : '',
-      valorBruto:      v('valorBruto').replace(/\./g,'').replace(',','.'),
-      desconto:        v('desconto'),
-      acrescimos:      v('acrescimos').replace(/\./g,'').replace(',','.'),
-      valorTotal:      totalStr,
-      meioPagamento:   v('formaPagamento') || 'pix',
-      parcelas:        parseInt(v('numeroParcelas') || '1'),
-      vencimento:      v('dataVencimento'),
-      status:          v('statusHonorario') || 'pendente',
-      descServicos:    v('descServicos'),
-      observacoes:     v('observacoes'),
-      dataCadastro:    new Date().toISOString(),
+      clienteId: g('clienteId')?.value || '',
+      clienteNome: v('clienteBusca'),
+      processoId: g('processoId')?.value || '',
+      processoNumero: v('processoBusca'),
+      tipoHonorario: v('tipoHonorario') || 'fixo',
+      competencia: (v('compAno') && v('compMes')) ? v('compAno') + '-' + v('compMes').padStart(2, '0') : '',
+      valorBruto: v('valorBruto').replace(/\./g, '').replace(',', '.'),
+      desconto: v('desconto'),
+      acrescimos: v('acrescimos').replace(/\./g, '').replace(',', '.'),
+      valorTotal: totalStr,
+      meioPagamento: v('formaPagamento') || 'pix',
+      parcelas: parseInt(v('numeroParcelas') || '1'),
+      vencimento: v('dataVencimento'),
+      status: v('statusHonorario') || 'pendente',
+      descServicos: v('descServicos'),
+      observacoes: v('observacoes'),
+      dataCadastro: new Date().toISOString(),
     };
 
-    window.JurisFlow?.db?.saveHonorario(honorario);
+    fetch('http://localhost:8080/honorarios', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tipoHonorario: honorario.tipoHonorario,
+        valorTotal: parseFloat(honorario.valorTotal),
+        competencia: honorario.competencia,
+        status: honorario.status,
+        formaPagamento: honorario.meioPagamento,
+        descricao: honorario.descServicos,
+        clienteId: Number(honorario.clienteId),
+        processoId: honorario.processoId
+          ? Number(honorario.processoId)
+          : null
+      })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Erro ao salvar honorário');
+        }
+
+        return res.json();
+      })
+      .then(data => {
+
+        console.log('Honorário salvo:', data);
+
+        window.JurisFlow?.showToast(
+          '✅ Honorário lançado com sucesso!',
+          'success'
+        );
+
+        if (notif) {
+          setTimeout(() => {
+            window.JurisFlow?.showToast(
+              '📧 Cobrança enviada ao cliente.',
+              'info'
+            );
+          }, 700);
+        }
+
+        setTimeout(() => {
+          window.location.href = 'financeiro.html';
+        }, 1500);
+
+      })
+      .catch(erro => {
+
+        console.error(erro);
+
+        window.JurisFlow?.showToast(
+          'Erro ao salvar honorário.',
+          'error'
+        );
+
+      });
 
     setTimeout(() => {
       window.JurisFlow?.showToast('✅ Honorário lançado com sucesso!', 'success');
@@ -570,7 +656,10 @@ function initCancel() {
 }
 
 // ── Init ──────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+  await carregarClientesBackend();
+  await carregarProcessosBackend();
   applyMasks();
   initRealtimeValidation();
   initClienteAutocomplete();

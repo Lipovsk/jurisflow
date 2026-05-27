@@ -395,9 +395,29 @@
     ));
   }
 
-  allProcessos = window.JurisFlow?.db?.getProcessos() || [];
-  render(allProcessos);
-  updateCards(allProcessos);
+fetch('http://localhost:8080/processos')
+  .then(res => res.json())
+  .then(data => {
+
+    allProcessos = data.map(p => ({
+      ...p,
+      clienteNome: p.cliente?.nome || 'Cliente não encontrado'
+    }));
+
+    render(allProcessos);
+    updateCards(allProcessos);
+  })
+  .catch(err => {
+    console.error('Erro ao carregar processos:', err);
+
+    document.getElementById('procBody').innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:32px;color:red;">
+          Erro ao carregar processos
+        </td>
+      </tr>
+    `;
+  });
 
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterStatus').addEventListener('change', applyFilters);
