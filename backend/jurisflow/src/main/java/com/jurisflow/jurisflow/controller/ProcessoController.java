@@ -38,22 +38,66 @@ public class ProcessoController {
 
     @PostMapping
     public Processo criar(@RequestBody ProcessoRequest request) {
-        Cliente cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
+        Cliente cliente = null;
+
+        if (request.getClienteId() != null) {
+            cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
+        }
 
         Processo processo = new Processo();
+
         processo.setNumero(request.getNumero());
         processo.setTipoAcao(request.getTipoAcao());
         processo.setAreaJuridica(request.getAreaJuridica());
         processo.setStatus(request.getStatus());
         processo.setDescricao(request.getDescricao());
-        processo.setCliente(cliente);
+
+        processo.setDataAbertura(request.getDataAbertura());
+        processo.setDataAudiencia(request.getDataAudiencia());
+        processo.setPrazoFinal(request.getPrazoFinal());
 
         processo.setValorHonorario(request.getValorHonorario());
         processo.setFormaPagamento(request.getFormaPagamento());
         processo.setParcelasHonorario(request.getParcelasHonorario());
         processo.setVencimentoHonorario(request.getVencimentoHonorario());
 
+        processo.setCliente(cliente);
+
         return processoRepository.save(processo);
+    }
+
+    @PutMapping("/{id}")
+    public Processo atualizar(@PathVariable Long id, @RequestBody ProcessoRequest request) {
+        return processoRepository.findById(id).map(processo -> {
+
+            Cliente cliente = null;
+
+            if (request.getClienteId() != null) {
+                cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
+            }
+
+            processo.setNumero(request.getNumero());
+            processo.setTipoAcao(request.getTipoAcao());
+            processo.setAreaJuridica(request.getAreaJuridica());
+            processo.setStatus(request.getStatus());
+            processo.setDescricao(request.getDescricao());
+
+            processo.setDataAbertura(request.getDataAbertura());
+            processo.setDataAudiencia(request.getDataAudiencia());
+            processo.setPrazoFinal(request.getPrazoFinal());
+
+            processo.setValorHonorario(request.getValorHonorario());
+            processo.setFormaPagamento(request.getFormaPagamento());
+            processo.setParcelasHonorario(request.getParcelasHonorario());
+            processo.setVencimentoHonorario(request.getVencimentoHonorario());
+
+            if (cliente != null) {
+                processo.setCliente(cliente);
+            }
+
+            return processoRepository.save(processo);
+
+        }).orElse(null);
     }
 
     @DeleteMapping("/{id}")
@@ -67,6 +111,11 @@ public class ProcessoController {
         private String areaJuridica;
         private String status;
         private String descricao;
+
+        private String dataAbertura;
+        private String dataAudiencia;
+        private String prazoFinal;
+
         private Long clienteId;
 
         private Double valorHonorario;
@@ -112,6 +161,30 @@ public class ProcessoController {
 
         public void setDescricao(String descricao) {
             this.descricao = descricao;
+        }
+
+        public String getDataAbertura() {
+            return dataAbertura;
+        }
+
+        public void setDataAbertura(String dataAbertura) {
+            this.dataAbertura = dataAbertura;
+        }
+
+        public String getDataAudiencia() {
+            return dataAudiencia;
+        }
+
+        public void setDataAudiencia(String dataAudiencia) {
+            this.dataAudiencia = dataAudiencia;
+        }
+
+        public String getPrazoFinal() {
+            return prazoFinal;
+        }
+
+        public void setPrazoFinal(String prazoFinal) {
+            this.prazoFinal = prazoFinal;
         }
 
         public Long getClienteId() {

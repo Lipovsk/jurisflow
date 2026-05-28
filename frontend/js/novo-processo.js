@@ -5,10 +5,13 @@
 function getIniciais(nome) {
   if (!nome) return '?';
   const p = nome.trim().split(' ').filter(Boolean);
-  return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
+  return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
 }
 
 let clientesBackend = [];
+
+const processoEditId =
+  new URLSearchParams(window.location.search).get('id');
 
 async function carregarClientesBackend() {
   try {
@@ -96,7 +99,7 @@ function initRealtimeValidation() {
 
 // ── Client Autocomplete ───────────────────────────────────
 function initClienteAutocomplete() {
-  const input    = document.getElementById('clienteBusca');
+  const input = document.getElementById('clienteBusca');
   const dropdown = document.getElementById('acDropdown');
   const hiddenId = document.getElementById('clienteId');
   if (!input) return;
@@ -174,7 +177,7 @@ function initClienteAutocomplete() {
 
 // ── Process Status Selector ───────────────────────────────
 function initProcStatus() {
-  const btns   = document.querySelectorAll('.pstbtn');
+  const btns = document.querySelectorAll('.pstbtn');
   const hidden = document.getElementById('statusProcesso');
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -187,7 +190,7 @@ function initProcStatus() {
 
 // ── Priority Selector ─────────────────────────────────────
 function initPriority() {
-  const btns   = document.querySelectorAll('.pribtn');
+  const btns = document.querySelectorAll('.pribtn');
   const hidden = document.getElementById('prioridade');
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -201,15 +204,15 @@ function initPriority() {
 // ── Date Alerts ───────────────────────────────────────────
 function initDateAlerts() {
   const audienciaInput = document.getElementById('dataAudiencia');
-  const prazoInput     = document.getElementById('prazoFinal');
-  const banner         = document.getElementById('prazoBanner');
-  const bannerText     = document.getElementById('prazoBannerText');
+  const prazoInput = document.getElementById('prazoFinal');
+  const banner = document.getElementById('prazoBanner');
+  const bannerText = document.getElementById('prazoBannerText');
 
   function checkDate(input, alertEl, label) {
     const val = input.value;
     if (!val) { alertEl.style.display = 'none'; return; }
     const date = new Date(val + 'T00:00:00');
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const diff = Math.ceil((date - today) / 86400000);
 
     if (diff < 0) {
@@ -233,13 +236,13 @@ function initDateAlerts() {
     const prazo = document.getElementById('prazoFinal').value;
     if (!prazo) { banner.style.display = 'none'; return; }
     const date = new Date(prazo + 'T00:00:00');
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const diff = Math.ceil((date - today) / 86400000);
     if (diff <= 7) {
       bannerText.textContent = diff < 0
         ? `O prazo final já venceu há ${Math.abs(diff)} dia(s)!`
         : diff === 0 ? 'O prazo final é hoje!'
-        : `O prazo final é em ${diff} dia(s). Atenção!`;
+          : `O prazo final é em ${diff} dia(s). Atenção!`;
       banner.className = diff <= 3 ? 'prazo-banner urgent' : 'prazo-banner';
       banner.style.display = 'flex';
     } else {
@@ -258,10 +261,10 @@ function initDateAlerts() {
 
 // ── Timeline ──────────────────────────────────────────────
 function initTimeline() {
-  const tl        = document.getElementById('timeline');
-  const addForm   = document.getElementById('tlAddForm');
-  const btnAdd    = document.getElementById('btnAddEvento');
-  const btnTlAdd  = document.getElementById('btnTlAdd');
+  const tl = document.getElementById('timeline');
+  const addForm = document.getElementById('tlAddForm');
+  const btnAdd = document.getElementById('btnAddEvento');
+  const btnTlAdd = document.getElementById('btnTlAdd');
   const btnCancel = document.getElementById('btnTlCancel');
   if (!tl) return;
 
@@ -317,15 +320,15 @@ function initTimeline() {
 const uploadedFiles = [];
 
 function initFileUpload() {
-  const zone  = document.getElementById('uploadArea');
+  const zone = document.getElementById('uploadArea');
   const input = document.getElementById('fileInput');
-  const btn   = document.getElementById('btnUpload');
-  const list  = document.getElementById('fileList');
+  const btn = document.getElementById('btnUpload');
+  const list = document.getElementById('fileList');
   if (!zone || !input) return;
 
   btn?.addEventListener('click', () => input.click());
   zone.addEventListener('click', e => { if (!e.target.closest('.btn-upload')) input.click(); });
-  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
   zone.addEventListener('drop', e => {
     e.preventDefault();
@@ -401,10 +404,79 @@ function initCharCounter() {
     ct.style.color = len > 900 ? 'var(--amber)' : 'var(--gray-400)';
   });
 }
+async function carregarProcessoParaEdicao() {
+
+  if (!processoEditId) return;
+
+  try {
+
+    const response = await fetch(
+      `http://localhost:8080/processos/${processoEditId}`
+    );
+
+    const processo = await response.json();
+
+    document.getElementById('numProcesso').value =
+      processo.numero || '';
+
+    document.getElementById('tipoAcao').value =
+      processo.tipoAcao || '';
+
+    document.getElementById('areaJuridica').value =
+      processo.areaJuridica || '';
+
+    document.getElementById('observacoes').value =
+      processo.descricao || '';
+
+    document.getElementById('statusProcesso').value =
+      processo.status || 'andamento';
+
+    if (processo.cliente) {
+
+      document.getElementById('clienteBusca').value =
+        processo.cliente.nome || '';
+
+      document.getElementById('clienteId').value =
+        processo.cliente.id || '';
+
+    }
+
+    if (processo.valorHonorario) {
+
+      document.getElementById('honorarios').value =
+        Number(processo.valorHonorario).toLocaleString(
+          'pt-BR',
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        );
+
+    }
+
+    document.getElementById('formaPagamento').value =
+      processo.formaPagamento || '';
+    document.getElementById('dataAbertura').value =
+      processo.dataAbertura || '';
+
+    document.getElementById('dataAudiencia').value =
+      processo.dataAudiencia || '';
+
+    document.getElementById('prazoFinal').value =
+      processo.prazoFinal || '';
+    document.querySelector('.page-title').textContent =
+      'Editar Processo';
+
+  } catch (erro) {
+
+    console.error('Erro ao carregar processo:', erro);
+
+  }
+}
 
 // ── Form Submit ───────────────────────────────────────────
 function initFormSubmit() {
-  const form   = document.getElementById('formNovoProcesso');
+  const form = document.getElementById('formNovoProcesso');
   const btnTop = document.getElementById('btnSalvar');
 
   function doSave(e) {
@@ -433,112 +505,166 @@ function initFormSubmit() {
     const clienteNome = clienteEl?.value?.trim() || '';
 
     const processo = {
-      numero:          v('numProcesso'),
+      numero: v('numProcesso'),
       clienteId,
       clienteNome,
-      areaJuridica:    v('areaJuridica'),
-      tipoAcao:        v('tipoAcao'),
-      status:          v('statusProcesso') || 'andamento',
-      prioridade:      v('prioridade') || 'media',
-      tribunal:        v('tribunal'),
-      comarca:         v('comarca'),
-      vara:            v('vara'),
-      juiz:            v('juiz'),
-      dataAbertura:    v('dataAbertura'),
-      dataAudiencia:   v('dataAudiencia'),
-      prazoFinal:      v('prazoFinal'),
-      valorCausa:      v('valorCausa'),
-      honorarios:      v('honorarios'),
-      statusFinanceiro:v('statusFinanceiro'),
-      formaPagamento:  v('formaPagamento'),
-      observacoes:     v('observacoes'),
-      andamento:       0,
-      dataCadastro:    new Date().toISOString(),
+      areaJuridica: v('areaJuridica'),
+      tipoAcao: v('tipoAcao'),
+      status: v('statusProcesso') || 'andamento',
+      prioridade: v('prioridade') || 'media',
+      tribunal: v('tribunal'),
+      comarca: v('comarca'),
+      vara: v('vara'),
+      juiz: v('juiz'),
+      dataAbertura: v('dataAbertura'),
+      dataAudiencia: v('dataAudiencia'),
+      prazoFinal: v('prazoFinal'),
+      valorCausa: v('valorCausa'),
+      honorarios: v('honorarios'),
+      statusFinanceiro: v('statusFinanceiro'),
+      formaPagamento: v('formaPagamento'),
+      observacoes: v('observacoes'),
+      andamento: 0,
+      dataCadastro: new Date().toISOString(),
     };
 
-  fetch('http://localhost:8080/processos', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    numero: processo.numero,
-    tipoAcao: processo.tipoAcao,
-    areaJuridica: processo.areaJuridica,
-    status: processo.status,
-    descricao: processo.observacoes,
-    clienteId: Number(processo.clienteId)
-  })
-})
-.then(res => {
-  if (!res.ok) {
-    throw new Error('Erro ao salvar processo');
-  }
+    const metodo = processoEditId ? 'PUT' : 'POST';
 
-  return res.json();
-})
-.then(async data => {
-  console.log('Processo salvo:', data);
+    const url = processoEditId
+      ? `http://localhost:8080/processos/${processoEditId}`
+      : 'http://localhost:8080/processos';
 
-  const compromissosParaCriar = [];
-
-  if (processo.dataAudiencia) {
-    compromissosParaCriar.push({
-      titulo: `Audiência — ${processo.tipoAcao || processo.numero}`,
-      tipo: "audiencia",
-      data: processo.dataAudiencia,
-      hora: "09:00",
-      descricao: `Audiência do processo ${processo.numero}`,
-      status: "agendado",
-      prioridade: processo.prioridade || "media",
-      clienteId: Number(processo.clienteId),
-      processoId: data.id
-    });
-  }
-
-  if (processo.prazoFinal) {
-    compromissosParaCriar.push({
-      titulo: `Prazo — ${processo.tipoAcao || processo.numero}`,
-      tipo: "prazo",
-      data: processo.prazoFinal,
-      hora: "",
-      descricao: `Prazo final do processo ${processo.numero}`,
-      status: "agendado",
-      prioridade: "alta",
-      clienteId: Number(processo.clienteId),
-      processoId: data.id
-    });
-  }
-
-  for (const compromisso of compromissosParaCriar) {
-    await fetch("http://localhost:8080/compromissos", {
-      method: "POST",
+    fetch(url, {
+      method: metodo,
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(compromisso)
-    });
-  }
+      body: JSON.stringify({
+        numero: processo.numero,
+        tipoAcao: processo.tipoAcao,
+        areaJuridica: processo.areaJuridica,
+        status: processo.status,
+        descricao: processo.observacoes,
+        clienteId: Number(processo.clienteId),
 
-  window.JurisFlow?.showToast('✅ Processo salvo e agenda atualizada!', 'success');
+        valorHonorario: parseFloat(
+          String(processo.honorarios || '0')
+            .replace(/\./g, '')
+            .replace(',', '.')
+        ) || 0,
 
-  setTimeout(() => {
-    window.location.href = `detalhes-cliente.html?id=${processo.clienteId}`;
-  }, 1000);
-})
-.catch(erro => {
-  console.error(erro);
+        formaPagamento: processo.formaPagamento || '',
 
-  allBtns.forEach(b => {
-    if (b) {
-      b.disabled = false;
-      const t = b.querySelector('.bfs-text');
-      if (t) t.textContent = 'Salvar Processo';
-    }
-  });
+        parcelasHonorario:
+          processo.formaPagamento === 'Parcelado' ? 2 : 1,
 
-  window.JurisFlow?.showToast('Erro ao salvar processo no backend.', 'error');
-});
+        vencimentoHonorario:
+          processo.prazoFinal || processo.dataAbertura
+      })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Erro ao salvar processo');
+        }
+
+        return res.json();
+      })
+      .then(async data => {
+        console.log('Processo salvo:', data);
+        if (processoEditId) {
+          window.JurisFlow?.showToast('✅ Processo atualizado com sucesso!', 'success');
+
+          setTimeout(() => {
+            window.location.href = `detalhes-processo.html?id=${processoEditId}`;
+          }, 1000);
+
+          return;
+        }
+
+        const valorHonorario = parseFloat(
+          String(processo.honorarios || '0')
+            .replace(/\./g, '')
+            .replace(',', '.')
+        ) || 0;
+
+        if (valorHonorario > 0) {
+          await fetch("http://localhost:8080/honorarios", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              tipoHonorario: "fixo",
+              valorTotal: valorHonorario,
+              competencia: new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0"),
+              status: processo.statusFinanceiro === "Em dia" ? "pago" : "pendente",
+              formaPagamento: processo.formaPagamento || "Não informado",
+              descricao: `Honorário automático do processo ${processo.numero || data.id}`,
+              clienteId: Number(processo.clienteId),
+              processoId: data.id
+            })
+          });
+        }
+
+        const compromissosParaCriar = [];
+
+        if (processo.dataAudiencia) {
+          compromissosParaCriar.push({
+            titulo: `Audiência — ${processo.tipoAcao || processo.numero}`,
+            tipo: "audiencia",
+            data: processo.dataAudiencia,
+            hora: "09:00",
+            descricao: `Audiência do processo ${processo.numero}`,
+            status: "agendado",
+            prioridade: processo.prioridade || "media",
+            clienteId: Number(processo.clienteId),
+            processoId: data.id
+          });
+        }
+
+        if (processo.prazoFinal) {
+          compromissosParaCriar.push({
+            titulo: `Prazo — ${processo.tipoAcao || processo.numero}`,
+            tipo: "prazo",
+            data: processo.prazoFinal,
+            hora: "",
+            descricao: `Prazo final do processo ${processo.numero}`,
+            status: "agendado",
+            prioridade: "alta",
+            clienteId: Number(processo.clienteId),
+            processoId: data.id
+          });
+        }
+
+        for (const compromisso of compromissosParaCriar) {
+          await fetch("http://localhost:8080/compromissos", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(compromisso)
+          });
+        }
+
+        window.JurisFlow?.showToast('✅ Processo salvo e agenda atualizada!', 'success');
+
+        setTimeout(() => {
+          window.location.href = `detalhes-cliente.html?id=${processo.clienteId}`;
+        }, 1000);
+      })
+      .catch(erro => {
+        console.error(erro);
+
+        allBtns.forEach(b => {
+          if (b) {
+            b.disabled = false;
+            const t = b.querySelector('.bfs-text');
+            if (t) t.textContent = 'Salvar Processo';
+          }
+        });
+
+        window.JurisFlow?.showToast('Erro ao salvar processo no backend.', 'error');
+      });
   }
 
   form?.addEventListener('submit', doSave);
@@ -561,7 +687,7 @@ function initCancel() {
 
 // ── Progress tracker ──────────────────────────────────────
 function initProgressTracker() {
-  const ids   = ['sec1', 'sec2', 'sec3', 'sec4', 'sec5', 'sec6'];
+  const ids = ['sec1', 'sec2', 'sec3', 'sec4', 'sec5', 'sec6'];
   const steps = document.querySelectorAll('.fstep');
   const lines = document.querySelectorAll('.fstep-line');
 
@@ -586,7 +712,8 @@ function initProgressTracker() {
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   await carregarClientesBackend();
-  
+  await carregarProcessoParaEdicao();
+
   applyMasks();
   initRealtimeValidation();
   initClienteAutocomplete();

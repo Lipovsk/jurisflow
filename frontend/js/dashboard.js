@@ -214,7 +214,7 @@ function initLogout() {
   $$('[data-action="logout"]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (confirm('Deseja sair do JurisFlow?')) {
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
       }
     });
   });

@@ -334,7 +334,9 @@ async function carregarProcesso() {
       </div>
       <div class="proc-actions">
         <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
-        <button class="btn-act btn-navy-act" onclick="window.JurisFlow?.showToast('Edição disponível em breve','info')">✏️ Editar</button>
+       <button id="btnEditarProcesso" class="btn-primary">
+  ✏️ Editar Processo
+</button>
       </div>
     </div>
 
@@ -459,6 +461,15 @@ async function carregarProcesso() {
     `;
   }
 }
+document.addEventListener('click', e => {
+
+  const btn = e.target.closest('#btnEditarProcesso');
+
+  if (btn) {
+    window.location.href = `novo-processo.html?id=${id}`;
+  }
+
+});
 
 carregarProcesso();
 })();

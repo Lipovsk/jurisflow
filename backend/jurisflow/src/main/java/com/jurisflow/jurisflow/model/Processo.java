@@ -14,6 +14,9 @@ public class Processo {
     private String areaJuridica;
     private String status;
     private String descricao;
+    private String dataAbertura;
+    private String dataAudiencia;
+    private String prazoFinal;
 
     private Double valorHonorario;
     private String formaPagamento;
@@ -107,4 +110,27 @@ public class Processo {
     public void setVencimentoHonorario(String vencimentoHonorario) {
         this.vencimentoHonorario = vencimentoHonorario;
     }
+    public String getDataAbertura() {
+    return dataAbertura;
+}
+
+public void setDataAbertura(String dataAbertura) {
+    this.dataAbertura = dataAbertura;
+}
+
+public String getDataAudiencia() {
+    return dataAudiencia;
+}
+
+public void setDataAudiencia(String dataAudiencia) {
+    this.dataAudiencia = dataAudiencia;
+}
+
+public String getPrazoFinal() {
+    return prazoFinal;
+}
+
+public void setPrazoFinal(String prazoFinal) {
+    this.prazoFinal = prazoFinal;
+}
 }
