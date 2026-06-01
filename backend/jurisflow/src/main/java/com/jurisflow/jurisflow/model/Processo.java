@@ -14,6 +14,7 @@ public class Processo {
     private String areaJuridica;
     private String status;
     private String descricao;
+
     private String dataAbertura;
     private String dataAudiencia;
     private String prazoFinal;
@@ -71,12 +72,28 @@ public class Processo {
         this.descricao = descricao;
     }
 
-    public Cliente getCliente() {
-        return cliente;
+    public String getDataAbertura() {
+        return dataAbertura;
     }
 
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
+    public void setDataAbertura(String dataAbertura) {
+        this.dataAbertura = dataAbertura;
+    }
+
+    public String getDataAudiencia() {
+        return dataAudiencia;
+    }
+
+    public void setDataAudiencia(String dataAudiencia) {
+        this.dataAudiencia = dataAudiencia;
+    }
+
+    public String getPrazoFinal() {
+        return prazoFinal;
+    }
+
+    public void setPrazoFinal(String prazoFinal) {
+        this.prazoFinal = prazoFinal;
     }
 
     public Double getValorHonorario() {
@@ -110,27 +127,12 @@ public class Processo {
     public void setVencimentoHonorario(String vencimentoHonorario) {
         this.vencimentoHonorario = vencimentoHonorario;
     }
-    public String getDataAbertura() {
-    return dataAbertura;
-}
 
-public void setDataAbertura(String dataAbertura) {
-    this.dataAbertura = dataAbertura;
-}
+    public Cliente getCliente() {
+        return cliente;
+    }
 
-public String getDataAudiencia() {
-    return dataAudiencia;
-}
-
-public void setDataAudiencia(String dataAudiencia) {
-    this.dataAudiencia = dataAudiencia;
-}
-
-public String getPrazoFinal() {
-    return prazoFinal;
-}
-
-public void setPrazoFinal(String prazoFinal) {
-    this.prazoFinal = prazoFinal;
-}
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
 }

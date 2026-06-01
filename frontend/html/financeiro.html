@@ -450,7 +450,7 @@
       <button class="sidebar-toggle" id="sidebarToggle">☰</button>
       <div class="topbar-left">
         <div class="page-title">Financeiro</div>
-        <div class="page-subtitle">Honorários, recebimentos e metas — Maio 2026</div>
+        <div class="page-subtitle">Honorários, recebimentos e metas — <span id="labelMesTitulo"></span></div>
       </div>
       <div class="topbar-right">
         <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
@@ -477,9 +477,9 @@
             <span class="fc-trend up">↑ 12%</span>
           </div>
           <div class="fc-value" id="fcRecebido">R$ 28.900</div>
-          <div class="fc-label">Recebido em Maio</div>
+          <div class="fc-label"><span id="labelRecebidoMes">Recebido no mês</span></div>
           <div class="fc-bar">
-            <div class="fc-bar-fill" style="width:76%;background:var(--green);"></div>
+          <div class="fc-bar-fill" style="width:76%;background:var(--green);"></div>
           </div>
         </div>
         <div class="fin-card">
@@ -504,7 +504,7 @@
             <div class="fc-bar-fill" style="width:30%;background:var(--red);"></div>
           </div>
         </div>
-        <div class="fin-card">
+          <div class="fin-card">
           <div class="fc-header">
             <div class="fc-icon" style="background:rgba(201,168,76,.1);">🎯</div>
             <span class="fc-trend up">76%</span>
@@ -536,7 +536,7 @@
       <div style="margin-top:20px;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <span style="font-size:.78rem;color:var(--gray-600);font-weight:500;">
-            Meta Mensal — R$ 50.000
+            <span id="labelMetaMensal">Meta Mensal — </span><span id="labelMetaMensalValor"></span>
           </span>
 
           <span

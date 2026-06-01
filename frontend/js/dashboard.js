@@ -11,12 +11,6 @@ const AppState = {
     oab: '12.345/SP',
     role: 'Advogado Sênior',
   },
-  stats: {
-    clientes:  48,
-    processos: 127,
-    prazos:    9,
-    honorarios: 'R$ 38.400',
-  },
   sidebar: {
     open: false,
     activeItem: 'dashboard',
@@ -39,8 +33,8 @@ function timeAgo(minutesAgo) {
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 function initSidebar() {
-  const sidebar  = $('#sidebar');
-  const overlay  = $('#sidebarOverlay');
+  const sidebar = $('#sidebar');
+  const overlay = $('#sidebarOverlay');
   const toggleBtn = $('#sidebarToggle');
 
   if (!sidebar) return;
@@ -76,12 +70,12 @@ function closeSidebar(sidebar, overlay) {
 
 function getCurrentPage() {
   const path = window.location.pathname;
-  if (path.includes('clientes'))   return 'clientes';
-  if (path.includes('processos'))  return 'processos';
-  if (path.includes('agenda'))     return 'agenda';
+  if (path.includes('clientes')) return 'clientes';
+  if (path.includes('processos')) return 'processos';
+  if (path.includes('agenda')) return 'agenda';
   if (path.includes('financeiro')) return 'financeiro';
   if (path.includes('documentos')) return 'documentos';
-  if (path.includes('config'))     return 'configuracoes';
+  if (path.includes('config')) return 'configuracoes';
   return 'dashboard';
 }
 
@@ -93,15 +87,15 @@ function setActiveNavItem(page) {
 
 function navigateTo(page) {
   const routes = {
-    dashboard:      'dashboard.html',
-    clientes:       'clientes.html',
-    processos:      'processos.html',
-    agenda:         'agenda.html',
-    financeiro:     'financeiro.html',
-    documentos:     'documentos.html',
-    configuracoes:  'configuracoes.html',
+    dashboard: 'dashboard.html',
+    clientes: 'clientes.html',
+    processos: 'processos.html',
+    agenda: 'agenda.html',
+    financeiro: 'financeiro.html',
+    documentos: 'documentos.html',
+    configuracoes: 'configuracoes.html',
     'novo-cliente': 'novo-cliente.html',
-    'novo-processo':'novo-processo.html',
+    'novo-processo': 'novo-processo.html',
   };
   if (routes[page]) window.location.href = routes[page];
 }
@@ -145,12 +139,12 @@ function showToast(message, type = 'info', duration = 3500) {
     document.body.appendChild(container);
   }
 
-  const icons  = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+  const icons = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
   const colors = {
-    info:    '#2563EB',
+    info: '#2563EB',
     success: '#10B981',
     warning: '#F59E0B',
-    error:   '#EF4444',
+    error: '#EF4444',
   };
 
   const toast = document.createElement('div');
@@ -232,23 +226,23 @@ function initTopbarDate() {
 
 // ─── Global Search ────────────────────────────────────────────────────────────
 const SEARCH_DATA = [
-  { type: 'cliente',  icon: '👤', name: 'Ana Lima',          sub: 'CPF 123.456.789-00 · Ativo' },
-  { type: 'cliente',  icon: '👤', name: 'Roberto Sousa',     sub: 'CPF 987.654.321-00 · Ativo' },
-  { type: 'cliente',  icon: '👤', name: 'Maria Fernanda',    sub: 'CPF 456.123.789-00 · Inativo' },
-  { type: 'cliente',  icon: '👤', name: 'João Carlos',       sub: 'CPF 321.654.987-00 · Ativo' },
+  { type: 'cliente', icon: '👤', name: 'Ana Lima', sub: 'CPF 123.456.789-00 · Ativo' },
+  { type: 'cliente', icon: '👤', name: 'Roberto Sousa', sub: 'CPF 987.654.321-00 · Ativo' },
+  { type: 'cliente', icon: '👤', name: 'Maria Fernanda', sub: 'CPF 456.123.789-00 · Inativo' },
+  { type: 'cliente', icon: '👤', name: 'João Carlos', sub: 'CPF 321.654.987-00 · Ativo' },
   { type: 'processo', icon: '📁', name: 'Proc. 0001234-56.2024', sub: 'Ana Lima · Trabalhista' },
   { type: 'processo', icon: '📁', name: 'Proc. 0009876-12.2024', sub: 'Roberto Sousa · Cível' },
   { type: 'processo', icon: '📁', name: 'Proc. 0005555-99.2023', sub: 'Maria Fernanda · Família' },
-  { type: 'pagina',   icon: '📅', name: 'Agenda',            sub: 'Audiências e compromissos', page: 'agenda' },
-  { type: 'pagina',   icon: '💰', name: 'Financeiro',        sub: 'Honorários e faturas',      page: 'financeiro' },
-  { type: 'pagina',   icon: '📄', name: 'Documentos',        sub: 'Contratos e petições',      page: 'documentos' },
-  { type: 'pagina',   icon: '⚙️', name: 'Configurações',    sub: 'Perfil e preferências',     page: 'configuracoes' },
+  { type: 'pagina', icon: '📅', name: 'Agenda', sub: 'Audiências e compromissos', page: 'agenda' },
+  { type: 'pagina', icon: '💰', name: 'Financeiro', sub: 'Honorários e faturas', page: 'financeiro' },
+  { type: 'pagina', icon: '📄', name: 'Documentos', sub: 'Contratos e petições', page: 'documentos' },
+  { type: 'pagina', icon: '⚙️', name: 'Configurações', sub: 'Perfil e preferências', page: 'configuracoes' },
 ];
 
 function initGlobalSearch() {
-  const input    = $('#searchGlobalInput');
+  const input = $('#searchGlobalInput');
   const dropdown = $('#searchDropdown');
-  const overlay  = $('#searchOverlay');
+  const overlay = $('#searchOverlay');
   if (!input) return;
 
   function highlight(text, query) {
@@ -337,11 +331,11 @@ function initGlobalSearch() {
 // ─── FAB (draggable) ─────────────────────────────────────────────────────────
 function initFAB() {
   const items = [
-    { icon: '👤', label: 'Novo Cliente',    page: 'novo-cliente' },
-    { icon: '📁', label: 'Novo Processo',   page: 'novo-processo' },
-    { icon: '📅', label: 'Nova Audiência',  page: 'agenda' },
-    { icon: '⏰', label: 'Novo Prazo',      page: 'agenda' },
-    { icon: '📄', label: 'Novo Documento',  page: 'documentos' },
+    { icon: '👤', label: 'Novo Cliente', page: 'novo-cliente' },
+    { icon: '📁', label: 'Novo Processo', page: 'novo-processo' },
+    { icon: '📅', label: 'Nova Audiência', page: 'agenda' },
+    { icon: '⏰', label: 'Novo Prazo', page: 'agenda' },
+    { icon: '📄', label: 'Novo Documento', page: 'documentos' },
   ];
 
   const backdrop = document.createElement('div');
@@ -378,9 +372,9 @@ function initFAB() {
   document.body.appendChild(container);
 
   // ── Open / Close ──────────────────────────────────────
-  function openFAB()  { container.classList.add('open');    backdrop.classList.add('active'); }
+  function openFAB() { container.classList.add('open'); backdrop.classList.add('active'); }
   function closeFAB() { container.classList.remove('open'); backdrop.classList.remove('active'); }
-  function toggleFAB(){ container.classList.contains('open') ? closeFAB() : openFAB(); }
+  function toggleFAB() { container.classList.contains('open') ? closeFAB() : openFAB(); }
 
   backdrop.addEventListener('click', closeFAB);
   document.addEventListener('keydown', e => {
@@ -389,33 +383,33 @@ function initFAB() {
   });
 
   // ── Position helpers ──────────────────────────────────
-  const FAB_SIZE   = 56;
-  const MARGIN     = 20;
-  const STORE_KEY  = 'jf_fab_pos';
-  const SPRING     = 'left .3s cubic-bezier(.34,1.56,.64,1), top .3s cubic-bezier(.34,1.56,.64,1)';
+  const FAB_SIZE = 56;
+  const MARGIN = 20;
+  const STORE_KEY = 'jf_fab_pos';
+  const SPRING = 'left .3s cubic-bezier(.34,1.56,.64,1), top .3s cubic-bezier(.34,1.56,.64,1)';
 
   function clamp(x, y) {
     return {
-      x: Math.max(MARGIN, Math.min(x, window.innerWidth  - FAB_SIZE - MARGIN)),
+      x: Math.max(MARGIN, Math.min(x, window.innerWidth - FAB_SIZE - MARGIN)),
       y: Math.max(MARGIN, Math.min(y, window.innerHeight - FAB_SIZE - MARGIN)),
     };
   }
 
   function applyPos(x, y, animate = false) {
     container.style.transition = animate ? SPRING : 'none';
-    container.style.left   = x + 'px';
-    container.style.top    = y + 'px';
-    container.style.right  = 'auto';
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
+    container.style.right = 'auto';
     container.style.bottom = 'auto';
   }
 
   // Snap to nearest horizontal edge (premium feel)
   function snapEdge() {
-    const r      = container.getBoundingClientRect();
-    const cx     = r.left + FAB_SIZE / 2;
+    const r = container.getBoundingClientRect();
+    const cx = r.left + FAB_SIZE / 2;
     const isLeft = cx < window.innerWidth / 2;
-    const tx     = isLeft ? MARGIN : window.innerWidth - FAB_SIZE - MARGIN;
-    const c      = clamp(tx, r.top);
+    const tx = isLeft ? MARGIN : window.innerWidth - FAB_SIZE - MARGIN;
+    const c = clamp(tx, r.top);
     applyPos(c.x, c.y, true);
     container.classList.toggle('left-side', isLeft);
     localStorage.setItem(STORE_KEY, JSON.stringify({ ...c, side: isLeft ? 'left' : 'right' }));
@@ -451,22 +445,22 @@ function initFAB() {
   });
 
   // ── Drag logic (mouse + touch) ────────────────────────
-  let dragging  = false;
-  let didMove   = false;
+  let dragging = false;
+  let didMove = false;
   let ox, oy, sx, sy; // pointer offset and start coords
 
   function dragStart(px, py) {
-    const r  = container.getBoundingClientRect();
+    const r = container.getBoundingClientRect();
     // Anchor pointer relative to container corner
     ox = px - r.left;
     oy = py - r.top;
     sx = px;
     sy = py;
     dragging = true;
-    didMove  = false;
+    didMove = false;
     applyPos(r.left, r.top);           // lock in left/top, cancel CSS bottom/right
     container.style.transition = 'none';
-    mainBtn.style.cursor        = 'grabbing';
+    mainBtn.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
     closeFAB();
   }
@@ -477,13 +471,13 @@ function initFAB() {
     if (!didMove) return;
     const c = clamp(px - ox, py - oy);
     container.style.left = c.x + 'px';
-    container.style.top  = c.y + 'px';
+    container.style.top = c.y + 'px';
   }
 
   function dragEnd(px, py) {
     if (!dragging) return;
     dragging = false;
-    mainBtn.style.cursor           = 'grab';
+    mainBtn.style.cursor = 'grab';
     document.body.style.userSelect = '';
 
     if (!didMove) {
@@ -499,7 +493,7 @@ function initFAB() {
   // Mouse
   mainBtn.addEventListener('mousedown', e => { e.preventDefault(); dragStart(e.clientX, e.clientY); });
   document.addEventListener('mousemove', e => dragMove(e.clientX, e.clientY));
-  document.addEventListener('mouseup',   e => { if (dragging) dragEnd(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', e => { if (dragging) dragEnd(e.clientX, e.clientY); });
 
   // Touch
   mainBtn.addEventListener('touchstart', e => {
@@ -524,7 +518,7 @@ function addRipple(e, el) {
   const rect = el.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height);
   const x = (e.clientX - rect.left) - size / 2;
-  const y = (e.clientY - rect.top)  - size / 2;
+  const y = (e.clientY - rect.top) - size / 2;
   const ripple = document.createElement('span');
   ripple.className = 'ripple-wave';
   ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px;`;
@@ -549,9 +543,9 @@ function initQuickActions() {
 // ─── Stat Progress Bars ───────────────────────────────────────────────────────
 function initStatProgressBars() {
   const configs = [
-    { count: 48,  max: 60,  color: 'blue' },
+    { count: 48, max: 60, color: 'blue' },
     { count: 127, max: 150, color: 'gold' },
-    { count: 9,   max: 20,  color: 'red'  },
+    { count: 9, max: 20, color: 'red' },
     { count: null, pct: 80, color: 'green' },
   ];
   const cards = $$('.stat-card');
@@ -582,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRippleEffects();
   initQuickActions();
   initStatProgressBars();
+  carregarDashboardReal();
 
   // Confirma que a UI está pronta
   console.log(
@@ -625,7 +620,244 @@ const API = {
     }
   },
 };
+async function carregarDashboardReal() {
 
+  try {
+
+    const [
+      clientesRes,
+      processosRes,
+      compromissosRes,
+      honorariosRes
+    ] = await Promise.all([
+
+      fetch('http://localhost:8080/clientes'),
+      fetch('http://localhost:8080/processos'),
+      fetch('http://localhost:8080/compromissos'),
+      fetch('http://localhost:8080/honorarios')
+
+    ]);
+
+    const clientes = await clientesRes.json();
+    const processos = await processosRes.json();
+    const compromissos = await compromissosRes.json();
+    const honorarios = await honorariosRes.json();
+
+    atualizarCardsDashboard({
+      clientes,
+      processos,
+      compromissos,
+      honorarios
+    });
+
+  } catch (erro) {
+
+    console.error('Erro ao carregar dashboard:', erro);
+
+  }
+
+}
+
+function atualizarCardsDashboard(dados) {
+
+  const totalClientes = dados.clientes.length;
+
+  const totalProcessos = dados.processos.length;
+
+  const totalPrazos = dados.compromissos.filter(c =>
+    c.tipo === 'prazo'
+  ).length;
+
+  const totalHonorarios = dados.honorarios.reduce(
+    (soma, h) => soma + (h.valorTotal || 0),
+    0
+  );
+
+  const cards = document.querySelectorAll('[data-count]');
+
+  document.getElementById('dashClientes').textContent = totalClientes;
+document.getElementById('dashProcessos').textContent = totalProcessos;
+document.getElementById('dashPrazos').textContent = totalPrazos;
+
+  document.getElementById('dashHonorarios').textContent =
+  totalHonorarios.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  // ===== PRAZOS CRÍTICOS =====
+  const prazosCriticos = dados.compromissos
+    .filter(c => c.tipo === 'prazo')
+    .sort((a, b) => new Date(a.data) - new Date(b.data))
+    .slice(0, 5);
+
+  const prazosBox = document.getElementById('dashPrazosCriticos');
+
+  if (prazosBox) {
+    prazosBox.innerHTML = prazosCriticos.length
+      ? prazosCriticos.map(c => `
+        <div class="prazo-item">
+          <div class="prazo-date urgent">
+            <div class="day">${new Date(c.data + 'T00:00:00').getDate()}</div>
+            <div class="mon">${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short' })}</div>
+          </div>
+          <div class="prazo-info">
+            <div class="prazo-title">${c.titulo || 'Prazo sem título'}</div>
+            <div class="prazo-client">👤 ${c.cliente?.nome || 'Cliente não informado'}</div>
+          </div>
+          <span class="prazo-tag urgente">Prazo</span>
+        </div>
+      `).join('')
+      : '<div style="padding:16px;color:#999;">Nenhum prazo cadastrado</div>';
+  }
+
+  // ===== AUDIÊNCIAS =====
+  const audiencias = dados.compromissos
+    .filter(c => c.tipo === 'audiencia')
+    .sort((a, b) => new Date(a.data) - new Date(b.data))
+    .slice(0, 3);
+
+  const audBox = document.getElementById('dashAudiencias');
+
+  if (audBox) {
+    audBox.innerHTML = audiencias.length
+      ? audiencias.map(c => `
+        <div class="audiencia-item prazo-border">
+          <div class="audiencia-time">${c.hora || '--:--'}</div>
+          <div class="audiencia-info">
+            <div class="audiencia-title">${c.titulo || 'Audiência'}</div>
+            <div class="audiencia-local">📍 ${c.descricao || 'Sem descrição'} · ${c.data || ''}</div>
+          </div>
+        </div>
+      `).join('')
+      : '<div style="padding:16px;color:#999;">Nenhuma audiência cadastrada</div>';
+  }
+
+  // ===== CLIENTES RECENTES =====
+  const clientesRecentes = [...dados.clientes]
+    .slice(-5)
+    .reverse();
+
+  const cliBox = document.getElementById('dashClientesRecentes');
+
+  function getIniciaisLocal(nome) {
+    if (!nome) return '?';
+    const p = String(nome).trim().split(' ').filter(Boolean);
+    if (!p.length) return '?';
+    return p.length === 1
+      ? p[0].substring(0, 2).toUpperCase()
+      : (p[0][0] + p[1][0]).toUpperCase();
+  }
+
+  if (cliBox) {
+    cliBox.innerHTML = clientesRecentes.length
+      ? clientesRecentes.map(c => `
+        <div class="client-row" onclick="location.href='detalhes-cliente.html?id=${c.id}'">
+          <div class="client-avatar">${getIniciaisLocal(c.nome)}</div>
+          <div class="client-info">
+            <div class="client-name">${c.nome || 'Sem nome'}</div>
+            <div class="client-meta">${c.email || 'Sem e-mail'}</div>
+          </div>
+          <span class="client-status status-ativo">${c.status || 'ativo'}</span>
+        </div>
+      `).join('')
+      : '<div style="padding:16px;color:#999;">Nenhum cliente cadastrado</div>';
+  }
+
+  // ===== ALERTAS =====
+  const alertasBox = document.getElementById('dashAlertas');
+
+  const alertas = [];
+
+  // prazos urgentes
+  dados.compromissos.forEach(c => {
+    if (c.tipo === 'prazo') {
+      alertas.push({
+        tipo: 'red',
+        texto: `Prazo próximo: ${c.titulo}`,
+        tempo: c.data,
+      });
+    }
+  });
+
+  // honorários pendentes
+  dados.honorarios.forEach(h => {
+    if (h.status === 'pendente') {
+      alertas.push({
+        tipo: 'amber',
+        texto: `Honorário pendente — R$ ${Number(h.valorTotal || 0).toLocaleString('pt-BR')}`,
+        tempo: h.competencia || '',
+      });
+    }
+  });
+
+  if (alertasBox) {
+    alertasBox.innerHTML = alertas.length
+      ? alertas.slice(0, 5).map(a => `
+        <div class="alert-item">
+          <div class="alert-dot ${a.tipo}"></div>
+          <div>
+            <div class="alert-text">${a.texto}</div>
+            <div class="alert-time">${a.tempo}</div>
+          </div>
+        </div>
+      `).join('')
+      : '<div style="padding:16px;color:#999;">Nenhum alerta encontrado</div>';
+  }
+
+  // ===== FINANCEIRO =====
+  const financeiroBox = document.getElementById('dashFinanceiro');
+
+  const recebidos = dados.honorarios
+    .filter(h => h.status === 'pago')
+    .reduce((s, h) => s + (h.valorTotal || 0), 0);
+
+  const pendentes = dados.honorarios
+    .filter(h => h.status === 'pendente')
+    .reduce((s, h) => s + (h.valorTotal || 0), 0);
+
+  const total = recebidos + pendentes;
+
+  const meta = 50000;
+
+  const percentual = Math.min((total / meta) * 100, 100);
+
+  if (financeiroBox) {
+    financeiroBox.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
+          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">Recebido</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green);">
+            ${recebidos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        </div>
+
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
+          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">A receber</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--amber);">
+            ${pendentes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray-400);margin-bottom:6px;">
+          <span>Meta mensal</span>
+          <span style="color:var(--navy);font-weight:600;">${percentual.toFixed(0)}%</span>
+        </div>
+        <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
+          <div style="
+            height:100%;
+            width:${percentual}%;
+            background:linear-gradient(90deg,var(--gold),var(--gold-light));
+            border-radius:3px;
+          "></div>
+        </div>
+      </div>
+    `;
+  }
+
+}
 // Exporta para uso em outros módulos
 // Exporta sem sobrescrever o .db do storage.js
 window.JurisFlow = Object.assign(window.JurisFlow || {}, {

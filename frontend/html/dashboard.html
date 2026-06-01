@@ -135,7 +135,7 @@
           <div class="stat-trend up">↑ 8%</div>
         </div>
         <div>
-          <div class="stat-value" data-count="48">0</div>
+          <div class="stat-value" id="dashClientes">0</div>
           <div class="stat-label">Clientes Ativos</div>
         </div>
         <div class="stat-footer">+4 este mês · <span>último: Ana Lima</span></div>
@@ -147,7 +147,7 @@
           <div class="stat-trend up">↑ 3%</div>
         </div>
         <div>
-          <div class="stat-value" data-count="127">0</div>
+          <div class="stat-value" id="dashProcessos">0</div>
           <div class="stat-label">Processos em Curso</div>
         </div>
         <div class="stat-footer">12 com <span>prazo esta semana</span></div>
@@ -159,7 +159,7 @@
           <div class="stat-trend down">↑ 2</div>
         </div>
         <div>
-          <div class="stat-value" data-count="9">0</div>
+          <div class="stat-value" id="dashPrazos">0</div>
           <div class="stat-label">Prazos Urgentes</div>
         </div>
         <div class="stat-footer"><span>3 vencem hoje</span> · 6 esta semana</div>
@@ -171,7 +171,7 @@
           <div class="stat-trend up">↑ 12%</div>
         </div>
         <div>
-          <div class="stat-value">R$ 38.400</div>
+        <div class="stat-value" id="dashHonorarios">R$ 0,00</div>
           <div class="stat-label">Honorários (Maio)</div>
         </div>
         <div class="stat-footer">Meta: <span>R$ 50.000</span> · 76% atingido</div>
@@ -192,69 +192,10 @@
           <a class="card-action" href="agenda.html">Ver todos →</a>
         </div>
         <div class="card-body" style="padding-top:8px;padding-bottom:8px;">
-
-          <div class="prazo-item">
-            <div class="prazo-date urgent">
-              <div class="day">20</div>
-              <div class="mon">Mai</div>
-            </div>
-            <div class="prazo-info">
-              <div class="prazo-title">Contestação — Processo 0012345-88</div>
-              <div class="prazo-client">👤 Maria Aparecida Souza · Cível</div>
-            </div>
-            <span class="prazo-tag urgente">Hoje</span>
-          </div>
-
-          <div class="prazo-item">
-            <div class="prazo-date urgent">
-              <div class="day">20</div>
-              <div class="mon">Mai</div>
-            </div>
-            <div class="prazo-info">
-              <div class="prazo-title">Recurso de Apelação — TJ/SP</div>
-              <div class="prazo-client">👤 Construtora Beta Ltda · Empresarial</div>
-            </div>
-            <span class="prazo-tag urgente">Hoje</span>
-          </div>
-
-          <div class="prazo-item">
-            <div class="prazo-date warning">
-              <div class="day">22</div>
-              <div class="mon">Mai</div>
-            </div>
-            <div class="prazo-info">
-              <div class="prazo-title">Petição Inicial — Ação Trabalhista</div>
-              <div class="prazo-client">👤 João Paulo Ferreira · Trabalhista</div>
-            </div>
-            <span class="prazo-tag hoje">2 dias</span>
-          </div>
-
-          <div class="prazo-item">
-            <div class="prazo-date warning">
-              <div class="day">23</div>
-              <div class="mon">Mai</div>
-            </div>
-            <div class="prazo-info">
-              <div class="prazo-title">Manifestação — Processo 0098761-22</div>
-              <div class="prazo-client">👤 Tecno Solutions S/A · Empresarial</div>
-            </div>
-            <span class="prazo-tag hoje">3 dias</span>
-          </div>
-
-          <div class="prazo-item">
-            <div class="prazo-date ok">
-              <div class="day">26</div>
-              <div class="mon">Mai</div>
-            </div>
-            <div class="prazo-info">
-              <div class="prazo-title">Alegações Finais — Processo 0056789-11</div>
-              <div class="prazo-client">👤 Roberto Alves Costa · Criminal</div>
-            </div>
-            <span class="prazo-tag semana">6 dias</span>
-          </div>
-
+          <div id="dashPrazosCriticos"></div>
         </div>
       </div>
+
 
       <!-- Audiências + Alertas -->
       <div style="display:flex;flex-direction:column;gap:20px;">
@@ -269,31 +210,7 @@
             <a class="card-action" href="agenda.html">Agenda →</a>
           </div>
           <div class="card-body">
-
-            <div class="audiencia-item prazo-border">
-              <div class="audiencia-time">09:00</div>
-              <div class="audiencia-info">
-                <div class="audiencia-title">Audiência de Instrução — Cível</div>
-                <div class="audiencia-local">📍 2ª Vara Cível — TJSP · Hoje</div>
-              </div>
-            </div>
-
-            <div class="audiencia-item">
-              <div class="audiencia-time">14:30</div>
-              <div class="audiencia-info">
-                <div class="audiencia-title">Audiência Trabalhista — Conciliação</div>
-                <div class="audiencia-local">📍 3ª Vara do Trabalho · Amanhã</div>
-              </div>
-            </div>
-
-            <div class="audiencia-item ok-border">
-              <div class="audiencia-time">10:00</div>
-              <div class="audiencia-info">
-                <div class="audiencia-title">Audiência de Custódia</div>
-                <div class="audiencia-local">📍 1ª Vara Criminal · Qui, 22/05</div>
-              </div>
-            </div>
-
+            <div id="dashAudiencias"></div>
           </div>
         </div>
 
@@ -303,33 +220,10 @@
             <div class="card-title">⚠️ Alertas Importantes</div>
           </div>
           <div class="card-body" style="padding-top:4px;padding-bottom:8px;">
-
-            <div class="alert-item">
-              <div class="alert-dot red"></div>
-              <div>
-                <div class="alert-text">Novo despacho no processo 0012345-88 — ação requerida</div>
-                <div class="alert-time">há 35 min</div>
-              </div>
-            </div>
-
-            <div class="alert-item">
-              <div class="alert-dot amber"></div>
-              <div>
-                <div class="alert-text">Honorário pendente: Construtora Beta Ltda — R$ 4.500</div>
-                <div class="alert-time">há 2h</div>
-              </div>
-            </div>
-
-            <div class="alert-item">
-              <div class="alert-dot blue"></div>
-              <div>
-                <div class="alert-text">Documento recebido: Laudo Pericial — Proc. 0056789-11</div>
-                <div class="alert-time">hoje, 08:14</div>
-              </div>
-            </div>
-
+            <div id="dashAlertas"></div>
           </div>
         </div>
+
 
       </div><!-- /col direita -->
 
@@ -348,52 +242,7 @@
           <a class="card-action" href="clientes.html">Ver todos →</a>
         </div>
         <div class="card-body" style="padding-top:4px;padding-bottom:8px;">
-
-          <div class="client-row" onclick="location.href='clientes.html'">
-            <div class="client-avatar" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);">MA</div>
-            <div class="client-info">
-              <div class="client-name">Maria Aparecida Souza</div>
-              <div class="client-meta">2 processos · último contato ontem</div>
-            </div>
-            <span class="client-status status-ativo">Ativo</span>
-          </div>
-
-          <div class="client-row" onclick="location.href='clientes.html'">
-            <div class="client-avatar" style="background:linear-gradient(135deg,#10B981,#059669);">CB</div>
-            <div class="client-info">
-              <div class="client-name">Construtora Beta Ltda</div>
-              <div class="client-meta">1 processo · último contato hoje</div>
-            </div>
-            <span class="client-status status-ativo">Ativo</span>
-          </div>
-
-          <div class="client-row" onclick="location.href='clientes.html'">
-            <div class="client-avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);">JP</div>
-            <div class="client-info">
-              <div class="client-name">João Paulo Ferreira</div>
-              <div class="client-meta">1 processo · aguardando retorno</div>
-            </div>
-            <span class="client-status status-aguarda">Aguardando</span>
-          </div>
-
-          <div class="client-row" onclick="location.href='clientes.html'">
-            <div class="client-avatar" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);">TS</div>
-            <div class="client-info">
-              <div class="client-name">Tecno Solutions S/A</div>
-              <div class="client-meta">3 processos · contato há 3 dias</div>
-            </div>
-            <span class="client-status status-ativo">Ativo</span>
-          </div>
-
-          <div class="client-row" onclick="location.href='clientes.html'">
-            <div class="client-avatar" style="background:linear-gradient(135deg,#6B7280,#4B5563);">RA</div>
-            <div class="client-info">
-              <div class="client-name">Roberto Alves Costa</div>
-              <div class="client-meta">1 processo · em andamento</div>
-            </div>
-            <span class="client-status status-ativo">Ativo</span>
-          </div>
-
+          <div id="dashClientesRecentes"></div>
         </div>
       </div>
 
@@ -407,43 +256,10 @@
           <a class="card-action" href="financeiro.html">Detalhes →</a>
         </div>
         <div class="card-body">
-
-          <div class="chart-bars" style="opacity:1;">
-            <div class="chart-bar" style="opacity:.5;height:40%;"></div>
-            <div class="chart-bar" style="opacity:.55;height:68%;"></div>
-            <div class="chart-bar" style="opacity:.6;height:52%;"></div>
-            <div class="chart-bar" style="opacity:.7;height:80%;"></div>
-            <div class="chart-bar" style="opacity:.75;height:58%;"></div>
-            <div class="chart-bar" style="opacity:1;height:76%;background:linear-gradient(180deg,var(--gold),rgba(201,168,76,.4));"></div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--gray-400);margin-top:8px;padding:0 8px;">
-            <span>Dez</span><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
-            <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
-              <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">Recebido</div>
-              <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green);">R$ 28.900</div>
-            </div>
-            <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
-              <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">A receber</div>
-              <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--amber);">R$ 9.500</div>
-            </div>
-          </div>
-
-          <!-- Barra de meta -->
-          <div style="margin-top:16px;">
-            <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray-400);margin-bottom:6px;">
-              <span>Meta mensal</span><span style="color:var(--navy);font-weight:600;">76%</span>
-            </div>
-            <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
-              <div style="height:100%;width:76%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;"></div>
-            </div>
-          </div>
-
+          <div id="dashFinanceiro"></div>
         </div>
       </div>
+
 
     </div><!-- /content-grid -->
 
