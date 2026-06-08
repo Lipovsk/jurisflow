@@ -464,6 +464,36 @@ async function carregarProcessoParaEdicao() {
 
     document.getElementById('prazoFinal').value =
       processo.prazoFinal || '';
+
+    document.getElementById('tribunal').value =
+      processo.tribunal || '';
+
+    document.getElementById('comarca').value =
+      processo.comarca || '';
+
+    document.getElementById('vara').value =
+      processo.vara || '';
+
+    document.getElementById('juiz').value =
+      processo.juiz || '';
+
+    document.getElementById('prioridade').value =
+      processo.prioridade || 'media';
+
+    document.getElementById('valorCausa').value =
+      processo.valorCausa
+        ? Number(processo.valorCausa).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+        : '';
+
+    document.getElementById('statusFinanceiro').value =
+      processo.statusFinanceiro || '';
+
+    document.getElementById('ultMovimentacao').value =
+      processo.ultMovimentacao || '';
+
     document.querySelector('.page-title').textContent =
       'Editar Processo';
 
@@ -519,6 +549,7 @@ function initFormSubmit() {
       dataAbertura: v('dataAbertura'),
       dataAudiencia: v('dataAudiencia'),
       prazoFinal: v('prazoFinal'),
+      ultMovimentacao: v('ultMovimentacao'),
       valorCausa: v('valorCausa'),
       honorarios: v('honorarios'),
       statusFinanceiro: v('statusFinanceiro'),
@@ -546,6 +577,20 @@ function initFormSubmit() {
         status: processo.status,
         descricao: processo.observacoes,
         clienteId: Number(processo.clienteId),
+        tribunal: processo.tribunal,
+        comarca: processo.comarca,
+        vara: processo.vara,
+        juiz: processo.juiz,
+        prioridade: processo.prioridade,
+
+        valorCausa: parseFloat(
+          String(processo.valorCausa || '0')
+            .replace(/\./g, '')
+            .replace(',', '.')
+        ) || 0,
+
+        statusFinanceiro: processo.statusFinanceiro,
+        ultMovimentacao: processo.ultMovimentacao,
 
         valorHonorario: parseFloat(
           String(processo.honorarios || '0')

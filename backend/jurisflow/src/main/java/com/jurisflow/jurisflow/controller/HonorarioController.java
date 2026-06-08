@@ -76,6 +76,41 @@ public class HonorarioController {
         return honorarioRepository.save(honorario);
     }
 
+    @PutMapping("/{id}")
+    public Honorario atualizar(@PathVariable Long id, @RequestBody HonorarioRequest request) {
+        return honorarioRepository.findById(id).map(honorario -> {
+
+            Cliente cliente = null;
+            Processo processo = null;
+
+            if (request.getClienteId() != null) {
+                cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
+            }
+
+            if (request.getProcessoId() != null) {
+                processo = processoRepository.findById(request.getProcessoId()).orElse(null);
+            }
+
+            honorario.setTipoHonorario(request.getTipoHonorario());
+            honorario.setValorTotal(request.getValorTotal());
+            honorario.setCompetencia(request.getCompetencia());
+            honorario.setStatus(request.getStatus());
+            honorario.setFormaPagamento(request.getFormaPagamento());
+            honorario.setDescricao(request.getDescricao());
+
+            if (cliente != null) {
+                honorario.setCliente(cliente);
+            }
+
+            if (processo != null) {
+                honorario.setProcesso(processo);
+            }
+
+            return honorarioRepository.save(honorario);
+
+        }).orElse(null);
+    }
+
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
         honorarioRepository.deleteById(id);

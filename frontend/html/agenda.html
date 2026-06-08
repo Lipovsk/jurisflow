@@ -503,46 +503,7 @@
             <div class="qd-title">⚡ Próximos Prazos</div>
             <div class="qd-sub">Esta semana</div>
           </div>
-          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Contestação — Maria Aparecida Souza · Prazo: Hoje','warning')">
-            <div class="dl-strip" style="background:#DC2626;"></div>
-            <div class="dl-info">
-              <div class="dl-title">Contestação — Proc. 0012345-88</div>
-              <div class="dl-client">Maria Aparecida Souza</div>
-            </div>
-            <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
-          </div>
-          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Recurso de Apelação — Construtora Beta Ltda · Prazo: Hoje','warning')">
-            <div class="dl-strip" style="background:#DC2626;"></div>
-            <div class="dl-info">
-              <div class="dl-title">Recurso de Apelação — TJ/SP</div>
-              <div class="dl-client">Construtora Beta Ltda</div>
-            </div>
-            <div class="dl-date" style="background:#FEF2F2;color:#DC2626;">Hoje</div>
-          </div>
-          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Petição Inicial Trabalhista — João Paulo Ferreira · Prazo: 22/05','info')">
-            <div class="dl-strip" style="background:#D97706;"></div>
-            <div class="dl-info">
-              <div class="dl-title">Petição Inicial Trabalhista</div>
-              <div class="dl-client">João Paulo Ferreira</div>
-            </div>
-            <div class="dl-date" style="background:#FFFBEB;color:#D97706;">22/05</div>
-          </div>
-          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Manifestação — Tecno Solutions S/A · Prazo: 23/05','info')">
-            <div class="dl-strip" style="background:#D97706;"></div>
-            <div class="dl-info">
-              <div class="dl-title">Manifestação — Proc. 0098761-22</div>
-              <div class="dl-client">Tecno Solutions S/A</div>
-            </div>
-            <div class="dl-date" style="background:#FFFBEB;color:#D97706;">23/05</div>
-          </div>
-          <div class="deadline-item" onclick="window.JurisFlow.showToast('📋 Alegações Finais — Roberto Alves Costa · Prazo: 26/05','info')">
-            <div class="dl-strip" style="background:#2563EB;"></div>
-            <div class="dl-info">
-              <div class="dl-title">Alegações Finais — Proc. 0056789</div>
-              <div class="dl-client">Roberto Alves Costa</div>
-            </div>
-            <div class="dl-date" style="background:#EEF3FF;color:#2563EB;">26/05</div>
-          </div>
+          <div id="prazosRapidosBody"></div>
         </div>
 
       </div>
@@ -556,104 +517,11 @@
           </div>
           <div class="tab-row">
             <button class="tab-btn active" onclick="filterTl('',this)">Todos</button>
-            <button class="tab-btn" onclick="filterTl('Audiência',this)">Audiências</button>
-            <button class="tab-btn" onclick="filterTl('Prazo',this)">Prazos</button>
+            <button class="tab-btn" onclick="filterTl('audiencia',this)">Audiências</button>
+            <button class="tab-btn" onclick="filterTl('prazo',this)">Prazos</button>
           </div>
         </div>
-        <div class="timeline-body" id="tlBody">
-
-          <div class="tl-item" data-tipo="Prazo">
-            <div class="tl-left">
-              <div class="tl-dot red">⚡</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Hoje — 20 de Maio · Urgente</div>
-              <div class="tl-event-title">Contestação — Processo 0012345-88</div>
-              <div class="tl-event-detail">Cliente: Maria Aparecida Souza · Vara Cível</div>
-              <div class="tl-tags"><span class="tl-tag red">Prazo</span><span class="tl-tag red">Urgente</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Audiência">
-            <div class="tl-left">
-              <div class="tl-dot blue">📋</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Hoje — 20 de Maio · 09:00</div>
-              <div class="tl-event-title">Audiência de Instrução — Cível</div>
-              <div class="tl-event-detail">📍 2ª Vara Cível — TJSP · Dr. Juiz Ferreira Lima</div>
-              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag red">Hoje</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Audiência">
-            <div class="tl-left">
-              <div class="tl-dot amber">📋</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Amanhã — 21 de Maio · 14:30</div>
-              <div class="tl-event-title">Audiência Trabalhista — Conciliação</div>
-              <div class="tl-event-detail">📍 3ª Vara do Trabalho · Cliente: João Paulo Ferreira</div>
-              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag amber">Trabalhista</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Prazo">
-            <div class="tl-left">
-              <div class="tl-dot amber">⏰</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Sexta-feira — 22 de Maio</div>
-              <div class="tl-event-title">Petição Inicial — Ação Trabalhista</div>
-              <div class="tl-event-detail">Cliente: João Paulo Ferreira · Protocolo TRT</div>
-              <div class="tl-tags"><span class="tl-tag amber">Prazo</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Audiência">
-            <div class="tl-left">
-              <div class="tl-dot green">📋</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Qui — 22 de Maio · 10:00</div>
-              <div class="tl-event-title">Audiência de Custódia</div>
-              <div class="tl-event-detail">📍 1ª Vara Criminal · Cliente: Roberto Alves Costa</div>
-              <div class="tl-tags"><span class="tl-tag blue">Audiência</span><span class="tl-tag green">Criminal</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Prazo">
-            <div class="tl-left">
-              <div class="tl-dot amber">📄</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Sábado — 23 de Maio</div>
-              <div class="tl-event-title">Manifestação — Proc. 0098761-22</div>
-              <div class="tl-event-detail">Cliente: Tecno Solutions S/A · Fase de Liquidação</div>
-              <div class="tl-tags"><span class="tl-tag amber">Prazo</span></div>
-            </div>
-          </div>
-
-          <div class="tl-item" data-tipo="Lembrete">
-            <div class="tl-left">
-              <div class="tl-dot gold">🔔</div>
-              <div class="tl-line"></div>
-            </div>
-            <div class="tl-content">
-              <div class="tl-date-tag">Segunda — 26 de Maio</div>
-              <div class="tl-event-title">Alegações Finais — Proc. 0056789-11</div>
-              <div class="tl-event-detail">Cliente: Roberto Alves Costa · Prazo final</div>
-              <div class="tl-tags"><span class="tl-tag blue">Prazo</span></div>
-            </div>
-          </div>
-
-        </div>
+        <div class="timeline-body" id="tlBody"></div>
       </div>
 
     </div>
@@ -917,21 +785,47 @@
 <script src="../js/dashboard.js"></script>
 <script>
 (function(){
+  let compromissos = [];
+
   // Mini calendar
   const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  let curDate = new Date(2026,4,1); // Maio 2026
-  const eventDays = [20,22,23,26];
+  let curDate = new Date();
+
+  async function carregarCompromissos() {
+    try {
+      const response = await fetch('http://localhost:8080/compromissos');
+      compromissos = await response.json();
+
+      renderCal();
+      renderPrazosRapidos();
+      renderTimeline();
+
+    } catch (erro) {
+      console.error('Erro ao carregar compromissos:', erro);
+      renderCal();
+    }
+  }
 
   function renderCal(){
     document.getElementById('calMonth').textContent = months[curDate.getMonth()] + ' ' + curDate.getFullYear();
     const first = new Date(curDate.getFullYear(), curDate.getMonth(), 1).getDay();
     const total = new Date(curDate.getFullYear(), curDate.getMonth()+1, 0).getDate();
-    const today = new Date(2026,4,20);
+    const today = new Date();
     let html = '';
     for(let i=0;i<first;i++) html += `<div class="cal-day other-month">${new Date(curDate.getFullYear(),curDate.getMonth(),-(first-1-i)).getDate()}</div>`;
     for(let d=1;d<=total;d++){
       const isToday = d===today.getDate() && curDate.getMonth()===today.getMonth() && curDate.getFullYear()===today.getFullYear();
-      const hasEv = eventDays.includes(d);
+      const hasEv = compromissos.some(c => {
+        if (!c.data) return false;
+
+        const dataComp = new Date(c.data + 'T00:00:00');
+
+        return (
+          dataComp.getDate() === d &&
+          dataComp.getMonth() === curDate.getMonth() &&
+          dataComp.getFullYear() === curDate.getFullYear()
+        );
+      });
       html += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}">${d}</div>`;
     }
     document.getElementById('calDays').innerHTML = html;
@@ -942,7 +836,6 @@
       });
     });
   }
-  renderCal();
   document.getElementById('calPrev').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()-1); renderCal(); });
   document.getElementById('calNext').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()+1); renderCal(); });
 
@@ -1266,7 +1159,7 @@ carregarClientesAgenda();
       closeDrawer();
     }
 
-    location.reload();
+    await carregarCompromissos();
 
   } catch (error) {
     console.error(error);
@@ -1295,63 +1188,162 @@ carregarClientesAgenda();
       item.style.display = (!tipo || item.dataset.tipo===tipo) ? '' : 'none';
     });
   };
- async function carregarCompromissos() {
-  try {
-    const response = await fetch("http://localhost:8080/compromissos");
-    const compromissos = await response.json();
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
 
-    const tlBody = document.getElementById("tlBody");
+  function parseCompromissoDate(data) {
+    return data ? new Date(data + 'T00:00:00') : null;
+  }
 
-    if (!compromissos.length) {
-      tlBody.innerHTML = `
-        <div class="empty-state">
-          Nenhum compromisso cadastrado
+  function formatarDataCurta(data) {
+    const date = parseCompromissoDate(data);
+    return date
+      ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      : 'Sem data';
+  }
+
+  function formatarDataTimeline(c) {
+    const date = parseCompromissoDate(c.data);
+    const label = date
+      ? date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long' })
+      : 'Sem data';
+    return `${label}${c.hora ? ' · ' + c.hora : ''}`;
+  }
+
+  function tipoNormalizado(tipo) {
+    return String(tipo || 'compromisso').toLowerCase();
+  }
+
+  function tipoLabel(tipo) {
+    const labels = {
+      audiencia: 'Audiência',
+      prazo: 'Prazo',
+      reuniao: 'Reunião',
+      lembrete: 'Lembrete',
+      tarefa: 'Tarefa',
+      protocolo: 'Protocolo'
+    };
+    return labels[tipoNormalizado(tipo)] || 'Compromisso';
+  }
+
+  function corPorTipo(c) {
+    const tipo = tipoNormalizado(c.tipo);
+    if (tipo === 'prazo') return 'red';
+    if (tipo === 'lembrete') return 'gold';
+    if (tipo === 'tarefa') return 'green';
+    if (c.prioridade === 'urgente') return 'red';
+    return 'blue';
+  }
+
+  function iconePorTipo(tipo) {
+    const icons = {
+      audiencia: '📋',
+      prazo: '⏰',
+      reuniao: '🤝',
+      lembrete: '🔔',
+      tarefa: '✅',
+      protocolo: '📄'
+    };
+    return icons[tipoNormalizado(tipo)] || '📌';
+  }
+
+  function renderPrazosRapidos() {
+    const box = document.getElementById('prazosRapidosBody');
+    if (!box) return;
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const prazos = compromissos
+      .filter(c => c.tipo === 'prazo')
+      .filter(c => c.data)
+      .sort((a, b) => new Date(a.data) - new Date(b.data))
+      .slice(0, 5);
+
+    if (!prazos.length) {
+      box.innerHTML = `
+        <div style="padding:18px 20px;color:var(--gray-400);font-size:.82rem;">
+          Nenhum prazo cadastrado.
         </div>
       `;
       return;
     }
 
-    tlBody.innerHTML = compromissos.map(c => `
-      <div class="tl-item" data-tipo="${c.tipo || ''}">
-        <div class="tl-left">
-          <div class="tl-dot ${c.tipo === 'prazo' ? 'red' : 'blue'}">
-            ${c.tipo === 'prazo' ? '⏰' : '📋'}
+    box.innerHTML = prazos.map(c => {
+      const data = new Date(c.data + 'T00:00:00');
+      const diff = Math.ceil((data - hoje) / 86400000);
+
+      const label =
+        diff === 0 ? 'Hoje' :
+        diff === 1 ? 'Amanhã' :
+        data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+      const cor =
+        diff <= 0 ? '#DC2626' :
+        diff <= 3 ? '#D97706' :
+        '#2563EB';
+
+      const bg =
+        diff <= 0 ? '#FEF2F2' :
+        diff <= 3 ? '#FFFBEB' :
+        '#EEF3FF';
+
+      return `
+        <div class="deadline-item">
+          <div class="dl-strip" style="background:${cor};"></div>
+          <div class="dl-info">
+            <div class="dl-title">${c.titulo || 'Prazo sem título'}</div>
+            <div class="dl-client">${c.cliente?.nome || 'Cliente não informado'}</div>
           </div>
-          <div class="tl-line"></div>
+          <div class="dl-date" style="background:${bg};color:${cor};">${label}</div>
         </div>
-
-        <div class="tl-content">
-          <div class="tl-date-tag">
-            ${c.data || 'Sem data'} ${c.hora ? '· ' + c.hora : ''}
-          </div>
-
-          <div class="tl-event-title">
-            ${c.titulo || 'Compromisso sem título'}
-          </div>
-
-          <div class="tl-event-detail">
-            Cliente: ${c.cliente?.nome || '—'} ${c.descricao ? '· ' + c.descricao : ''}
-          </div>
-
-          <div class="tl-tags">
-            <span class="tl-tag ${c.tipo === 'prazo' ? 'red' : 'blue'}">
-              ${c.tipo || 'compromisso'}
-            </span>
-
-            <span class="tl-tag amber">
-              ${c.prioridade || 'media'}
-            </span>
-          </div>
-        </div>
-      </div>
-    `).join("");
-
-  } catch (error) {
-    console.error("Erro ao carregar compromissos:", error);
+      `;
+    }).join('');
   }
-}
+  function renderTimeline() {
+    const tlBody = document.getElementById('tlBody');
+    const ordenados = [...compromissos].sort((a, b) => String(a.data || '').localeCompare(String(b.data || '')));
 
-carregarCompromissos();
+    if (!ordenados.length) {
+      tlBody.innerHTML = '<div class="empty-state">Nenhum compromisso cadastrado</div>';
+      return;
+    }
+
+    tlBody.innerHTML = ordenados.map(c => {
+      const tipo = tipoNormalizado(c.tipo);
+      const cor = corPorTipo(c);
+
+      return `
+        <div class="tl-item" data-tipo="${escapeHtml(tipo)}">
+          <div class="tl-left">
+            <div class="tl-dot ${cor}">
+              ${iconePorTipo(tipo)}
+            </div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-content">
+            <div class="tl-date-tag">${escapeHtml(formatarDataTimeline(c))}</div>
+            <div class="tl-event-title">${escapeHtml(c.titulo || 'Compromisso sem título')}</div>
+            <div class="tl-event-detail">
+              Cliente: ${escapeHtml(c.cliente?.nome || '—')}${c.descricao ? ' · ' + escapeHtml(c.descricao) : ''}
+            </div>
+            <div class="tl-tags">
+              <span class="tl-tag ${cor}">${escapeHtml(tipoLabel(tipo))}</span>
+              <span class="tl-tag amber">${escapeHtml(c.prioridade || 'media')}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  carregarCompromissos();
 })();
 </script>
 </body>

@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Honorários — JurisFlow</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .page-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .page-heading h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+
+    .page-heading p {
+      margin-top: 4px;
+      font-size: .82rem;
+      color: var(--gray-400);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      height: 40px;
+      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all .2s;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: var(--white);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: var(--navy-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--navy);
+      color: var(--navy);
+    }
+
+    .hon-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .hon-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .hon-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.12rem;
+      flex-shrink: 0;
+    }
+
+    .hon-card-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.42rem;
+      line-height: 1.15;
+      font-weight: 700;
+      color: var(--navy);
+      overflow-wrap: anywhere;
+    }
+
+    .hon-card-label {
+      margin-top: 3px;
+      font-size: .72rem;
+      color: var(--gray-400);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .hon-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      color: var(--gray-600);
+      border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .filter-tab:hover,
+    .filter-tab.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--white);
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 420px;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 40px;
+      padding: 0 16px 0 40px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      color: var(--gray-800);
+      background: var(--white);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--navy-light);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      font-size: .85rem;
+      pointer-events: none;
+    }
+
+    .hon-table-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      animation: fadeUp .4s ease both;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .table-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .table-count {
+      font-size: .76rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .15s;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: .82rem;
+      color: var(--gray-800);
+      vertical-align: middle;
+    }
+
+    .client-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 190px;
+    }
+
+    .client-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--navy-light), var(--gold));
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .cell-main {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .cell-sub {
+      font-size: .72rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .process-num {
+      font-family: 'DM Mono', monospace;
+      font-size: .76rem;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    .value-cell {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-pago {
+      background: #ECFDF5;
+      color: #059669;
+    }
+
+    .status-pendente {
+      background: #FFFBEB;
+      color: #D97706;
+    }
+
+    .status-inadimplente {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .74rem;
+      font-weight: 700;
+      color: var(--gray-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+
+    .btn-action:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .btn-pay {
+      color: #059669;
+      border-color: #A7F3D0;
+    }
+
+    .btn-pay:hover:not(:disabled) {
+      background: #ECFDF5;
+    }
+
+    .btn-edit {
+      color: #2563EB;
+      border-color: #BFDBFE;
+    }
+
+    .btn-edit:hover {
+      background: #EEF3FF;
+    }
+
+    .btn-delete {
+      color: #DC2626;
+      border-color: #FECACA;
+    }
+
+    .btn-delete:hover {
+      background: #FEF2F2;
+    }
+
+    .empty-state,
+    .loading-state {
+      padding: 54px 20px;
+      text-align: center;
+      color: var(--gray-400);
+    }
+
+    .empty-state strong,
+    .loading-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--navy);
+      font-size: .95rem;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(13, 27, 42, .45);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 560px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      transform: translateY(16px);
+      transition: transform .2s;
+    }
+
+    .modal-overlay.open .modal-box {
+      transform: translateY(0);
+    }
+
+    .modal-head,
+    .modal-footer {
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .modal-footer {
+      justify-content: flex-end;
+      border-top: 1px solid var(--gray-100);
+      border-bottom: none;
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: var(--gray-800);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .84rem;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 88px;
+      padding-top: 10px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--navy-light);
+    }
+
+    @media (max-width: 1100px) {
+      .hon-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page-actions,
+      .hon-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .search-box {
+        max-width: none;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+      }
+
+      .filter-tab {
+        flex: 0 0 auto;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hon-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .page-content {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-icon">⚖</div>
+        <div>
+          <div class="brand-name">JurisFlow</div>
+          <div class="brand-tagline">Sistema Jurídico</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item" data-page="dashboard" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" data-page="clientes" href="clientes.html"><span class="nav-icon">👤</span> Clientes</a>
+    <a class="nav-item" data-page="processos" href="processos.html"><span class="nav-icon">📁</span> Processos</a>
+    <a class="nav-item" data-page="agenda" href="agenda.html"><span class="nav-icon">📅</span> Agenda</a>
+    <div class="nav-section-label">Financeiro</div>
+    <a class="nav-item active" data-page="financeiro" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" data-page="documentos" href="documentos.html"><span class="nav-icon">📄</span> Documentos</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item" data-page="configuracoes" href="configuracoes.html"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-card" data-action="logout">
+      <div class="user-avatar">CM</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Carlos Mendes</div>
+        <div class="user-role">OAB 12.345/SP</div>
+      </div>
+      <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <div class="topbar-left">
+      <div class="page-title">Honorários</div>
+      <div class="page-subtitle">Gestão de recebimentos e cobranças advocatícias</div>
+    </div>
+    <div class="topbar-right">
+      <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:8px;"></span>
+      <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">CM</div>
+        <div class="topbar-user-name">Dr. Mendes</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="page-actions">
+      <div class="page-heading">
+        <h1>Honorários</h1>
+        <p>Controle financeiro vinculado a clientes e processos reais do backend.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-secondary" type="button" onclick="carregarHonorarios()">↻ Atualizar</button>
+        <button class="btn-primary" type="button" onclick="window.location.href='lancar-honorario.html'">＋ Lançar Honorário</button>
+      </div>
+    </div>
+
+    <section class="hon-summary" aria-label="Resumo de honorários">
+      <div class="hon-card">
+        <div class="hon-card-icon" style="background:#ECFDF5;color:#059669;">💵</div>
+        <div>
+          <div class="hon-card-value" id="cardRecebido">R$ 0,00</div>
+          <div class="hon-card-label">Total Recebido</div>
+        </div>
+      </div>
+      <div class="hon-card">
+        <div class="hon-card-icon" style="background:#FFFBEB;color:#D97706;">⏳</div>
+        <div>
+          <div class="hon-card-value" id="cardPendente">R$ 0,00</div>
+          <div class="hon-card-label">Total Pendente</div>
+        </div>
+      </div>
+      <div class="hon-card">
+        <div class="hon-card-icon" style="background:#FEF2F2;color:#DC2626;">⚠️</div>
+        <div>
+          <div class="hon-card-value" id="cardInadimplente">R$ 0,00</div>
+          <div class="hon-card-label">Total Inadimplente</div>
+        </div>
+      </div>
+      <div class="hon-card">
+        <div class="hon-card-icon" style="background:#EEF3FF;color:#2563EB;">📋</div>
+        <div>
+          <div class="hon-card-value" id="cardQuantidade">0</div>
+          <div class="hon-card-label">Qtd. Honorários</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hon-toolbar" aria-label="Filtros de honorários">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" type="button" data-filter="todos">Todos</button>
+        <button class="filter-tab" type="button" data-filter="pago">Pagos</button>
+        <button class="filter-tab" type="button" data-filter="pendente">Pendentes</button>
+        <button class="filter-tab" type="button" data-filter="inadimplente">Inadimplentes</button>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="searchInput" placeholder="Buscar por cliente ou número do processo">
+      </div>
+    </section>
+
+    <section class="hon-table-card">
+      <div class="table-header">
+        <div>
+          <div class="table-title">Honorários cadastrados</div>
+          <div class="table-count" id="tableCount">Carregando dados da API...</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Processo</th>
+              <th>Tipo de Honorário</th>
+              <th>Valor</th>
+              <th>Competência</th>
+              <th>Forma de Pagamento</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="honorariosBody">
+            <tr>
+              <td colspan="8">
+                <div class="loading-state">
+                  <strong>Carregando honorários</strong>
+                  <span>Buscando dados reais no backend.</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="editModalTitle">Editar Honorário</div>
+        <div class="cell-sub" id="editModalSubtitle"></div>
+      </div>
+      <button class="modal-close" type="button" onclick="fecharModalEdicao()">×</button>
+    </div>
+    <form id="editForm">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field">
+            <label for="editTipo">Tipo de Honorário</label>
+            <input id="editTipo" type="text" required>
+          </div>
+          <div class="field">
+            <label for="editValor">Valor</label>
+            <input id="editValor" type="number" min="0" step="0.01" required>
+          </div>
+          <div class="field">
+            <label for="editCompetencia">Competência</label>
+            <input id="editCompetencia" type="month">
+          </div>
+          <div class="field">
+            <label for="editForma">Forma de Pagamento</label>
+            <input id="editForma" type="text">
+          </div>
+          <div class="field">
+            <label for="editStatus">Status</label>
+            <select id="editStatus">
+              <option value="pago">Pago</option>
+              <option value="pendente">Pendente</option>
+              <option value="inadimplente">Inadimplente</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="editDescricao">Descrição</label>
+            <textarea id="editDescricao"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" type="button" onclick="fecharModalEdicao()">Cancelar</button>
+        <button class="btn-primary" type="submit">Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/storage.js"></script>
+<script src="../js/dashboard.js"></script>
+<script>
+(() => {
+  const API_BASE = 'http://localhost:8080';
+
+  let honorarios = [];
+  let filtroAtual = 'todos';
+  let buscaAtual = '';
+  let honorarioEditandoId = null;
+
+  const byId = id => document.getElementById(id);
+
+  function toast(mensagem, tipo = 'info') {
+    if (window.JurisFlow?.showToast) {
+      window.JurisFlow.showToast(mensagem, tipo);
+      return;
+    }
+    alert(mensagem);
+  }
+
+  function escapeHtml(valor) {
+    return String(valor ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function normalizarTexto(valor) {
+    return String(valor ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function normalizarStatus(status) {
+    const valor = normalizarTexto(status).trim();
+    if (valor === 'pago' || valor === 'em dia' || valor === 'quitado') return 'pago';
+    if (valor === 'inadimplente' || valor === 'atrasado') return 'inadimplente';
+    return 'pendente';
+  }
+
+  function statusLabel(status) {
+    const valor = normalizarStatus(status);
+    if (valor === 'pago') return 'Pago';
+    if (valor === 'inadimplente') return 'Inadimplente';
+    return 'Pendente';
+  }
+
+  function moeda(valor) {
+    return Number(valor || 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  }
+
+  function competenciaLabel(valor) {
+    if (!valor) return 'Não informada';
+    const partes = String(valor).split('-');
+    if (partes.length < 2) return valor;
+    const data = new Date(Number(partes[0]), Number(partes[1]) - 1, 1);
+    return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+  }
+
+  function iniciais(nome) {
+    const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return 'JF';
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
+  }
+
+  function clienteNome(honorario) {
+    return honorario.cliente?.nome || 'Cliente não vinculado';
+  }
+
+  function clienteDoc(honorario) {
+    return honorario.cliente?.cpfCnpj || honorario.cliente?.cpf || '';
+  }
+
+  function processoNumero(honorario) {
+    return honorario.processo?.numero || 'Sem processo';
+  }
+
+  function processoResumo(honorario) {
+    return honorario.processo?.tipoAcao || honorario.processo?.areaJuridica || '';
+  }
+
+  function montarRequest(honorario, extras = {}) {
+    return {
+      tipoHonorario: honorario.tipoHonorario || '',
+      valorTotal: Number(honorario.valorTotal || 0),
+      competencia: honorario.competencia || '',
+      status: honorario.status || 'pendente',
+      formaPagamento: honorario.formaPagamento || '',
+      descricao: honorario.descricao || '',
+      clienteId: honorario.cliente?.id || null,
+      processoId: honorario.processo?.id || null,
+      ...extras
+    };
+  }
+
+  async function carregarHonorarios() {
+    byId('honorariosBody').innerHTML = `
+      <tr>
+        <td colspan="8">
+          <div class="loading-state">
+            <strong>Carregando honorários</strong>
+            <span>Buscando dados reais no backend.</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    byId('tableCount').textContent = 'Carregando dados da API...';
+
+    try {
+      const resposta = await fetch(`${API_BASE}/honorarios`);
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      honorarios = await resposta.json();
+      renderizar();
+    } catch (erro) {
+      console.error('Erro ao carregar honorários:', erro);
+      honorarios = [];
+      renderizar();
+      toast('Erro ao carregar honorários do backend.', 'error');
+    }
+  }
+
+  function honorariosFiltrados() {
+    return honorarios.filter(honorario => {
+      const status = normalizarStatus(honorario.status);
+      const textoBusca = normalizarTexto(`${clienteNome(honorario)} ${processoNumero(honorario)}`);
+
+      const passaStatus = filtroAtual === 'todos' || status === filtroAtual;
+      const passaBusca = !buscaAtual || textoBusca.includes(buscaAtual);
+
+      return passaStatus && passaBusca;
+    });
+  }
+
+  function renderizarCards() {
+    const totalRecebido = honorarios
+      .filter(h => normalizarStatus(h.status) === 'pago')
+      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
+
+    const totalPendente = honorarios
+      .filter(h => normalizarStatus(h.status) === 'pendente')
+      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
+
+    const totalInadimplente = honorarios
+      .filter(h => normalizarStatus(h.status) === 'inadimplente')
+      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
+
+    byId('cardRecebido').textContent = moeda(totalRecebido);
+    byId('cardPendente').textContent = moeda(totalPendente);
+    byId('cardInadimplente').textContent = moeda(totalInadimplente);
+    byId('cardQuantidade').textContent = honorarios.length;
+  }
+
+  function renderizarTabela(lista) {
+    byId('tableCount').textContent = `${lista.length} honorário(s) encontrado(s)`;
+
+    if (!lista.length) {
+      byId('honorariosBody').innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <strong>Nenhum honorário encontrado</strong>
+              <span>Ajuste os filtros ou cadastre um novo honorário.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    byId('honorariosBody').innerHTML = lista.map(honorario => {
+      const status = normalizarStatus(honorario.status);
+      const pago = status === 'pago';
+      const cliente = clienteNome(honorario);
+      const processo = processoNumero(honorario);
+
+      return `
+        <tr>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar">${escapeHtml(iniciais(cliente))}</div>
+              <div>
+                <div class="cell-main">${escapeHtml(cliente)}</div>
+                <div class="cell-sub">${escapeHtml(clienteDoc(honorario) || 'Sem documento')}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="process-num">${escapeHtml(processo)}</div>
+            <div class="cell-sub">${escapeHtml(processoResumo(honorario))}</div>
+          </td>
+          <td>${escapeHtml(honorario.tipoHonorario || 'Não informado')}</td>
+          <td><span class="value-cell">${moeda(honorario.valorTotal)}</span></td>
+          <td>${escapeHtml(competenciaLabel(honorario.competencia))}</td>
+          <td>${escapeHtml(honorario.formaPagamento || 'Não informada')}</td>
+          <td><span class="status-badge status-${status}">${statusLabel(honorario.status)}</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-action btn-pay" type="button" ${pago ? 'disabled' : ''} onclick="marcarComoPago(${honorario.id})">💰 Marcar como Pago</button>
+              <button class="btn-action btn-edit" type="button" onclick="abrirModalEdicao(${honorario.id})">✏️ Editar</button>
+              <button class="btn-action btn-delete" type="button" onclick="excluirHonorario(${honorario.id})">🗑️ Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderizar() {
+    renderizarCards();
+    renderizarTabela(honorariosFiltrados());
+  }
+
+  async function atualizarHonorario(id, payload, mensagemSucesso) {
+    const resposta = await fetch(`${API_BASE}/honorarios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+    const atualizado = await resposta.json();
+    honorarios = honorarios.map(h => h.id === id ? atualizado : h);
+    renderizar();
+    toast(mensagemSucesso, 'success');
+  }
+
+  async function marcarComoPago(id) {
+    const honorario = honorarios.find(h => h.id === id);
+    if (!honorario) return;
+
+    try {
+      await atualizarHonorario(
+        id,
+        montarRequest(honorario, { status: 'pago' }),
+        'Honorário marcado como pago.'
+      );
+    } catch (erro) {
+      console.error('Erro ao marcar honorário como pago:', erro);
+      toast('Erro ao atualizar status do honorário.', 'error');
+    }
+  }
+
+  async function excluirHonorario(id) {
+    const honorario = honorarios.find(h => h.id === id);
+    const nome = clienteNome(honorario || {});
+
+    if (!confirm(`Deseja excluir o honorário de ${nome}?`)) return;
+
+    try {
+      const resposta = await fetch(`${API_BASE}/honorarios/${id}`, { method: 'DELETE' });
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+      honorarios = honorarios.filter(h => h.id !== id);
+      renderizar();
+      toast('Honorário excluído com sucesso.', 'success');
+    } catch (erro) {
+      console.error('Erro ao excluir honorário:', erro);
+      toast('Erro ao excluir honorário.', 'error');
+    }
+  }
+
+  function abrirModalEdicao(id) {
+    const honorario = honorarios.find(h => h.id === id);
+    if (!honorario) return;
+
+    honorarioEditandoId = id;
+    byId('editModalSubtitle').textContent = `${clienteNome(honorario)} · ${processoNumero(honorario)}`;
+    byId('editTipo').value = honorario.tipoHonorario || '';
+    byId('editValor').value = Number(honorario.valorTotal || 0).toFixed(2);
+    byId('editCompetencia').value = honorario.competencia || '';
+    byId('editForma').value = honorario.formaPagamento || '';
+    byId('editStatus').value = normalizarStatus(honorario.status);
+    byId('editDescricao').value = honorario.descricao || '';
+    byId('editModal').classList.add('open');
+  }
+
+  function fecharModalEdicao() {
+    honorarioEditandoId = null;
+    byId('editModal').classList.remove('open');
+  }
+
+  byId('editForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const honorario = honorarios.find(h => h.id === honorarioEditandoId);
+    if (!honorario) return;
+
+    const payload = montarRequest(honorario, {
+      tipoHonorario: byId('editTipo').value.trim(),
+      valorTotal: Number(byId('editValor').value || 0),
+      competencia: byId('editCompetencia').value,
+      status: byId('editStatus').value,
+      formaPagamento: byId('editForma').value.trim(),
+      descricao: byId('editDescricao').value.trim()
+    });
+
+    try {
+      await atualizarHonorario(honorario.id, payload, 'Honorário atualizado com sucesso.');
+      fecharModalEdicao();
+    } catch (erro) {
+      console.error('Erro ao editar honorário:', erro);
+      toast('Erro ao salvar alterações do honorário.', 'error');
+    }
+  });
+
+  byId('editModal').addEventListener('click', event => {
+    if (event.target === byId('editModal')) fecharModalEdicao();
+  });
+
+  byId('filterTabs').addEventListener('click', event => {
+    const botao = event.target.closest('.filter-tab');
+    if (!botao) return;
+
+    document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+    botao.classList.add('active');
+    filtroAtual = botao.dataset.filter;
+    renderizar();
+  });
+
+  byId('searchInput').addEventListener('input', event => {
+    buscaAtual = normalizarTexto(event.target.value);
+    renderizar();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') fecharModalEdicao();
+  });
+
+  window.carregarHonorarios = carregarHonorarios;
+  window.marcarComoPago = marcarComoPago;
+  window.excluirHonorario = excluirHonorario;
+  window.abrirModalEdicao = abrirModalEdicao;
+  window.fecharModalEdicao = fecharModalEdicao;
+
+  document.addEventListener('DOMContentLoaded', carregarHonorarios);
+})();
+</script>
+</body>
+</html>
