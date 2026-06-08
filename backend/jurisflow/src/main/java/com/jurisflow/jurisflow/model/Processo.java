@@ -18,6 +18,14 @@ public class Processo {
     private String dataAbertura;
     private String dataAudiencia;
     private String prazoFinal;
+    private String tribunal;
+    private String comarca;
+    private String vara;
+    private String juiz;
+    private String prioridade;
+    private Double valorCausa;
+    private String statusFinanceiro;
+    private String ultMovimentacao;
 
     private Double valorHonorario;
     private String formaPagamento;
@@ -134,5 +142,68 @@ public class Processo {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+    public String getTribunal() {
+        return tribunal;
+    }
+
+    public void setTribunal(String tribunal) {
+        this.tribunal = tribunal;
+    }
+
+    public String getComarca() {
+        return comarca;
+    }
+
+    public void setComarca(String comarca) {
+        this.comarca = comarca;
+    }
+
+    public String getVara() {
+        return vara;
+    }
+
+    public void setVara(String vara) {
+        this.vara = vara;
+    }
+
+    public String getJuiz() {
+        return juiz;
+    }
+
+    public void setJuiz(String juiz) {
+        this.juiz = juiz;
+    }
+
+    public String getPrioridade() {
+        return prioridade;
+    }
+
+    public void setPrioridade(String prioridade) {
+        this.prioridade = prioridade;
+    }
+
+    public Double getValorCausa() {
+        return valorCausa;
+    }
+
+    public void setValorCausa(Double valorCausa) {
+        this.valorCausa = valorCausa;
+    }
+
+    public String getStatusFinanceiro() {
+        return statusFinanceiro;
+    }
+
+    public void setStatusFinanceiro(String statusFinanceiro) {
+        this.statusFinanceiro = statusFinanceiro;
+    }
+
+    public String getUltMovimentacao() {
+        return ultMovimentacao;
+    }
+
+    public void setUltMovimentacao(String ultMovimentacao) {
+        this.ultMovimentacao = ultMovimentacao;
     }
 }
