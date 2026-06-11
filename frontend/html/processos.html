@@ -241,11 +241,12 @@
         <input type="text" id="searchInput" placeholder="Buscar por nº do processo, cliente ou assunto..." />
       </div>
       <select class="filter-select" id="filterStatus">
-        <option value="">Todos os status</option>
+        <option value="">Todos ativos</option>
         <option value="andamento">Em andamento</option>
         <option value="urgente">Urgente</option>
         <option value="suspenso">Suspenso</option>
-        <option value="concluido">Concluído</option>
+        <option value="concluido">Concluídos</option>
+        <option value="arquivado">Arquivados</option>
       </select>
       <select class="filter-select" id="filterArea">
         <option value="">Todas as áreas</option>
@@ -340,6 +341,7 @@
     urgente:  { cls:'sp-urgente',   label:'⚠ Urgente' },
     concluido:{ cls:'sp-concluido', label:'Concluído' },
     suspenso: { cls:'sp-suspenso',  label:'Suspenso' },
+    arquivado:{ cls:'sp-suspenso',  label:'📦 Arquivado' },
   };
 
   function updateCards(list) {
@@ -379,7 +381,14 @@
           </div>
         </td>
         <td><span class="status-proc ${s.cls}">${s.label}</span></td>
-        <td><button class="btn-icon btn-det-proc" data-id="${p.id}" title="Ver Detalhes">👁</button></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn-icon btn-concluir" data-id="${p.id}" title="Concluir">✔️</button>
+            <button type="button" class="btn-icon btn-arquivar" data-id="${p.id}" title="Arquivar">📦</button>
+            <button type="button" class="btn-icon btn-excluir" data-id="${p.id}" title="Excluir">🗑️</button>
+            <button type="button" class="btn-icon btn-det-proc" data-id="${p.id}" title="Detalhes">👁</button>
+          </div>
+        </td>
       </tr>`;
     }).join('') || '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--gray-400);">Nenhum processo encontrado</td></tr>';
   }
@@ -390,7 +399,7 @@
     const ar = document.getElementById('filterArea').value;
     render(allProcessos.filter(p =>
       (!q || (p.numero||'').toLowerCase().includes(q) || (p.tipoAcao||'').toLowerCase().includes(q) || (p.clienteNome||'').toLowerCase().includes(q)) &&
-      (!st || (p.status||'andamento') === st) &&
+      (!st ? (p.status || 'andamento') !== 'arquivado' : (p.status || 'andamento') === st) &&
       (!ar || normArea(p.areaJuridica) === ar)
     ));
   }
@@ -424,9 +433,91 @@ fetch('http://localhost:8080/processos')
   document.getElementById('filterArea').addEventListener('change', applyFilters);
 
   document.getElementById('procBody').addEventListener('click', function(e) {
-    const btn = e.target.closest('.btn-det-proc');
-    if (btn) window.location.href = 'detalhes-processo.html?id=' + btn.dataset.id;
+    e.stopPropagation();
+
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const id = btn.dataset.id;
+
+    if (btn.classList.contains('btn-det-proc')) {
+      window.location.href = 'detalhes-processo.html?id=' + id;
+      return;
+    }
+
+    if (btn.classList.contains('btn-concluir')) {
+      alterarStatus(id, 'concluido');
+      return;
+    }
+
+    if (btn.classList.contains('btn-arquivar')) {
+      alterarStatus(id, 'arquivado');
+      return;
+    }
+
+    if (btn.classList.contains('btn-excluir')) {
+      excluirProcesso(id);
+      return;
+    }
   });
+
+  async function excluirProcesso(id) {
+    if (!confirm('Deseja realmente excluir este processo?')) return;
+
+    try {
+      const response = await fetch(`http://localhost:8080/processos/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao excluir processo');
+      }
+
+      window.JurisFlow?.showToast('Processo excluído com sucesso.', 'success');
+      location.reload();
+
+    } catch (erro) {
+      console.error(erro);
+      window.JurisFlow?.showToast('Erro ao excluir processo.', 'error');
+    }
+  }
+
+  async function alterarStatus(id, novoStatus) {
+    try {
+      const responseGet = await fetch(`http://localhost:8080/processos/${id}`);
+
+      if (!responseGet.ok) {
+        throw new Error('Erro ao buscar processo');
+      }
+
+      const processo = await responseGet.json();
+
+      const responsePut = await fetch(`http://localhost:8080/processos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...processo,
+          clienteId: processo.cliente?.id,
+          status: novoStatus
+        })
+      });
+
+      if (!responsePut.ok) {
+        throw new Error('Erro ao atualizar processo');
+      }
+
+      window.JurisFlow?.showToast('Status do processo atualizado.', 'success');
+      location.reload();
+
+    } catch (erro) {
+      console.error(erro);
+      window.JurisFlow?.showToast('Erro ao atualizar processo.', 'error');
+    }
+  }
 
 })();
 </script>

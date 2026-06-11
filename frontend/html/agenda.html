@@ -89,6 +89,40 @@
     .tl-tag.amber  { background:#FFFBEB; color:#D97706; }
     .tl-tag.blue   { background:#EEF3FF; color:#2563EB; }
     .tl-tag.green  { background:#ECFDF5; color:#059669; }
+    .tl-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .btn-concluir-compromisso,
+    .btn-excluir-compromisso {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-concluir-compromisso {
+      background: #e8f8ef;
+      color: #15803d;
+    }
+    .btn-concluir-compromisso:hover {
+      background: #d1fae5;
+      transform: translateY(-1px);
+    }
+    .btn-excluir-compromisso {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    .btn-excluir-compromisso:hover {
+      background: #fee2e2;
+      transform: translateY(-1px);
+    }
 
     @media (max-width:1100px) { .agenda-layout { grid-template-columns:1fr; } }
   </style>
@@ -1180,14 +1214,17 @@ carregarClientesAgenda();
       document.getElementById('ncData').classList.remove('error'));
   })();
 
-  // Timeline filter — recebe o botão diretamente (compatível com todos os browsers)
-  window.filterTl = function(tipo, btn){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.querySelectorAll('#tlBody .tl-item').forEach(item=>{
-      item.style.display = (!tipo || item.dataset.tipo===tipo) ? '' : 'none';
+  function filterTl(tipo, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
     });
-  };
+
+    btn.classList.add('active');
+
+    renderTimeline(tipo);
+  }
+
+  window.filterTl = filterTl;
   function escapeHtml(value) {
     return String(value ?? '')
       .replaceAll('&', '&amp;')
@@ -1306,42 +1343,170 @@ carregarClientesAgenda();
       `;
     }).join('');
   }
-  function renderTimeline() {
-    const tlBody = document.getElementById('tlBody');
-    const ordenados = [...compromissos].sort((a, b) => String(a.data || '').localeCompare(String(b.data || '')));
+  function renderTimeline(filtro = '') {
+    const box = document.getElementById('tlBody');
+    if (!box) return;
 
-    if (!ordenados.length) {
-      tlBody.innerHTML = '<div class="empty-state">Nenhum compromisso cadastrado</div>';
+    let lista = [...compromissos]
+      .filter(c => c.data)
+      .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    if (filtro) {
+      lista = lista.filter(c => c.tipo === filtro);
+    }
+
+    if (!lista.length) {
+      box.innerHTML = `
+        <div style="padding:24px;color:var(--gray-400);font-size:.85rem;">
+          Nenhum compromisso encontrado.
+        </div>
+      `;
       return;
     }
 
-    tlBody.innerHTML = ordenados.map(c => {
-      const tipo = tipoNormalizado(c.tipo);
-      const cor = corPorTipo(c);
+    box.innerHTML = lista.map(c => {
+      const tipo = c.tipo || 'lembrete';
+
+      const dotClass =
+        tipo === 'prazo' ? 'red' :
+        tipo === 'audiencia' ? 'blue' :
+        tipo === 'reuniao' ? 'gold' :
+        tipo === 'tarefa' ? 'green' :
+        'amber';
+
+      const icon =
+        tipo === 'prazo' ? '⏰' :
+        tipo === 'audiencia' ? '📋' :
+        tipo === 'reuniao' ? '🤝' :
+        tipo === 'tarefa' ? '✅' :
+        '🔔';
+
+      const tipoLabel =
+        tipo === 'prazo' ? 'Prazo' :
+        tipo === 'audiencia' ? 'Audiência' :
+        tipo === 'reuniao' ? 'Reunião' :
+        tipo === 'tarefa' ? 'Tarefa' :
+        'Lembrete';
+
+      const dataFormatada = new Date(c.data + 'T00:00:00')
+        .toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long'
+        });
 
       return `
-        <div class="tl-item" data-tipo="${escapeHtml(tipo)}">
+        <div class="tl-item" data-tipo="${tipoLabel}">
           <div class="tl-left">
-            <div class="tl-dot ${cor}">
-              ${iconePorTipo(tipo)}
-            </div>
+            <div class="tl-dot ${dotClass}">${icon}</div>
             <div class="tl-line"></div>
           </div>
+
           <div class="tl-content">
-            <div class="tl-date-tag">${escapeHtml(formatarDataTimeline(c))}</div>
-            <div class="tl-event-title">${escapeHtml(c.titulo || 'Compromisso sem título')}</div>
-            <div class="tl-event-detail">
-              Cliente: ${escapeHtml(c.cliente?.nome || '—')}${c.descricao ? ' · ' + escapeHtml(c.descricao) : ''}
+            <div class="tl-date-tag">
+              ${dataFormatada} · ${c.hora || 'Dia inteiro'}
             </div>
+
+            <div class="tl-event-title">
+              ${c.titulo || 'Compromisso sem título'}
+            </div>
+
+            <div class="tl-event-detail">
+              ${c.cliente?.nome ? 'Cliente: ' + c.cliente.nome : ''}
+              ${c.processo?.numero ? ' · Processo: ' + c.processo.numero : ''}
+            </div>
+
             <div class="tl-tags">
-              <span class="tl-tag ${cor}">${escapeHtml(tipoLabel(tipo))}</span>
-              <span class="tl-tag amber">${escapeHtml(c.prioridade || 'media')}</span>
+              <span class="tl-tag ${dotClass}">${tipoLabel}</span>
+              <span class="tl-tag ${dotClass}">${c.status || 'agendado'}</span>
+            </div>
+
+            <div class="tl-actions">
+              <button
+                type="button"
+                class="btn-concluir-compromisso"
+                data-id="${c.id}">
+                ✓ Concluir
+              </button>
+
+              <button
+                type="button"
+                class="btn-excluir-compromisso"
+                data-id="${c.id}">
+                🗑 Excluir
+              </button>
             </div>
           </div>
         </div>
       `;
     }).join('');
   }
+
+  async function concluirCompromisso(id) {
+    try {
+      const responseGet = await fetch(`http://localhost:8080/compromissos/${id}`);
+      const compromisso = await responseGet.json();
+
+      const responsePut = await fetch(`http://localhost:8080/compromissos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...compromisso,
+          clienteId: compromisso.cliente?.id,
+          processoId: compromisso.processo?.id,
+          status: 'concluido'
+        })
+      });
+
+      if (!responsePut.ok) {
+        throw new Error('Erro ao concluir compromisso');
+      }
+
+      window.JurisFlow?.showToast('Compromisso concluído com sucesso.', 'success');
+      carregarCompromissos();
+
+    } catch (erro) {
+      console.error(erro);
+      window.JurisFlow?.showToast('Erro ao concluir compromisso.', 'error');
+    }
+  }
+
+  async function excluirCompromisso(id) {
+    if (!confirm('Deseja realmente excluir este compromisso?')) return;
+
+    try {
+      const response = await fetch(`http://localhost:8080/compromissos/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao excluir compromisso');
+      }
+
+      window.JurisFlow?.showToast('Compromisso excluído com sucesso.', 'success');
+      carregarCompromissos();
+
+    } catch (erro) {
+      console.error(erro);
+      window.JurisFlow?.showToast('Erro ao excluir compromisso.', 'error');
+    }
+  }
+
+  document.getElementById('tlBody').addEventListener('click', function(e) {
+    const concluir = e.target.closest('.btn-concluir-compromisso');
+    if (concluir) {
+      concluirCompromisso(concluir.dataset.id);
+      return;
+    }
+
+    const excluir = e.target.closest('.btn-excluir-compromisso');
+    if (excluir) {
+      excluirCompromisso(excluir.dataset.id);
+      return;
+    }
+  });
 
   carregarCompromissos();
 })();
