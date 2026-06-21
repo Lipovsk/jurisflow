@@ -1,0 +1,8 @@
+
+# Bancos locais
+*.mv.db
+*.trace.db
+
+# Arquivos locais e segredos
+.env
+application-local.properties

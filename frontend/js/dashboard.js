@@ -6,10 +6,10 @@
 // ─── Estado global (mock — será substituído pela API Spring Boot) ────────────
 const AppState = {
   user: {
-    name: 'Dr. Carlos Mendes',
-    initials: 'CM',
-    oab: '12.345/SP',
-    role: 'Advogado Sênior',
+    name: '',
+    initials: '',
+    oab: '',
+    role: '',
   },
   sidebar: {
     open: false,
@@ -103,7 +103,7 @@ function navigateTo(page) {
 // ─── Topbar ───────────────────────────────────────────────────────────────────
 function initTopbar() {
   $('#notifBtn')?.addEventListener('click', () => {
-    showToast('📬 Você tem 3 novas notificações.', 'info');
+    showToast('Nenhuma notificação no momento.', 'info');
   });
 }
 
@@ -200,7 +200,8 @@ function initGreeting() {
   if (hour < 12) greeting = 'Bom dia';
   else if (hour < 18) greeting = 'Boa tarde';
 
-  el.textContent = `${greeting}, Dr. Mendes 👋`;
+  const name = AppState.user?.name || '';
+  el.textContent = name ? `${greeting}, ${name} 👋` : `${greeting} 👋`;
 }
 
 // ─── Confirmação de logout ────────────────────────────────────────────────────
@@ -225,19 +226,7 @@ function initTopbarDate() {
 }
 
 // ─── Global Search ────────────────────────────────────────────────────────────
-const SEARCH_DATA = [
-  { type: 'cliente', icon: '👤', name: 'Ana Lima', sub: 'CPF 123.456.789-00 · Ativo' },
-  { type: 'cliente', icon: '👤', name: 'Roberto Sousa', sub: 'CPF 987.654.321-00 · Ativo' },
-  { type: 'cliente', icon: '👤', name: 'Maria Fernanda', sub: 'CPF 456.123.789-00 · Inativo' },
-  { type: 'cliente', icon: '👤', name: 'João Carlos', sub: 'CPF 321.654.987-00 · Ativo' },
-  { type: 'processo', icon: '📁', name: 'Proc. 0001234-56.2024', sub: 'Ana Lima · Trabalhista' },
-  { type: 'processo', icon: '📁', name: 'Proc. 0009876-12.2024', sub: 'Roberto Sousa · Cível' },
-  { type: 'processo', icon: '📁', name: 'Proc. 0005555-99.2023', sub: 'Maria Fernanda · Família' },
-  { type: 'pagina', icon: '📅', name: 'Agenda', sub: 'Audiências e compromissos', page: 'agenda' },
-  { type: 'pagina', icon: '💰', name: 'Financeiro', sub: 'Honorários e faturas', page: 'financeiro' },
-  { type: 'pagina', icon: '📄', name: 'Documentos', sub: 'Contratos e petições', page: 'documentos' },
-  { type: 'pagina', icon: '⚙️', name: 'Configurações', sub: 'Perfil e preferências', page: 'configuracoes' },
-];
+const SEARCH_DATA = [];
 
 function initGlobalSearch() {
   const input = $('#searchGlobalInput');

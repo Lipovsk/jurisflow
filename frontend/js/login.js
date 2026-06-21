@@ -116,20 +116,28 @@
   });
 
   /**
-   * Simula autenticação — SUBSTITUIR pela chamada real:
-   * POST /api/auth/login  { email, password }
+   * Autenticação: tenta chamar o backend real. Se o endpoint não existir
+   * ou ocorrer erro de rede, retorna erro informativo sem usar credenciais demo.
    */
-  function simulateLogin(email, password) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Demo: qualquer email + senha ≥ 6 chars funciona
-        if (email && password.length >= 6) {
-          resolve({ token: 'demo-jwt-token' });
-        } else {
-          reject(new Error('E-mail ou senha incorretos.'));
-        }
-      }, 1400);
-    });
+  async function simulateLogin(email, password) {
+    try {
+      const res = await fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || 'E-mail ou senha incorretos.');
+      }
+
+      const data = await res.json();
+      if (data?.token) localStorage.setItem('jurisflow_token', data.token);
+      return data;
+    } catch (err) {
+      throw new Error('Serviço de autenticação indisponível. Verifique o backend.');
+    }
   }
 
   // ---- Forgot Password Modal ----
