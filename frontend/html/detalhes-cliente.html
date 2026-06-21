@@ -659,7 +659,7 @@
 
           const area = normArea(cliente.areaJuridica);
           const aClasse = areaMap[area] || 'area-civel';
-          const aLabel = areaLabel[area] || cliente.areaJuridica || '—';
+          const aLabel = areaLabel[area] || cliente.areaJuridica || 'Não informado';
 
           const stCls = {
             ativo: 'sb-ativo',
@@ -671,7 +671,7 @@
             ativo: 'Ativo',
             inativo: 'Inativo',
             pendente: 'Pendente'
-          }[cliente.status] || cliente.status || 'Ativo';
+          }[cliente.status] || cliente.status || 'Não informado';
 
           function procRows() {
             if (!processos.length) {
@@ -720,7 +720,7 @@
             <div class="profile-name">${cliente.nome}</div>
 
             <div class="profile-meta">
-              ${cliente.cpfCnpj ? `<span class="profile-cpf">${cliente.cpfCnpj}</span>` : ''}
+              <span class="profile-cpf">${cliente.cpfCnpj || 'Não informado'}</span>
               <span class="area-badge ${aClasse}">${aLabel}</span>
               <span class="status-badge ${stCls}">${stLabel}</span>
               <span class="profile-since">Cliente desde ${fmtData(cliente.dataCadastro)}</span>
@@ -779,25 +779,25 @@
                 <div class="ic-field">
                   <div class="ic-label">CPF / CNPJ</div>
                   <div class="ic-value" style="font-family:'DM Mono',monospace;font-size:.8rem;">
-                    ${v(cliente.cpfCnpj)}
+                    ${cliente.cpfCnpj || 'Não informado'}
                   </div>
                 </div>
 
                 <div class="ic-field">
                   <div class="ic-label">Status</div>
-                  <div class="ic-value">${v(cliente.status)}</div>
+                  <div class="ic-value">${cliente.status || 'Não informado'}</div>
                 </div>
               </div>
 
               <div class="ic-row">
                 <div class="ic-field">
                   <div class="ic-label">Área Jurídica</div>
-                  <div class="ic-value">${v(cliente.areaJuridica)}</div>
+                  <div class="ic-value">${cliente.areaJuridica || 'Não informado'}</div>
                 </div>
 
                 <div class="ic-field">
                   <div class="ic-label">Tipo</div>
-                  <div class="ic-value">${v(cliente.tipoCliente)}</div>
+                  <div class="ic-value">${cliente.tipoCliente || 'Não informado'}</div>
                 </div>
               </div>
             </div>
@@ -910,12 +910,34 @@
         ">✕</button>
       </div>
 
-      <div style="padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+        <div style="padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
         <input id="editNome" value="${cliente.nome || ''}" placeholder="Nome" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
         <input id="editCpfCnpj" value="${cliente.cpfCnpj || ''}" placeholder="CPF/CNPJ" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
         <input id="editTelefone" value="${cliente.telefone || ''}" placeholder="Telefone" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
         <input id="editEmail" value="${cliente.email || ''}" placeholder="Email" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
         <input id="editEndereco" value="${cliente.endereco || ''}" placeholder="Endereço" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+
+        <label style="font-size:.85rem;color:#555;margin-top:4px;">Área Jurídica</label>
+        <select id="editArea" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          <option value="">Selecione</option>
+          <option ${cliente.areaJuridica === 'Cível' ? 'selected' : ''}>Cível</option>
+          <option ${cliente.areaJuridica === 'Criminal' ? 'selected' : ''}>Criminal</option>
+          <option ${cliente.areaJuridica === 'Trabalhista' ? 'selected' : ''}>Trabalhista</option>
+          <option ${cliente.areaJuridica === 'Família' ? 'selected' : ''}>Família</option>
+          <option ${cliente.areaJuridica === 'Previdenciário' ? 'selected' : ''}>Previdenciário</option>
+          <option ${cliente.areaJuridica === 'Empresarial' ? 'selected' : ''}>Empresarial</option>
+          <option ${cliente.areaJuridica === 'Tributário' ? 'selected' : ''}>Tributário</option>
+          <option ${cliente.areaJuridica === 'Imobiliário' ? 'selected' : ''}>Imobiliário</option>
+        </select>
+
+        <label style="font-size:.85rem;color:#555;margin-top:4px;">Tipo de Cliente</label>
+        <select id="editTipo" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          <option value="">Selecione</option>
+          <option ${cliente.tipoCliente === 'Pessoa Física' ? 'selected' : ''}>Pessoa Física</option>
+          <option ${cliente.tipoCliente === 'Pessoa Jurídica' ? 'selected' : ''}>Pessoa Jurídica</option>
+          <option ${cliente.tipoCliente === 'Menor Representado' ? 'selected' : ''}>Menor Representado</option>
+          <option ${cliente.tipoCliente === 'Espólio' ? 'selected' : ''}>Espólio</option>
+        </select>
 
         <select id="editStatus" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
           <option value="ativo" ${cliente.status === 'ativo' ? 'selected' : ''}>Ativo</option>
@@ -966,7 +988,9 @@
             telefone: document.getElementById("editTelefone").value,
             email: document.getElementById("editEmail").value,
             endereco: document.getElementById("editEndereco").value,
-            status: document.getElementById("editStatus").value
+            status: document.getElementById("editStatus").value,
+            areaJuridica: document.getElementById("editArea").value,
+            tipoCliente: document.getElementById("editTipo").value
           };
 
           const resposta = await fetch(`http://localhost:8080/clientes/${cliente.id}`, {

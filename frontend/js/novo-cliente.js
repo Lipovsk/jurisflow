@@ -282,6 +282,9 @@ function initFormSubmit() {
       cliente.cidade,
 
     status: cliente.status
+    ,
+    areaJuridica: cliente.areaJuridica,
+    tipoCliente: cliente.tipoCliente
 
   })
 

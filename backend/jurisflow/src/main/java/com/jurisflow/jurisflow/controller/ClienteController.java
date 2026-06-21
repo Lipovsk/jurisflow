@@ -41,6 +41,8 @@ public class ClienteController {
             cliente.setEmail(clienteAtualizado.getEmail());
             cliente.setEndereco(clienteAtualizado.getEndereco());
             cliente.setStatus(clienteAtualizado.getStatus());
+            cliente.setAreaJuridica(clienteAtualizado.getAreaJuridica());
+            cliente.setTipoCliente(clienteAtualizado.getTipoCliente());
             return clienteRepository.save(cliente);
         }).orElse(null);
     }

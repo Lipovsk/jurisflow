@@ -17,4 +17,6 @@ public class Cliente {
     private String email;
     private String endereco;
     private String status;
+    private String areaJuridica;
+    private String tipoCliente;
 }

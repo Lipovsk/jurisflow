@@ -1,0 +1,10 @@
+﻿{
+  "nome": "Teste Fluxo Frontend",
+  "cpfCnpj": "123.456.789-09",
+  "telefone": "(11) 99999-0000",
+  "email": "test.frontend@example.com",
+  "endereco": "Rua Exemplo, 123 - Cidade",
+  "status": "ativo",
+  "areaJuridica": "Cível",
+  "tipoCliente": "Pessoa Física"
+}

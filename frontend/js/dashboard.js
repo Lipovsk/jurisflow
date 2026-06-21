@@ -648,16 +648,16 @@ async function carregarDashboardReal() {
 }
 
 function atualizarCardsDashboard(dados) {
+  const clientes = Array.isArray(dados.clientes) ? dados.clientes : [];
+  const totalClientes = clientes.filter(c => (c.status || '').toLowerCase() === 'ativo').length;
 
-  const totalClientes = dados.clientes.length;
+  const totalProcessos = Array.isArray(dados.processos) ? dados.processos.length : 0;
 
-  const totalProcessos = dados.processos.length;
+  const compromissos = Array.isArray(dados.compromissos) ? dados.compromissos : [];
+  const totalPrazos = compromissos.filter(c => c.tipo === 'prazo').length;
 
-  const totalPrazos = dados.compromissos.filter(c =>
-    c.tipo === 'prazo'
-  ).length;
-
-  const totalHonorarios = dados.honorarios.reduce(
+  const honorarios = Array.isArray(dados.honorarios) ? dados.honorarios : [];
+  const totalHonorarios = honorarios.reduce(
     (soma, h) => soma + (h.valorTotal || 0),
     0
   );
