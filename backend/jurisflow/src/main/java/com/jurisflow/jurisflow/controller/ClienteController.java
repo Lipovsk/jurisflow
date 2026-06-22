@@ -24,6 +24,8 @@ public class ClienteController {
 
     @PostMapping
     public Cliente criar(@RequestBody Cliente cliente) {
+        cliente.setId(null);
+        cliente.setDataCadastro(null);
         return clienteRepository.save(cliente);
     }
 
@@ -43,6 +45,20 @@ public class ClienteController {
             cliente.setStatus(clienteAtualizado.getStatus());
             cliente.setAreaJuridica(clienteAtualizado.getAreaJuridica());
             cliente.setTipoCliente(clienteAtualizado.getTipoCliente());
+            cliente.setRg(clienteAtualizado.getRg());
+            cliente.setDataNascimento(clienteAtualizado.getDataNascimento());
+            cliente.setSexo(clienteAtualizado.getSexo());
+            cliente.setEstadoCivil(clienteAtualizado.getEstadoCivil());
+            cliente.setProfissao(clienteAtualizado.getProfissao());
+            cliente.setTelefoneSecundario(clienteAtualizado.getTelefoneSecundario());
+            cliente.setWhatsapp(clienteAtualizado.getWhatsapp());
+            cliente.setCep(clienteAtualizado.getCep());
+            cliente.setBairro(clienteAtualizado.getBairro());
+            cliente.setCidade(clienteAtualizado.getCidade());
+            cliente.setEstado(clienteAtualizado.getEstado());
+            cliente.setComplemento(clienteAtualizado.getComplemento());
+            cliente.setObsRapida(clienteAtualizado.getObsRapida());
+            cliente.setObservacoes(clienteAtualizado.getObservacoes());
             return clienteRepository.save(cliente);
         }).orElse(null);
     }

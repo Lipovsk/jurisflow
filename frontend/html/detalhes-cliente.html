@@ -533,7 +533,6 @@
     </main>
   </div>
 
-  <script src="../js/storage.js"></script>
   <script src="../js/dashboard.js"></script>
   <script>
     (function () {
@@ -589,25 +588,67 @@
         return s;
       }
 
+      const NAO_INFORMADO = 'Não informado';
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function campo(obj, ...nomes) {
+        for (const nome of nomes) {
+          const texto = String(obj?.[nome] ?? '').trim();
+          if (texto) return texto;
+        }
+        return '';
+      }
+
+      function valor(val) {
+        const texto = String(val ?? '').trim();
+        return texto || NAO_INFORMADO;
+      }
+
       function fmtData(iso) {
-        if (!iso) return '—';
+        if (!iso) return NAO_INFORMADO;
 
         try {
-          const d = new Date(iso);
+          const texto = String(iso);
+          const partes = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          const d = partes
+            ? new Date(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3]))
+            : new Date(texto);
 
-          if (isNaN(d.getTime())) return '—';
+          if (isNaN(d.getTime())) return NAO_INFORMADO;
 
           return String(d.getDate()).padStart(2, '0') + '/' +
             String(d.getMonth() + 1).padStart(2, '0') + '/' +
             d.getFullYear();
 
         } catch (e) {
-          return '—';
+          return NAO_INFORMADO;
         }
       }
 
-      function v(val) {
-        return val || '—';
+      function clienteDesde(dataCadastro) {
+        const data = fmtData(dataCadastro);
+        return data === NAO_INFORMADO ? NAO_INFORMADO : 'Cliente desde ' + data;
+      }
+
+      function campoInfo(label, value, extraStyle = '') {
+        const texto = String(value ?? '').trim();
+        const missing = !texto || texto === NAO_INFORMADO;
+        return `
+          <div class="ic-field">
+            <div class="ic-label">${label}</div>
+            <div class="ic-value ${missing ? 'nd' : ''}" ${extraStyle ? `style="${extraStyle}"` : ''}>
+              ${escapeHtml(valor(value))}
+            </div>
+          </div>
+        `;
       }
 
       const areaMap = {
@@ -650,28 +691,39 @@
 
           const cliente = await resposta.json();
 
-          const processosResposta = await fetch(`http://localhost:8080/processos/cliente/${id}`);
-          const processos = await processosResposta.json();
+          let processos = [];
+
+          try {
+            const processosResposta = await fetch(`http://localhost:8080/processos/cliente/${id}`);
+            if (processosResposta.ok) {
+              processos = await processosResposta.json();
+            }
+          } catch (erroProcessos) {
+            console.error('Erro ao carregar processos do cliente:', erroProcessos);
+          }
+
           const honorarios = [];
 
-          document.getElementById('pageTitle').textContent = cliente.nome;
-          document.title = cliente.nome + ' — JurisFlow';
+          const nomeCliente = valor(cliente.nome);
+
+          document.getElementById('pageTitle').textContent = nomeCliente;
+          document.title = nomeCliente + ' — JurisFlow';
 
           const area = normArea(cliente.areaJuridica);
-          const aClasse = areaMap[area] || 'area-civel';
-          const aLabel = areaLabel[area] || cliente.areaJuridica || 'Não informado';
+          const aClasse = area ? (areaMap[area] || '') : '';
+          const aLabel = area ? (areaLabel[area] || cliente.areaJuridica) : NAO_INFORMADO;
 
           const stCls = {
             ativo: 'sb-ativo',
             inativo: 'sb-inativo',
             pendente: 'sb-pendente'
-          }[cliente.status] || 'sb-ativo';
+          }[cliente.status] || 'sb-inativo';
 
           const stLabel = {
             ativo: 'Ativo',
             inativo: 'Inativo',
             pendente: 'Pendente'
-          }[cliente.status] || cliente.status || 'Não informado';
+          }[cliente.status] || valor(cliente.status);
 
           function procRows() {
             if (!processos.length) {
@@ -683,17 +735,17 @@
       <div class="proc-icon">📁</div>
 
       <div class="proc-row-info">
-        <div class="proc-row-num">${p.numero || '—'}</div>
-        <div class="proc-row-title">${p.tipoAcao || '—'}</div>
+        <div class="proc-row-num">${escapeHtml(valor(p.numero))}</div>
+        <div class="proc-row-title">${escapeHtml(valor(p.tipoAcao))}</div>
       </div>
 
       <div class="proc-row-right">
-        <span class="area-badge area-trabalhista">
-          ${p.areaJuridica || '—'}
+        <span class="area-badge ${areaMap[normArea(p.areaJuridica)] || ''}">
+          ${escapeHtml(valor(p.areaJuridica))}
         </span>
 
-        <span class="status-proc sp-andamento">
-          ${p.status || '—'}
+        <span class="status-proc ${p.status === 'urgente' ? 'sp-urgente' : p.status === 'concluido' ? 'sp-concluido' : p.status === 'suspenso' ? 'sp-suspenso' : 'sp-andamento'}">
+          ${escapeHtml(valor(p.status))}
         </span>
       </div>
     </div>
@@ -708,7 +760,7 @@
         <div class="breadcrumb">
           <a href="clientes.html">👤 Clientes</a>
           <span class="sep">›</span>
-          <span>${cliente.nome}</span>
+          <span>${escapeHtml(nomeCliente)}</span>
         </div>
 
         <div class="profile-header">
@@ -717,13 +769,13 @@
           </div>
 
           <div style="flex:1;min-width:0;">
-            <div class="profile-name">${cliente.nome}</div>
+            <div class="profile-name">${escapeHtml(nomeCliente)}</div>
 
             <div class="profile-meta">
-              <span class="profile-cpf">${cliente.cpfCnpj || 'Não informado'}</span>
-              <span class="area-badge ${aClasse}">${aLabel}</span>
-              <span class="status-badge ${stCls}">${stLabel}</span>
-              <span class="profile-since">Cliente desde ${fmtData(cliente.dataCadastro)}</span>
+              <span class="profile-cpf">${escapeHtml(valor(cliente.cpfCnpj))}</span>
+              <span class="area-badge ${aClasse}">${escapeHtml(aLabel)}</span>
+              <span class="status-badge ${stCls}">${escapeHtml(stLabel)}</span>
+              <span class="profile-since">${escapeHtml(clienteDesde(cliente.dataCadastro))}</span>
             </div>
           </div>
       <div class="profile-actions">
@@ -743,63 +795,73 @@
 
         <div class="info-grid">
           <div class="info-card">
-            <div class="ic-header">📞 Contato</div>
-
+            <div class="ic-header">👤 Dados principais</div>
             <div class="ic-body">
               <div class="ic-row">
-                <div class="ic-field">
-                  <div class="ic-label">Telefone</div>
-                  <div class="ic-value ${!cliente.telefone ? 'nd' : ''}">
-                    ${v(cliente.telefone)}
-                  </div>
-                </div>
-
-                <div class="ic-field">
-                  <div class="ic-label">E-mail</div>
-                  <div class="ic-value ${!cliente.email ? 'nd' : ''}">
-                    ${v(cliente.email)}
-                  </div>
-                </div>
+                ${campoInfo('Nome', cliente.nome)}
+                ${campoInfo('CPF / CNPJ', cliente.cpfCnpj, "font-family:'DM Mono',monospace;font-size:.8rem;")}
               </div>
+              <div class="ic-row">
+                ${campoInfo('RG', cliente.rg)}
+                ${campoInfo('Status', cliente.status)}
+              </div>
+              <div class="ic-row">
+                ${campoInfo('Área Jurídica', cliente.areaJuridica)}
+                ${campoInfo('Tipo de Cliente', cliente.tipoCliente)}
+              </div>
+              ${campoInfo('Data de Cadastro', fmtData(cliente.dataCadastro))}
+            </div>
+          </div>
 
-              <div class="ic-field">
-                <div class="ic-label">Endereço</div>
-                <div class="ic-value ${!cliente.endereco ? 'nd' : ''}">
-                  ${v(cliente.endereco)}
-                </div>
+          <div class="info-card">
+            <div class="ic-header">🧾 Dados pessoais</div>
+            <div class="ic-body">
+              <div class="ic-row">
+                ${campoInfo('Data de Nascimento', fmtData(campo(cliente, 'dataNascimento', 'dataNasc')))}
+                ${campoInfo('Sexo', cliente.sexo)}
+              </div>
+              <div class="ic-row">
+                ${campoInfo('Estado Civil', cliente.estadoCivil)}
+                ${campoInfo('Profissão', cliente.profissao)}
               </div>
             </div>
           </div>
 
           <div class="info-card">
-            <div class="ic-header">⚖️ Dados Jurídicos</div>
-
+            <div class="ic-header">📞 Contato</div>
             <div class="ic-body">
               <div class="ic-row">
-                <div class="ic-field">
-                  <div class="ic-label">CPF / CNPJ</div>
-                  <div class="ic-value" style="font-family:'DM Mono',monospace;font-size:.8rem;">
-                    ${cliente.cpfCnpj || 'Não informado'}
-                  </div>
-                </div>
-
-                <div class="ic-field">
-                  <div class="ic-label">Status</div>
-                  <div class="ic-value">${cliente.status || 'Não informado'}</div>
-                </div>
+                ${campoInfo('Telefone', campo(cliente, 'telefone', 'telefone1'))}
+                ${campoInfo('Telefone Secundário', campo(cliente, 'telefoneSecundario', 'telefone2'))}
               </div>
-
               <div class="ic-row">
-                <div class="ic-field">
-                  <div class="ic-label">Área Jurídica</div>
-                  <div class="ic-value">${cliente.areaJuridica || 'Não informado'}</div>
-                </div>
-
-                <div class="ic-field">
-                  <div class="ic-label">Tipo</div>
-                  <div class="ic-value">${cliente.tipoCliente || 'Não informado'}</div>
-                </div>
+                ${campoInfo('WhatsApp', cliente.whatsapp)}
+                ${campoInfo('E-mail', cliente.email)}
               </div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-header">📍 Endereço</div>
+            <div class="ic-body">
+              ${campoInfo('Endereço', campo(cliente, 'endereco', 'rua'))}
+              <div class="ic-row">
+                ${campoInfo('CEP', cliente.cep)}
+                ${campoInfo('Bairro', cliente.bairro)}
+              </div>
+              <div class="ic-row">
+                ${campoInfo('Cidade', cliente.cidade)}
+                ${campoInfo('Estado', cliente.estado)}
+              </div>
+              ${campoInfo('Complemento', cliente.complemento)}
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-header">📝 Observações</div>
+            <div class="ic-body">
+              ${campoInfo('Observação Rápida', campo(cliente, 'observacaoRapida', 'obsRapida'))}
+              ${campoInfo('Observações Detalhadas', cliente.observacoes)}
             </div>
           </div>
         </div>
@@ -870,6 +932,9 @@
       }
 
       function abrirModalEdicao(cliente) {
+        const inputValue = value => escapeHtml(String(value ?? ''));
+        const selected = (value, expected) => String(value ?? '') === expected ? 'selected' : '';
+
         const modal = document.createElement("div");
 
         modal.style.position = "fixed";
@@ -886,10 +951,13 @@
     <div style="
       background:white;
       width:100%;
-      max-width:520px;
+      max-width:760px;
+      max-height:92vh;
       border-radius:18px;
       box-shadow:0 20px 50px rgba(0,0,0,.18);
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
     ">
       <div style="
         padding:22px 26px;
@@ -910,40 +978,96 @@
         ">✕</button>
       </div>
 
-        <div style="padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
-        <input id="editNome" value="${cliente.nome || ''}" placeholder="Nome" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-        <input id="editCpfCnpj" value="${cliente.cpfCnpj || ''}" placeholder="CPF/CNPJ" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-        <input id="editTelefone" value="${cliente.telefone || ''}" placeholder="Telefone" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-        <input id="editEmail" value="${cliente.email || ''}" placeholder="Email" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-        <input id="editEndereco" value="${cliente.endereco || ''}" placeholder="Endereço" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+      <div style="padding:24px 26px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;">
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Dados principais</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <input id="editNome" value="${inputValue(cliente.nome)}" placeholder="Nome" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editCpfCnpj" value="${inputValue(cliente.cpfCnpj)}" placeholder="CPF/CNPJ" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          </div>
+        </section>
 
-        <label style="font-size:.85rem;color:#555;margin-top:4px;">Área Jurídica</label>
-        <select id="editArea" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-          <option value="">Selecione</option>
-          <option ${cliente.areaJuridica === 'Cível' ? 'selected' : ''}>Cível</option>
-          <option ${cliente.areaJuridica === 'Criminal' ? 'selected' : ''}>Criminal</option>
-          <option ${cliente.areaJuridica === 'Trabalhista' ? 'selected' : ''}>Trabalhista</option>
-          <option ${cliente.areaJuridica === 'Família' ? 'selected' : ''}>Família</option>
-          <option ${cliente.areaJuridica === 'Previdenciário' ? 'selected' : ''}>Previdenciário</option>
-          <option ${cliente.areaJuridica === 'Empresarial' ? 'selected' : ''}>Empresarial</option>
-          <option ${cliente.areaJuridica === 'Tributário' ? 'selected' : ''}>Tributário</option>
-          <option ${cliente.areaJuridica === 'Imobiliário' ? 'selected' : ''}>Imobiliário</option>
-        </select>
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Dados pessoais</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <input id="editRg" value="${inputValue(cliente.rg)}" placeholder="RG" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editDataNascimento" type="date" value="${inputValue(cliente.dataNascimento || cliente.dataNasc)}" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <select id="editSexo" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+              <option value="">Sexo</option>
+              <option value="Masculino" ${selected(cliente.sexo, 'Masculino')}>Masculino</option>
+              <option value="Feminino" ${selected(cliente.sexo, 'Feminino')}>Feminino</option>
+              <option value="Outro" ${selected(cliente.sexo, 'Outro')}>Outro</option>
+              <option value="Prefiro não informar" ${selected(cliente.sexo, 'Prefiro não informar')}>Prefiro não informar</option>
+            </select>
+            <select id="editEstadoCivil" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+              <option value="">Estado Civil</option>
+              <option value="Solteiro(a)" ${selected(cliente.estadoCivil, 'Solteiro(a)')}>Solteiro(a)</option>
+              <option value="Casado(a)" ${selected(cliente.estadoCivil, 'Casado(a)')}>Casado(a)</option>
+              <option value="Divorciado(a)" ${selected(cliente.estadoCivil, 'Divorciado(a)')}>Divorciado(a)</option>
+              <option value="Viúvo(a)" ${selected(cliente.estadoCivil, 'Viúvo(a)')}>Viúvo(a)</option>
+              <option value="União Estável" ${selected(cliente.estadoCivil, 'União Estável')}>União Estável</option>
+            </select>
+            <input id="editProfissao" value="${inputValue(cliente.profissao)}" placeholder="Profissão" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          </div>
+        </section>
 
-        <label style="font-size:.85rem;color:#555;margin-top:4px;">Tipo de Cliente</label>
-        <select id="editTipo" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-          <option value="">Selecione</option>
-          <option ${cliente.tipoCliente === 'Pessoa Física' ? 'selected' : ''}>Pessoa Física</option>
-          <option ${cliente.tipoCliente === 'Pessoa Jurídica' ? 'selected' : ''}>Pessoa Jurídica</option>
-          <option ${cliente.tipoCliente === 'Menor Representado' ? 'selected' : ''}>Menor Representado</option>
-          <option ${cliente.tipoCliente === 'Espólio' ? 'selected' : ''}>Espólio</option>
-        </select>
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Contato</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <input id="editTelefone" value="${inputValue(cliente.telefone || cliente.telefone1)}" placeholder="Telefone" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editTelefoneSecundario" value="${inputValue(cliente.telefoneSecundario || cliente.telefone2)}" placeholder="Telefone Secundário" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editWhatsapp" value="${inputValue(cliente.whatsapp)}" placeholder="WhatsApp" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editEmail" value="${inputValue(cliente.email)}" placeholder="Email" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          </div>
+        </section>
 
-        <select id="editStatus" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
-          <option value="ativo" ${cliente.status === 'ativo' ? 'selected' : ''}>Ativo</option>
-          <option value="pendente" ${cliente.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-          <option value="inativo" ${cliente.status === 'inativo' ? 'selected' : ''}>Inativo</option>
-        </select>
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Endereço</h4>
+          <input id="editEndereco" value="${inputValue(cliente.endereco || cliente.rua)}" placeholder="Endereço" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <input id="editCep" value="${inputValue(cliente.cep)}" placeholder="CEP" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editBairro" value="${inputValue(cliente.bairro)}" placeholder="Bairro" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editCidade" value="${inputValue(cliente.cidade)}" placeholder="Cidade" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editEstado" value="${inputValue(cliente.estado)}" placeholder="Estado" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+            <input id="editComplemento" value="${inputValue(cliente.complemento)}" placeholder="Complemento" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          </div>
+        </section>
+
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Dados jurídicos</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <select id="editAreaJuridica" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+              <option value="">Área Jurídica</option>
+              <option value="Cível" ${selected(cliente.areaJuridica, 'Cível')}>Cível</option>
+              <option value="Criminal" ${selected(cliente.areaJuridica, 'Criminal')}>Criminal</option>
+              <option value="Trabalhista" ${selected(cliente.areaJuridica, 'Trabalhista')}>Trabalhista</option>
+              <option value="Família" ${selected(cliente.areaJuridica, 'Família')}>Família</option>
+              <option value="Previdenciário" ${selected(cliente.areaJuridica, 'Previdenciário')}>Previdenciário</option>
+              <option value="Empresarial" ${selected(cliente.areaJuridica, 'Empresarial')}>Empresarial</option>
+              <option value="Tributário" ${selected(cliente.areaJuridica, 'Tributário')}>Tributário</option>
+              <option value="Imobiliário" ${selected(cliente.areaJuridica, 'Imobiliário')}>Imobiliário</option>
+            </select>
+            <select id="editTipoCliente" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+              <option value="">Tipo de Cliente</option>
+              <option value="Pessoa Física" ${selected(cliente.tipoCliente, 'Pessoa Física')}>Pessoa Física</option>
+              <option value="Pessoa Jurídica" ${selected(cliente.tipoCliente, 'Pessoa Jurídica')}>Pessoa Jurídica</option>
+              <option value="Menor Representado" ${selected(cliente.tipoCliente, 'Menor Representado')}>Menor Representado</option>
+              <option value="Espólio" ${selected(cliente.tipoCliente, 'Espólio')}>Espólio</option>
+            </select>
+            <select id="editStatus" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+              <option value="">Status</option>
+              <option value="ativo" ${selected(cliente.status, 'ativo')}>Ativo</option>
+              <option value="pendente" ${selected(cliente.status, 'pendente')}>Pendente</option>
+              <option value="inativo" ${selected(cliente.status, 'inativo')}>Inativo</option>
+            </select>
+          </div>
+        </section>
+
+        <section style="display:flex;flex-direction:column;gap:10px;">
+          <h4 style="margin:0;color:#0D1B2A;font-size:.9rem;">Observações</h4>
+          <input id="editObsRapida" value="${inputValue(cliente.obsRapida)}" placeholder="Observação rápida" style="height:42px;padding:0 14px;border:1px solid #ddd;border-radius:10px;">
+          <textarea id="editObservacoes" placeholder="Observações detalhadas" style="min-height:96px;padding:12px 14px;border:1px solid #ddd;border-radius:10px;resize:vertical;font-family:'DM Sans',sans-serif;">${inputValue(cliente.observacoes)}</textarea>
+        </section>
       </div>
 
       <div style="
@@ -982,15 +1106,31 @@
         document.getElementById("cancelarEdicao").addEventListener("click", () => modal.remove());
 
         document.getElementById("salvarEdicao").addEventListener("click", async () => {
+          const editValue = id => document.getElementById(id).value;
+
           const clienteAtualizado = {
-            nome: document.getElementById("editNome").value,
-            cpfCnpj: document.getElementById("editCpfCnpj").value,
-            telefone: document.getElementById("editTelefone").value,
-            email: document.getElementById("editEmail").value,
-            endereco: document.getElementById("editEndereco").value,
-            status: document.getElementById("editStatus").value,
-            areaJuridica: document.getElementById("editArea").value,
-            tipoCliente: document.getElementById("editTipo").value
+            nome: editValue("editNome"),
+            cpfCnpj: editValue("editCpfCnpj"),
+            telefone: editValue("editTelefone"),
+            email: editValue("editEmail"),
+            endereco: editValue("editEndereco"),
+            status: editValue("editStatus"),
+            areaJuridica: editValue("editAreaJuridica"),
+            tipoCliente: editValue("editTipoCliente"),
+            rg: editValue("editRg"),
+            dataNascimento: editValue("editDataNascimento"),
+            sexo: editValue("editSexo"),
+            estadoCivil: editValue("editEstadoCivil"),
+            profissao: editValue("editProfissao"),
+            telefoneSecundario: editValue("editTelefoneSecundario"),
+            whatsapp: editValue("editWhatsapp"),
+            cep: editValue("editCep"),
+            bairro: editValue("editBairro"),
+            cidade: editValue("editCidade"),
+            estado: editValue("editEstado"),
+            complemento: editValue("editComplemento"),
+            obsRapida: editValue("editObsRapida"),
+            observacoes: editValue("editObservacoes")
           };
 
           const resposta = await fetch(`http://localhost:8080/clientes/${cliente.id}`, {

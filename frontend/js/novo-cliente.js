@@ -255,7 +255,36 @@ function initFormSubmit() {
       status:      v('statusCliente') || 'ativo',
       obsRapida:   v('obsRapida'),
       observacoes: v('observacoes'),
-      dataCadastro: new Date().toISOString(),
+    };
+
+    const endereco = [
+      [cliente.rua, cliente.numero].filter(Boolean).join(', '),
+      cliente.cidade
+    ].filter(Boolean).join(' - ');
+
+    const payload = {
+      nome: cliente.nome,
+      cpfCnpj: cliente.cpfCnpj,
+      telefone: cliente.telefone1,
+      email: cliente.email,
+      endereco,
+      status: cliente.status,
+      areaJuridica: cliente.areaJuridica,
+      tipoCliente: cliente.tipoCliente,
+      rg: cliente.rg,
+      dataNascimento: cliente.dataNasc,
+      sexo: cliente.sexo,
+      estadoCivil: cliente.estadoCivil,
+      profissao: cliente.profissao,
+      telefoneSecundario: cliente.telefone2,
+      whatsapp: cliente.whatsapp,
+      cep: cliente.cep,
+      bairro: cliente.bairro,
+      cidade: cliente.cidade,
+      estado: cliente.estado,
+      complemento: cliente.complemento,
+      obsRapida: cliente.obsRapida,
+      observacoes: cliente.observacoes
     };
 
     fetch('http://localhost:8080/clientes', {
@@ -266,27 +295,7 @@ function initFormSubmit() {
     'Content-Type': 'application/json'
   },
 
-  body: JSON.stringify({
-
-    nome: cliente.nome,
-
-    cpfCnpj: cliente.cpfCnpj,
-
-    telefone: cliente.telefone1,
-
-    email: cliente.email,
-
-    endereco:
-      cliente.rua + ', ' +
-      cliente.numero + ' - ' +
-      cliente.cidade,
-
-    status: cliente.status
-    ,
-    areaJuridica: cliente.areaJuridica,
-    tipoCliente: cliente.tipoCliente
-
-  })
+  body: JSON.stringify(payload)
 
 })
 .then(res => {

@@ -562,9 +562,12 @@
             <thead>
               <tr>
                 <th>Cliente</th>
+                <th>CPF/CNPJ</th>
+                <th>Contato</th>
                 <th>Área Jurídica</th>
+                <th>Tipo</th>
                 <th>Processos</th>
-                <th>Último Contato</th>
+                <th>Cadastro</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
@@ -638,7 +641,6 @@
     </div>
   </div>
 
-  <script src="../js/storage.js"></script>
   <script src="../js/dashboard.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -659,12 +661,51 @@
           const p = nome.trim().split(' ').filter(Boolean);
           return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
         }
-        function relDate(iso) {
-          if (!iso) return '—';
-          const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
-          if (d === 0) return 'Hoje'; if (d === 1) return 'Ontem';
-          if (d < 7) return `há ${d} dias`; if (d < 30) return `há ${Math.floor(d / 7)} sem.`;
-          if (d < 365) return `há ${Math.floor(d / 30)} mes.`; return `há ${Math.floor(d / 365)} ano(s)`;
+        const NAO_INFORMADO = 'Não informado';
+
+        function escapeHtml(value) {
+          return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+        }
+
+        function valor(campo) {
+          const texto = String(campo ?? '').trim();
+          return texto || NAO_INFORMADO;
+        }
+
+        function campo(cliente, ...nomes) {
+          for (const nome of nomes) {
+            const texto = String(cliente?.[nome] ?? '').trim();
+            if (texto) return texto;
+          }
+          return '';
+        }
+
+        function formatarDataCadastro(iso) {
+          if (!iso) return NAO_INFORMADO;
+
+          try {
+            const texto = String(iso);
+            const partes = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            const data = partes
+              ? new Date(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3]))
+              : new Date(texto);
+
+            if (isNaN(data.getTime())) return NAO_INFORMADO;
+
+            return 'Cliente desde ' + data.toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+
+          } catch (e) {
+            return NAO_INFORMADO;
+          }
         }
         function normArea(a) {
           if (!a) return '';
@@ -685,22 +726,62 @@
           inativo: { label: 'Inativo', dot: 'dot-gray' },
         };
 
+        let processosPorCliente = new Map();
+        let processosDisponiveis = false;
+
+        async function carregarProcessosPorCliente() {
+          processosDisponiveis = false;
+          processosPorCliente = new Map();
+
+          try {
+            const resposta = await fetch('http://localhost:8080/processos');
+            if (!resposta.ok) throw new Error('Erro ao carregar processos');
+
+            const processos = await resposta.json();
+            processos.forEach(p => {
+              const clienteId = String(p.cliente?.id ?? p.clienteId ?? '');
+              if (!clienteId) return;
+              processosPorCliente.set(clienteId, (processosPorCliente.get(clienteId) || 0) + 1);
+            });
+
+            processosDisponiveis = true;
+          } catch (erro) {
+            console.error('Erro ao carregar processos dos clientes:', erro);
+          }
+        }
+
+        function formatarQuantidadeProcessos(clienteId) {
+          if (!processosDisponiveis) return '—';
+          const total = processosPorCliente.get(String(clienteId)) || 0;
+          return total + ' ' + (total === 1 ? 'processo' : 'processos');
+        }
+
         function renderTable(list) {
-          const procs = [];
           document.getElementById('tableCount').textContent = list.length + ' clientes encontrados';
           document.getElementById('clientsBody').innerHTML = list.map(c => {
             const an = normArea(c.areaJuridica);
-            const s = statusMap[c.status] || statusMap.ativo;
-            const np = procs.filter(p => p.clienteId === c.id).length;
+            const statusValor = campo(c, 'status');
+            const s = statusMap[statusValor] || { label: valor(statusValor), dot: 'dot-gray' };
+            const telefone = campo(c, 'telefone', 'telefone1');
+            const email = campo(c, 'email');
             return `<tr>
           <td><div class="client-cell">
             <div class="tbl-avatar" style="background:${getCor(c.id)}">${getIniciais(c.nome)}</div>
-            <div><div class="tbl-name">${c.nome}</div><div class="tbl-type">${c.tipoCliente || 'Pessoa Física'}</div></div>
+            <div>
+              <div class="tbl-name">${escapeHtml(valor(c.nome))}</div>
+              <div class="tbl-type">${escapeHtml(valor(c.tipoCliente))}</div>
+            </div>
           </div></td>
-          <td><span class="area-badge ${areaMap[an] || ''}">${areaLabel[an] || c.areaJuridica || '—'}</span></td>
-          <td style="font-weight:600;">${np}</td>
-          <td style="color:var(--gray-400);font-size:.82rem;">${relDate(c.dataCadastro)}</td>
-          <td><div class="status-dot"><div class="dot ${s.dot}"></div><span style="font-size:.78rem;font-weight:600;">${s.label}</span></div></td>
+          <td style="font-family:'DM Mono',monospace;font-size:.78rem;">${escapeHtml(valor(c.cpfCnpj))}</td>
+          <td>
+            <div>${escapeHtml(valor(telefone))}</div>
+            <div style="font-size:.73rem;color:var(--gray-400);margin-top:2px;">${escapeHtml(valor(email))}</div>
+          </td>
+          <td><span class="area-badge ${areaMap[an] || ''}">${escapeHtml(areaLabel[an] || valor(c.areaJuridica))}</span></td>
+          <td>${escapeHtml(valor(c.tipoCliente))}</td>
+          <td style="font-weight:600;">${formatarQuantidadeProcessos(c.id)}</td>
+          <td style="color:var(--gray-400);font-size:.82rem;">${escapeHtml(formatarDataCadastro(c.dataCadastro))}</td>
+          <td><div class="status-dot"><div class="dot ${s.dot}"></div><span style="font-size:.78rem;font-weight:600;">${escapeHtml(s.label)}</span></div></td>
           <td><button class="btn-outline btn-ver-perfil" data-id="${c.id}">Ver Perfil</button></td>
         </tr>`;
           }).join('');
@@ -713,6 +794,12 @@
           if (cards[1]) cards[1].textContent = all.filter(c => c.status === 'ativo').length;
           if (cards[2]) cards[2].textContent = all.filter(c => c.status === 'pendente' || c.status === 'aguardando').length;
           if (cards[3]) cards[3].textContent = all.filter(c => c.status === 'inativo').length;
+
+          const subs = document.querySelectorAll('.summary-sub');
+          if (subs[0]) subs[0].textContent = 'Clientes retornados pela API';
+          if (subs[1]) subs[1].textContent = 'Status ativo';
+          if (subs[2]) subs[2].textContent = 'Status pendente ou aguardando';
+          if (subs[3]) subs[3].textContent = 'Status inativo';
         }
 
         
@@ -725,6 +812,8 @@
             const resposta = await fetch('http://localhost:8080/clientes');
 
             clientes = await resposta.json();
+
+            await carregarProcessosPorCliente();
 
             renderTable(clientes);
 
@@ -753,7 +842,18 @@
           const ar = document.getElementById('filterArea').value;
           renderTable(clientes.filter(c => {
             const an = normArea(c.areaJuridica);
-            return (!q || c.nome.toLowerCase().includes(q) || (c.cpfCnpj || '').includes(q) || (c.email || '').toLowerCase().includes(q)) &&
+            const busca = [
+              c.nome,
+              c.cpfCnpj,
+              c.telefone,
+              c.telefone1,
+              c.email,
+              c.status,
+              c.areaJuridica,
+              c.tipoCliente,
+              c.dataCadastro
+            ].map(x => String(x || '').toLowerCase()).join(' ');
+            return (!q || busca.includes(q)) &&
               (!st || c.status === st || (st === 'aguardando' && c.status === 'pendente')) &&
               (!ar || an === ar);
           }));
