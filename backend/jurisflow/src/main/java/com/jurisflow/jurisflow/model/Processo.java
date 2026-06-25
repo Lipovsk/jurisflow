@@ -2,6 +2,8 @@ package com.jurisflow.jurisflow.model;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 public class Processo {
 
@@ -26,6 +28,7 @@ public class Processo {
     private Double valorCausa;
     private String statusFinanceiro;
     private String ultMovimentacao;
+    private String dataCadastro;
 
     private Double valorHonorario;
     private String formaPagamento;
@@ -38,6 +41,13 @@ public class Processo {
 
     public Long getId() {
         return id;
+    }
+
+    @PrePersist
+    public void preencherDataCadastro() {
+        if (dataCadastro == null || dataCadastro.isBlank()) {
+            dataCadastro = Instant.now().toString();
+        }
     }
 
     public String getNumero() {
@@ -205,5 +215,9 @@ public class Processo {
 
     public void setUltMovimentacao(String ultMovimentacao) {
         this.ultMovimentacao = ultMovimentacao;
+    }
+
+    public String getDataCadastro() {
+        return dataCadastro;
     }
 }

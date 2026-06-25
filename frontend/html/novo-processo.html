@@ -162,20 +162,23 @@
           <div class="fg col-3">
             <label class="flabel req">Status do Processo</label>
             <div class="proc-status-sel" id="procStatusSel">
-              <button type="button" class="pstbtn active" data-status="andamento">
+              <button type="button" class="pstbtn active" data-status="em_andamento">
                 <span class="sdot blue"></span> Em Andamento
               </button>
-              <button type="button" class="pstbtn" data-status="audiencia">
-                <span class="sdot amber"></span> Aguardando Audiência
+              <button type="button" class="pstbtn" data-status="audiencia_designada">
+                <span class="sdot amber"></span> Audiência Designada
               </button>
-              <button type="button" class="pstbtn urgent" data-status="urgente">
-                <span class="sdot red"></span> Urgente
+              <button type="button" class="pstbtn" data-status="suspenso">
+                <span class="sdot gray"></span> Suspenso
               </button>
               <button type="button" class="pstbtn" data-status="encerrado">
                 <span class="sdot gray"></span> Encerrado
               </button>
+              <button type="button" class="pstbtn" data-status="arquivado">
+                <span class="sdot gray"></span> Arquivado
+              </button>
             </div>
-            <input type="hidden" id="statusProcesso" value="andamento">
+            <input type="hidden" id="statusProcesso" value="em_andamento">
           </div>
 
           <!-- Prioridade -->
@@ -185,6 +188,7 @@
               <button type="button" class="pribtn" data-p="baixa">🟢 Baixa</button>
               <button type="button" class="pribtn active" data-p="media">🟡 Média</button>
               <button type="button" class="pribtn" data-p="alta">🔴 Alta</button>
+              <button type="button" class="pribtn" data-p="urgente">🔥 Urgente</button>
             </div>
             <input type="hidden" id="prioridade" value="media">
           </div>
@@ -368,10 +372,10 @@
           <div class="tl-item" data-type="criado">
             <div class="tl-dot blue"></div>
             <div class="tl-content">
-              <div class="tl-title">Processo criado</div>
+              <div class="tl-title">Pré-cadastro iniciado</div>
               <div class="tl-meta">Hoje · Dr. Carlos Mendes</div>
             </div>
-            <div class="tl-badge">Sistema</div>
+            <div class="tl-badge">Local</div>
           </div>
         </div>
 

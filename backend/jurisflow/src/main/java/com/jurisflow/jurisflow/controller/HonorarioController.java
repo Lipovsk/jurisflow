@@ -6,7 +6,9 @@ import com.jurisflow.jurisflow.model.Processo;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -14,6 +16,9 @@ import java.util.List;
 @RequestMapping("/honorarios")
 @CrossOrigin(origins = "*")
 public class HonorarioController {
+
+    private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =
+            "Este registro e gerenciado pelo processo vinculado. Edite o processo para altera-lo.";
 
     private final HonorarioRepository honorarioRepository;
     private final ClienteRepository clienteRepository;
@@ -72,6 +77,8 @@ public class HonorarioController {
         honorario.setDescricao(request.getDescricao());
         honorario.setCliente(cliente);
         honorario.setProcesso(processo);
+        honorario.setOrigem(Honorario.ORIGEM_MANUAL);
+        honorario.setChaveIntegracao(null);
 
         return honorarioRepository.save(honorario);
     }
@@ -79,6 +86,7 @@ public class HonorarioController {
     @PutMapping("/{id}")
     public Honorario atualizar(@PathVariable Long id, @RequestBody HonorarioRequest request) {
         return honorarioRepository.findById(id).map(honorario -> {
+            bloquearSeGerenciadoPeloProcesso(honorario);
 
             Cliente cliente = null;
             Processo processo = null;
@@ -113,7 +121,28 @@ public class HonorarioController {
 
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
-        honorarioRepository.deleteById(id);
+        honorarioRepository.findById(id).ifPresent(honorario -> {
+            bloquearSeGerenciadoPeloProcesso(honorario);
+            honorarioRepository.delete(honorario);
+        });
+    }
+
+    private void bloquearSeGerenciadoPeloProcesso(Honorario honorario) {
+        if (isGerenciadoPeloProcesso(honorario)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    REGISTRO_GERENCIADO_PELO_PROCESSO
+            );
+        }
+    }
+
+    private boolean isGerenciadoPeloProcesso(Honorario honorario) {
+        return Honorario.ORIGEM_PROCESSO_AUTOMATICO.equals(honorario.getOrigem())
+                || temTexto(honorario.getChaveIntegracao());
+    }
+
+    private boolean temTexto(String valor) {
+        return valor != null && !valor.isBlank();
     }
 
     public static class HonorarioRequest {

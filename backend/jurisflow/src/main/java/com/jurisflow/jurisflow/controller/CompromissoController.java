@@ -6,7 +6,9 @@ import com.jurisflow.jurisflow.model.Processo;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.CompromissoRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -14,6 +16,9 @@ import java.util.List;
 @RequestMapping("/compromissos")
 @CrossOrigin(origins = "*")
 public class CompromissoController {
+
+    private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =
+            "Este registro e gerenciado pelo processo vinculado. Edite o processo para altera-lo.";
 
     private final CompromissoRepository compromissoRepository;
     private final ClienteRepository clienteRepository;
@@ -73,6 +78,8 @@ public class CompromissoController {
         compromisso.setPrioridade(request.getPrioridade());
         compromisso.setCliente(cliente);
         compromisso.setProcesso(processo);
+        compromisso.setOrigem(Compromisso.ORIGEM_MANUAL);
+        compromisso.setChaveIntegracao(null);
 
         return compromissoRepository.save(compromisso);
     }
@@ -80,6 +87,8 @@ public class CompromissoController {
     @PutMapping("/{id}")
     public Compromisso atualizar(@PathVariable Long id, @RequestBody CompromissoRequest request) {
         return compromissoRepository.findById(id).map(compromisso -> {
+            bloquearSeGerenciadoPeloProcesso(compromisso);
+
             compromisso.setTitulo(request.getTitulo());
             compromisso.setTipo(request.getTipo());
             compromisso.setData(request.getData());
@@ -104,7 +113,28 @@ public class CompromissoController {
 
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
-        compromissoRepository.deleteById(id);
+        compromissoRepository.findById(id).ifPresent(compromisso -> {
+            bloquearSeGerenciadoPeloProcesso(compromisso);
+            compromissoRepository.delete(compromisso);
+        });
+    }
+
+    private void bloquearSeGerenciadoPeloProcesso(Compromisso compromisso) {
+        if (isGerenciadoPeloProcesso(compromisso)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    REGISTRO_GERENCIADO_PELO_PROCESSO
+            );
+        }
+    }
+
+    private boolean isGerenciadoPeloProcesso(Compromisso compromisso) {
+        return Compromisso.ORIGEM_PROCESSO_AUTOMATICO.equals(compromisso.getOrigem())
+                || temTexto(compromisso.getChaveIntegracao());
+    }
+
+    private boolean temTexto(String valor) {
+        return valor != null && !valor.isBlank();
     }
 
     public static class CompromissoRequest {

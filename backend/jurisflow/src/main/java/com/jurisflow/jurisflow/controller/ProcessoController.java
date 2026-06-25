@@ -1,10 +1,18 @@
 package com.jurisflow.jurisflow.controller;
 
 import com.jurisflow.jurisflow.model.Cliente;
+import com.jurisflow.jurisflow.model.Compromisso;
+import com.jurisflow.jurisflow.model.Honorario;
 import com.jurisflow.jurisflow.model.Processo;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
+import com.jurisflow.jurisflow.repository.CompromissoRepository;
+import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
+import com.jurisflow.jurisflow.service.ProcessoSincronizacaoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -13,12 +21,27 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ProcessoController {
 
+    private static final String PROCESSO_COM_VINCULOS_MANUAIS =
+            "Nao e possivel excluir este processo porque existem compromissos ou honorarios manuais ou legados vinculados a ele. Remova ou trate esses registros antes de excluir o processo.";
+
     private final ProcessoRepository processoRepository;
     private final ClienteRepository clienteRepository;
+    private final CompromissoRepository compromissoRepository;
+    private final HonorarioRepository honorarioRepository;
+    private final ProcessoSincronizacaoService processoSincronizacaoService;
 
-    public ProcessoController(ProcessoRepository processoRepository, ClienteRepository clienteRepository) {
+    public ProcessoController(
+            ProcessoRepository processoRepository,
+            ClienteRepository clienteRepository,
+            CompromissoRepository compromissoRepository,
+            HonorarioRepository honorarioRepository,
+            ProcessoSincronizacaoService processoSincronizacaoService
+    ) {
         this.processoRepository = processoRepository;
         this.clienteRepository = clienteRepository;
+        this.compromissoRepository = compromissoRepository;
+        this.honorarioRepository = honorarioRepository;
+        this.processoSincronizacaoService = processoSincronizacaoService;
     }
 
     @GetMapping
@@ -37,15 +60,42 @@ public class ProcessoController {
     }
 
     @PostMapping
+    @Transactional
     public Processo criar(@RequestBody ProcessoRequest request) {
-        Cliente cliente = null;
-
-        if (request.getClienteId() != null) {
-            cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
-        }
+        Cliente cliente = buscarClienteObrigatorio(request.getClienteId());
 
         Processo processo = new Processo();
 
+        preencherProcesso(processo, request);
+        processo.setCliente(cliente);
+
+        Processo processoSalvo = processoRepository.save(processo);
+        processoSincronizacaoService.sincronizar(processoSalvo);
+
+        return processoSalvo;
+    }
+
+    @PutMapping("/{id}")
+    @Transactional
+    public Processo atualizar(@PathVariable Long id, @RequestBody ProcessoRequest request) {
+        return processoRepository.findById(id).map(processo -> {
+
+            if (request.getClienteId() != null) {
+                Cliente cliente = buscarClienteExistente(request.getClienteId());
+                processo.setCliente(cliente);
+            }
+
+            preencherProcesso(processo, request);
+
+            Processo processoSalvo = processoRepository.save(processo);
+            processoSincronizacaoService.sincronizar(processoSalvo);
+
+            return processoSalvo;
+
+        }).orElse(null);
+    }
+
+    private void preencherProcesso(Processo processo, ProcessoRequest request) {
         processo.setNumero(request.getNumero());
         processo.setTipoAcao(request.getTipoAcao());
         processo.setAreaJuridica(request.getAreaJuridica());
@@ -55,6 +105,7 @@ public class ProcessoController {
         processo.setDataAbertura(request.getDataAbertura());
         processo.setDataAudiencia(request.getDataAudiencia());
         processo.setPrazoFinal(request.getPrazoFinal());
+
         processo.setTribunal(request.getTribunal());
         processo.setComarca(request.getComarca());
         processo.setVara(request.getVara());
@@ -68,57 +119,55 @@ public class ProcessoController {
         processo.setFormaPagamento(request.getFormaPagamento());
         processo.setParcelasHonorario(request.getParcelasHonorario());
         processo.setVencimentoHonorario(request.getVencimentoHonorario());
-
-        processo.setCliente(cliente);
-
-        return processoRepository.save(processo);
     }
 
-    @PutMapping("/{id}")
-    public Processo atualizar(@PathVariable Long id, @RequestBody ProcessoRequest request) {
-        return processoRepository.findById(id).map(processo -> {
+    private Cliente buscarClienteObrigatorio(Long clienteId) {
+        if (clienteId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "clienteId e obrigatorio para cadastrar processo."
+            );
+        }
 
-            Cliente cliente = null;
+        return buscarClienteExistente(clienteId);
+    }
 
-            if (request.getClienteId() != null) {
-                cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
-            }
-
-            processo.setNumero(request.getNumero());
-            processo.setTipoAcao(request.getTipoAcao());
-            processo.setAreaJuridica(request.getAreaJuridica());
-            processo.setStatus(request.getStatus());
-            processo.setDescricao(request.getDescricao());
-
-            processo.setDataAbertura(request.getDataAbertura());
-            processo.setDataAudiencia(request.getDataAudiencia());
-            processo.setPrazoFinal(request.getPrazoFinal());
-
-            processo.setTribunal(request.getTribunal());
-            processo.setComarca(request.getComarca());
-            processo.setVara(request.getVara());
-            processo.setJuiz(request.getJuiz());
-            processo.setPrioridade(request.getPrioridade());
-            processo.setValorCausa(request.getValorCausa());
-            processo.setStatusFinanceiro(request.getStatusFinanceiro());
-            processo.setUltMovimentacao(request.getUltMovimentacao());
-            processo.setValorHonorario(request.getValorHonorario());
-            processo.setFormaPagamento(request.getFormaPagamento());
-            processo.setParcelasHonorario(request.getParcelasHonorario());
-            processo.setVencimentoHonorario(request.getVencimentoHonorario());
-
-            if (cliente != null) {
-                processo.setCliente(cliente);
-            }
-
-            return processoRepository.save(processo);
-
-        }).orElse(null);
+    private Cliente buscarClienteExistente(Long clienteId) {
+        return clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "clienteId nao corresponde a cliente existente."
+                ));
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public void deletar(@PathVariable Long id) {
-        processoRepository.deleteById(id);
+        Processo processo = processoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Processo nao encontrado."
+                ));
+
+        List<Compromisso> compromissos = compromissoRepository.findByProcessoId(id);
+        List<Honorario> honorarios = honorarioRepository.findByProcessoId(id);
+
+        boolean possuiVinculoNaoAutomatico = compromissos.stream()
+                .anyMatch(compromisso -> !processoSincronizacaoService
+                        .isCompromissoAutomaticoSeguroDoProcesso(processo, compromisso))
+                || honorarios.stream()
+                .anyMatch(honorario -> !processoSincronizacaoService
+                        .isHonorarioAutomaticoSeguroDoProcesso(processo, honorario));
+
+        if (possuiVinculoNaoAutomatico) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    PROCESSO_COM_VINCULOS_MANUAIS
+            );
+        }
+
+        processoSincronizacaoService.removerRegistrosAutomaticosDoProcesso(processo);
+        processoRepository.delete(processo);
     }
 
     public static class ProcessoRequest {

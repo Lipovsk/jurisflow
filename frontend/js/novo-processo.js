@@ -45,6 +45,61 @@ function maskProcesso(v) {
   return v.substring(0, 25);
 }
 
+function stringOuNull(valor) {
+  const texto = String(valor ?? '').trim();
+  return texto || null;
+}
+
+function moedaOuNull(valor) {
+  const texto = String(valor ?? '').trim();
+  if (!texto) return null;
+
+  const numero = Number(
+    texto
+      .replace(/\./g, '')
+      .replace(',', '.')
+  );
+
+  return Number.isFinite(numero) ? numero : null;
+}
+
+function clienteIdSelecionado() {
+  const valor = document.getElementById('clienteId')?.value;
+  const id = Number(valor);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function clienteSelecionadoExiste(id) {
+  return clientesBackend.some(cliente => Number(cliente.id) === id);
+}
+
+function normalizarStatusProcesso(status) {
+  const texto = String(status ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+
+  if (texto === 'andamento' || texto === 'em andamento') return 'em_andamento';
+  if (texto === 'audiencia' || texto === 'audiencia designada') return 'audiencia_designada';
+  if (texto === 'concluido' || texto === 'encerrado') return 'encerrado';
+  if (texto === 'suspenso') return 'suspenso';
+  if (texto === 'arquivado') return 'arquivado';
+  return 'em_andamento';
+}
+
+function selecionarStatusProcesso(status) {
+  const valor = normalizarStatusProcesso(status);
+  const hidden = document.getElementById('statusProcesso');
+  if (hidden) hidden.value = valor;
+
+  document.querySelectorAll('.pstbtn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === valor);
+  });
+}
+
 function applyMasks() {
   document.querySelectorAll('[data-mask="currency"]').forEach(el => {
     el.addEventListener('input', e => { e.target.value = maskCurrency(e.target.value); });
@@ -73,13 +128,15 @@ function validateForm() {
     if (!v) ok = false;
   });
   // Validate hidden client field
-  const clienteId = document.getElementById('clienteId');
+  const clienteId = clienteIdSelecionado();
   const clienteInput = document.getElementById('clienteBusca');
-  if (clienteId && !clienteId.value) {
+  if (!clienteId || !clienteSelecionadoExiste(clienteId)) {
     const g = clienteInput?.closest('.fg');
     if (g) {
       g.classList.add('has-error');
       clienteInput?.classList.add('error');
+      const erro = g.querySelector('.ferr');
+      if (erro) erro.textContent = 'Selecione um cliente válido da lista';
     }
     ok = false;
   }
@@ -312,7 +369,7 @@ function initTimeline() {
 
     document.getElementById('tlEventoDesc').value = '';
     addForm.style.display = 'none';
-    window.JurisFlow?.showToast('Evento adicionado à timeline.', 'success');
+    window.JurisFlow?.showToast('Evento adicionado apenas nesta tela.', 'info');
   });
 }
 
@@ -354,10 +411,10 @@ function initFileUpload() {
         item.innerHTML = `
           <div class="tl-dot amber"></div>
           <div class="tl-content">
-            <div class="tl-title">Documento anexado: ${file.name}</div>
+            <div class="tl-title">Documento selecionado: ${file.name}</div>
             <div class="tl-meta">${today} · Dr. Carlos Mendes</div>
           </div>
-          <div class="tl-badge">Documento</div>
+          <div class="tl-badge">Local</div>
           <button class="tl-item-del" title="Remover">✕</button>
         `;
         item.querySelector('.tl-item-del').addEventListener('click', () => item.remove());
@@ -428,8 +485,7 @@ async function carregarProcessoParaEdicao() {
     document.getElementById('observacoes').value =
       processo.descricao || '';
 
-    document.getElementById('statusProcesso').value =
-      processo.status || 'andamento';
+    selecionarStatusProcesso(processo.status);
 
     if (processo.cliente) {
 
@@ -530,33 +586,51 @@ function initFormSubmit() {
     const g = id => document.getElementById(id);
     const v = id => g(id)?.value?.trim() || '';
 
-    const clienteEl = g('clienteBusca');
-    const clienteId = g('clienteId')?.value || '';
-    const clienteNome = clienteEl?.value?.trim() || '';
+    const clienteId = clienteIdSelecionado();
 
-    const processo = {
-      numero: v('numProcesso'),
-      clienteId,
-      clienteNome,
+    if (!clienteId || !clienteSelecionadoExiste(clienteId)) {
+      const clienteInput = g('clienteBusca');
+      const grupo = clienteInput?.closest('.fg');
+      if (grupo) {
+        grupo.classList.add('has-error');
+        const erro = grupo.querySelector('.ferr');
+        if (erro) erro.textContent = 'Selecione um cliente válido da lista';
+      }
+      clienteInput?.classList.add('error');
+      clienteInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.JurisFlow?.showToast('Selecione um cliente válido da lista antes de salvar.', 'warning');
+      allBtns.forEach(b => {
+        if (b) {
+          b.disabled = false;
+          const t = b.querySelector('.bfs-text');
+          if (t) t.textContent = 'Salvar Processo';
+        }
+      });
+      return;
+    }
+
+    const payload = {
+      numero: stringOuNull(v('numProcesso')),
+      tipoAcao: stringOuNull(v('tipoAcao')),
       areaJuridica: v('areaJuridica'),
-      tipoAcao: v('tipoAcao'),
-      status: v('statusProcesso') || 'andamento',
+      status: v('statusProcesso') || 'em_andamento',
+      descricao: stringOuNull(v('observacoes')),
+      dataAbertura: stringOuNull(v('dataAbertura')),
+      dataAudiencia: stringOuNull(v('dataAudiencia')),
+      prazoFinal: stringOuNull(v('prazoFinal')),
+      tribunal: stringOuNull(v('tribunal')),
+      comarca: stringOuNull(v('comarca')),
+      vara: stringOuNull(v('vara')),
+      juiz: stringOuNull(v('juiz')),
       prioridade: v('prioridade') || 'media',
-      tribunal: v('tribunal'),
-      comarca: v('comarca'),
-      vara: v('vara'),
-      juiz: v('juiz'),
-      dataAbertura: v('dataAbertura'),
-      dataAudiencia: v('dataAudiencia'),
-      prazoFinal: v('prazoFinal'),
-      ultMovimentacao: v('ultMovimentacao'),
-      valorCausa: v('valorCausa'),
-      honorarios: v('honorarios'),
-      statusFinanceiro: v('statusFinanceiro'),
-      formaPagamento: v('formaPagamento'),
-      observacoes: v('observacoes'),
-      andamento: 0,
-      dataCadastro: new Date().toISOString(),
+      valorCausa: moedaOuNull(v('valorCausa')),
+      statusFinanceiro: stringOuNull(v('statusFinanceiro')),
+      ultMovimentacao: stringOuNull(v('ultMovimentacao')),
+      valorHonorario: moedaOuNull(v('honorarios')),
+      formaPagamento: stringOuNull(v('formaPagamento')),
+      parcelasHonorario: null,
+      vencimentoHonorario: null,
+      clienteId
     };
 
     const metodo = processoEditId ? 'PUT' : 'POST';
@@ -570,42 +644,7 @@ function initFormSubmit() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        numero: processo.numero,
-        tipoAcao: processo.tipoAcao,
-        areaJuridica: processo.areaJuridica,
-        status: processo.status,
-        descricao: processo.observacoes,
-        clienteId: Number(processo.clienteId),
-        tribunal: processo.tribunal,
-        comarca: processo.comarca,
-        vara: processo.vara,
-        juiz: processo.juiz,
-        prioridade: processo.prioridade,
-
-        valorCausa: parseFloat(
-          String(processo.valorCausa || '0')
-            .replace(/\./g, '')
-            .replace(',', '.')
-        ) || 0,
-
-        statusFinanceiro: processo.statusFinanceiro,
-        ultMovimentacao: processo.ultMovimentacao,
-
-        valorHonorario: parseFloat(
-          String(processo.honorarios || '0')
-            .replace(/\./g, '')
-            .replace(',', '.')
-        ) || 0,
-
-        formaPagamento: processo.formaPagamento || '',
-
-        parcelasHonorario:
-          processo.formaPagamento === 'Parcelado' ? 2 : 1,
-
-        vencimentoHonorario:
-          processo.prazoFinal || processo.dataAbertura
-      })
+      body: JSON.stringify(payload)
     })
       .then(res => {
         if (!res.ok) {
@@ -617,7 +656,7 @@ function initFormSubmit() {
       .then(async data => {
         console.log('Processo salvo:', data);
         if (processoEditId) {
-          window.JurisFlow?.showToast('✅ Processo atualizado com sucesso!', 'success');
+          window.JurisFlow?.showToast('Processo atualizado com sucesso.', 'success');
 
           setTimeout(() => {
             window.location.href = `detalhes-processo.html?id=${processoEditId}`;
@@ -626,75 +665,10 @@ function initFormSubmit() {
           return;
         }
 
-        const valorHonorario = parseFloat(
-          String(processo.honorarios || '0')
-            .replace(/\./g, '')
-            .replace(',', '.')
-        ) || 0;
-
-        if (valorHonorario > 0) {
-          await fetch("http://localhost:8080/honorarios", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              tipoHonorario: "fixo",
-              valorTotal: valorHonorario,
-              competencia: new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0"),
-              status: processo.statusFinanceiro === "Em dia" ? "pago" : "pendente",
-              formaPagamento: processo.formaPagamento || "Não informado",
-              descricao: `Honorário automático do processo ${processo.numero || data.id}`,
-              clienteId: Number(processo.clienteId),
-              processoId: data.id
-            })
-          });
-        }
-
-        const compromissosParaCriar = [];
-
-        if (processo.dataAudiencia) {
-          compromissosParaCriar.push({
-            titulo: `Audiência — ${processo.tipoAcao || processo.numero}`,
-            tipo: "audiencia",
-            data: processo.dataAudiencia,
-            hora: "09:00",
-            descricao: `Audiência do processo ${processo.numero}`,
-            status: "agendado",
-            prioridade: processo.prioridade || "media",
-            clienteId: Number(processo.clienteId),
-            processoId: data.id
-          });
-        }
-
-        if (processo.prazoFinal) {
-          compromissosParaCriar.push({
-            titulo: `Prazo — ${processo.tipoAcao || processo.numero}`,
-            tipo: "prazo",
-            data: processo.prazoFinal,
-            hora: "",
-            descricao: `Prazo final do processo ${processo.numero}`,
-            status: "agendado",
-            prioridade: "alta",
-            clienteId: Number(processo.clienteId),
-            processoId: data.id
-          });
-        }
-
-        for (const compromisso of compromissosParaCriar) {
-          await fetch("http://localhost:8080/compromissos", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(compromisso)
-          });
-        }
-
-        window.JurisFlow?.showToast('✅ Processo salvo e agenda atualizada!', 'success');
+        window.JurisFlow?.showToast('Processo cadastrado com sucesso.', 'success');
 
         setTimeout(() => {
-          window.location.href = `detalhes-cliente.html?id=${processo.clienteId}`;
+          window.location.href = `detalhes-cliente.html?id=${payload.clienteId}`;
         }, 1000);
       })
       .catch(erro => {
@@ -726,7 +700,7 @@ function initCancel() {
     });
   });
   document.getElementById('btnRascunho')?.addEventListener('click', () => {
-    window.JurisFlow?.showToast('Rascunho salvo.', 'info');
+    window.JurisFlow?.showToast('Rascunho local ainda não é salvo nesta etapa.', 'info');
   });
 }
 

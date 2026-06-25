@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 @Entity
 public class Honorario {
 
+    public static final String ORIGEM_MANUAL = "MANUAL";
+    public static final String ORIGEM_PROCESSO_AUTOMATICO = "PROCESSO_AUTOMATICO";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,6 +18,10 @@ public class Honorario {
     private String status;
     private String formaPagamento;
     private String descricao;
+    private String origem;
+
+    @Column(unique = true)
+    private String chaveIntegracao;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
@@ -74,6 +81,22 @@ public class Honorario {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public String getOrigem() {
+        return origem;
+    }
+
+    public void setOrigem(String origem) {
+        this.origem = origem;
+    }
+
+    public String getChaveIntegracao() {
+        return chaveIntegracao;
+    }
+
+    public void setChaveIntegracao(String chaveIntegracao) {
+        this.chaveIntegracao = chaveIntegracao;
     }
 
     public Cliente getCliente() {

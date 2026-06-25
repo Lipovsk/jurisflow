@@ -43,12 +43,15 @@
     .area-criminal  { background:#FEF2F2; color:#DC2626; }
     .area-familia   { background:#F5F3FF; color:#7C3AED; }
 
-    .sp-andamento { background:#EEF3FF; color:#2563EB; }
-    .sp-urgente   { background:#FEF2F2; color:#DC2626; }
-    .sp-concluido { background:#ECFDF5; color:#059669; }
+    .sp-em-andamento { background:#EEF3FF; color:#2563EB; }
+    .sp-audiencia-designada { background:#FFFBEB; color:#D97706; }
     .sp-suspenso  { background:#F1F5F9; color:#64748B; }
+    .sp-encerrado { background:#ECFDF5; color:#059669; }
+    .sp-arquivado { background:#F1F5F9; color:#475569; }
+    .sp-nao-padronizado { background:#FEF2F2; color:#DC2626; }
     .status-proc  { display:inline-flex; align-items:center; font-size:.72rem; font-weight:600; padding:4px 10px; border-radius:20px; }
 
+    .prioridade-urgente { background:#FEF2F2; color:#DC2626; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-block; }
     .prioridade-alta  { background:#FEF2F2; color:#DC2626; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-block; }
     .prioridade-media { background:#FFFBEB; color:#D97706; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-block; }
     .prioridade-baixa { background:#ECFDF5; color:#059669; font-size:.67rem; font-weight:600; padding:3px 9px; border-radius:20px; display:inline-block; }
@@ -67,10 +70,6 @@
     .ic-label { font-size:.67rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; }
     .ic-value { font-size:.84rem; color:var(--gray-800); font-weight:500; }
     .ic-value.nd { color:var(--gray-300); font-style:italic; font-weight:400; }
-
-    .progress-wrap { display:flex; align-items:center; gap:10px; }
-    .progress-bar  { flex:1; height:7px; background:var(--gray-100); border-radius:4px; overflow:hidden; }
-    .progress-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--navy-light),var(--navy)); }
 
     .client-link-card {
       background:var(--white); border:1px solid var(--gray-100);
@@ -93,6 +92,24 @@
     .sc-title { font-family:'Playfair Display',serif; font-size:.92rem; font-weight:600; color:var(--navy); }
     .sc-count { font-size:.75rem; color:var(--gray-400); background:var(--gray-50); padding:3px 10px; border-radius:20px; font-weight:600; }
 
+    .linked-list { display:flex; flex-direction:column; }
+    .linked-item { padding:18px 22px; border-bottom:1px solid var(--gray-100); }
+    .linked-item:last-child { border-bottom:none; }
+    .linked-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:12px; }
+    .linked-title { color:var(--navy); font-size:.9rem; font-weight:700; }
+    .linked-meta { color:var(--gray-400); font-size:.73rem; margin-top:3px; }
+    .linked-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+    .linked-field { min-width:0; }
+    .linked-label { font-size:.64rem; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; }
+    .linked-value { margin-top:3px; color:var(--gray-700); font-size:.8rem; line-height:1.4; overflow-wrap:anywhere; }
+    .linked-value.nd { color:var(--gray-300); font-style:italic; }
+    .linked-desc { margin-top:12px; background:var(--gray-50); border-radius:var(--radius-sm); padding:11px 12px; color:var(--gray-600); font-size:.8rem; line-height:1.5; white-space:pre-wrap; }
+    .origin-badge { display:inline-flex; align-items:center; white-space:nowrap; font-size:.68rem; font-weight:700; border-radius:20px; padding:4px 9px; }
+    .origin-auto { background:#EEF3FF; color:#2563EB; }
+    .origin-manual { background:#ECFDF5; color:#059669; }
+    .origin-legacy { background:#F1F5F9; color:#64748B; }
+    .tech-ref { margin-top:10px; color:var(--gray-300); font-family:'DM Mono',monospace; font-size:.67rem; overflow-wrap:anywhere; }
+
     .hon-row { display:flex; align-items:center; gap:14px; padding:13px 22px; border-bottom:1px solid var(--gray-100); transition:background .15s; }
     .hon-row:last-child { border-bottom:none; }
     .hon-row:hover { background:var(--gray-50); }
@@ -105,7 +122,7 @@
     .hs-pendente { background:#FFFBEB; color:#D97706; }
     .hs-inadimpl { background:#FEF2F2; color:#DC2626; }
 
-    .andamento-obs { background:var(--gray-50); border-radius:var(--radius-sm); padding:14px 16px; font-size:.83rem; color:var(--gray-600); line-height:1.5; }
+    .description-box { background:var(--gray-50); border-radius:var(--radius-sm); padding:14px 16px; font-size:.83rem; color:var(--gray-600); line-height:1.5; white-space:pre-wrap; }
 
     .empty-state { padding:32px; text-align:center; color:var(--gray-400); font-size:.84rem; }
     .not-found { text-align:center; padding:60px 24px; }
@@ -113,13 +130,80 @@
     .not-found p  { color:var(--gray-400); margin-bottom:20px; }
     .not-found a  { color:var(--blue-accent); font-weight:600; text-decoration:none; }
 
+    .edit-overlay {
+      position:fixed; inset:0; z-index:400;
+      display:none; align-items:center; justify-content:center;
+      padding:20px; background:rgba(13,27,42,.48); backdrop-filter:blur(4px);
+    }
+    .edit-overlay.open { display:flex; }
+    .edit-modal {
+      width:min(980px,100%); max-height:92vh; overflow:hidden;
+      background:var(--white); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg);
+      display:flex; flex-direction:column;
+    }
+    .edit-head {
+      padding:18px 22px; border-bottom:1px solid var(--gray-100);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .edit-title { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:var(--navy); }
+    .edit-sub { font-size:.75rem; color:var(--gray-400); margin-top:2px; }
+    .edit-close {
+      width:34px; height:34px; border:none; background:var(--gray-100);
+      border-radius:8px; cursor:pointer; color:var(--gray-600);
+    }
+    .edit-body { padding:20px 22px; overflow:auto; }
+    .edit-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .edit-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .edit-field.full { grid-column:1 / -1; }
+    .edit-field label {
+      font-size:.68rem; font-weight:700; color:var(--gray-500);
+      text-transform:uppercase; letter-spacing:.05em;
+    }
+    .edit-field input,
+    .edit-field select,
+    .edit-field textarea {
+      width:100%; min-height:40px; border:1px solid var(--gray-200);
+      border-radius:var(--radius-sm); padding:0 11px; background:var(--white);
+      color:var(--gray-800); font-family:'DM Sans',sans-serif; font-size:.84rem; outline:none;
+    }
+    .edit-field textarea { min-height:90px; padding-top:10px; resize:vertical; line-height:1.5; }
+    .edit-field input:focus,
+    .edit-field select:focus,
+    .edit-field textarea:focus { border-color:var(--navy-light); }
+    .edit-field.has-error input { border-color:var(--red); }
+    .edit-error { display:none; font-size:.72rem; color:var(--red); }
+    .edit-field.has-error .edit-error { display:block; }
+    .edit-actions {
+      padding:14px 22px; border-top:1px solid var(--gray-100);
+      display:flex; justify-content:flex-end; gap:10px;
+    }
+    .cliente-edit-wrap { position:relative; }
+    .cliente-dropdown {
+      display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+      max-height:220px; overflow:auto; z-index:410; background:var(--white);
+      border:1px solid var(--gray-200); border-radius:var(--radius-md); box-shadow:var(--shadow-lg);
+    }
+    .cliente-dropdown.open { display:block; }
+    .cliente-option { padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--gray-100); }
+    .cliente-option:last-child { border-bottom:none; }
+    .cliente-option:hover { background:var(--gray-50); }
+    .cliente-option strong { display:block; color:var(--navy); font-size:.84rem; }
+    .cliente-option span { display:block; color:var(--gray-400); font-size:.72rem; margin-top:2px; }
+
     @media (max-width:1100px) {
       .detail-grid-3 { grid-template-columns:1fr 1fr; }
+      .edit-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:900px) {
       .detail-grid, .detail-grid-3 { grid-template-columns:1fr; }
+      .linked-grid { grid-template-columns:1fr 1fr; }
       .proc-header { flex-wrap:wrap; }
       .proc-actions { width:100%; }
+      .edit-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:640px) {
+      .linked-top { flex-direction:column; align-items:flex-start; }
+      .linked-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -179,58 +263,93 @@
 (function(){
   'use strict';
 
-  const CORES = [
-    'linear-gradient(135deg,#2563EB,#1D4ED8)','linear-gradient(135deg,#10B981,#059669)',
-    'linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#8B5CF6,#7C3AED)',
-    'linear-gradient(135deg,#F97316,#EA580C)','linear-gradient(135deg,#0D9488,#0F766E)',
-    'linear-gradient(135deg,#6B7280,#4B5563)','linear-gradient(135deg,#EC4899,#DB2777)',
-  ];
+  const API_BASE = 'http://localhost:8080';
+  const NAO_INFORMADO = 'Não informado';
+  const main = document.getElementById('mainContent');
+  const idParam = new URLSearchParams(window.location.search).get('id');
+  const processoId = Number(idParam);
+  let processoAtual = null;
+  let clientes = [];
+
   function getCor(id) {
+    const CORES = [
+      'linear-gradient(135deg,#2563EB,#1D4ED8)','linear-gradient(135deg,#10B981,#059669)',
+      'linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#8B5CF6,#7C3AED)',
+      'linear-gradient(135deg,#F97316,#EA580C)','linear-gradient(135deg,#0D9488,#0F766E)',
+      'linear-gradient(135deg,#6B7280,#4B5563)','linear-gradient(135deg,#EC4899,#DB2777)',
+    ];
     const n = String(id || '').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
     return CORES[n % CORES.length];
   }
+
   function getIniciais(nome) {
     if (!nome) return '?';
     const p = nome.trim().split(/\s+/).filter(Boolean);
     if (p.length === 1) return p[0].slice(0,2).toUpperCase();
     return (p[0][0] + p[p.length-1][0]).toUpperCase();
   }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function normalizarTexto(value) {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ');
+  }
+
+  function texto(value, fallback = NAO_INFORMADO) {
+    const val = String(value ?? '').trim();
+    return val || fallback;
+  }
+
   function normArea(a) {
-    if (!a) return '';
-    const m = {'Cível':'civel','Trabalhista':'trabalhista','Empresarial':'empresarial','Criminal':'criminal','Família':'familia','Familia':'familia'};
-    if (m[a]) return m[a];
-    const s = a.toLowerCase();
-    if (s.includes('civ'))    return 'civel';
-    if (s.includes('trab'))   return 'trabalhista';
+    const s = normalizarTexto(a);
+    if (!s) return '';
+    if (s.includes('civ')) return 'civel';
+    if (s.includes('trab')) return 'trabalhista';
     if (s.includes('empres')) return 'empresarial';
-    if (s.includes('crim'))   return 'criminal';
-    if (s.includes('fam'))    return 'familia';
+    if (s.includes('crim')) return 'criminal';
+    if (s.includes('fam')) return 'familia';
     return s;
   }
-  function fmtData(iso) {
-    if (!iso) return '—';
-    try {
-      const d = new Date(iso);
-      return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
-    } catch(e) { return '—'; }
+
+  function datePart(value) {
+    const match = String(value ?? '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return match ? match[0] : '';
   }
-  function fmtMoeda(v) {
-    if (!v && v !== 0) return '—';
-    const n = parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
-    return 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  function dateFromPart(part) {
+    if (!part) return null;
+    const [ano, mes, dia] = part.split('-').map(Number);
+    const data = new Date(ano, mes - 1, dia);
+    if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) return null;
+    return data;
   }
-  function fmtCompetencia(c) {
-    if (!c) return '—';
-    const parts = c.split('-');
-    if (parts.length < 2) return c;
-    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    return (meses[parseInt(parts[1],10)-1] || parts[1]) + '/' + parts[0];
+
+  function fmtData(value, fallback = NAO_INFORMADO) {
+    const data = dateFromPart(datePart(value));
+    if (!data) return fallback;
+    return `${String(data.getDate()).padStart(2,'0')}/${String(data.getMonth()+1).padStart(2,'0')}/${data.getFullYear()}`;
   }
-  function prazoChip(iso) {
-    if (!iso) return '<span style="color:var(--gray-400)">—</span>';
-    const d = new Date(iso);
-    const diff = Math.round((d - new Date()) / 86400000);
-    const txt = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+
+  function prazoChip(value) {
+    const data = dateFromPart(datePart(value));
+    if (!data) return `<span style="color:var(--gray-400)">${NAO_INFORMADO}</span>`;
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const diff = Math.round((data - hoje) / 86400000);
+    const txt = fmtData(value);
     const cls = diff < 0 ? 'prazo-red' : diff <= 7 ? 'prazo-red' : diff <= 30 ? 'prazo-amber' : 'prazo-green';
     const style = {
       'prazo-red'  :'background:#FEF2F2;color:#DC2626',
@@ -239,239 +358,722 @@
     }[cls];
     return `<span style="${style};font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-block;">${txt}</span>`;
   }
-  function v(val) { return val || '—'; }
 
-  const areaMap   = {civel:'area-civel',trabalhista:'area-trabalhista',empresarial:'area-empresarial',criminal:'area-criminal',familia:'area-familia'};
-  const areaLabel = {civel:'Cível',trabalhista:'Trabalhista',empresarial:'Empresarial',criminal:'Criminal',familia:'Família'};
-  const statusMap = {
-    andamento:{ cls:'sp-andamento', label:'Em andamento' },
-    urgente:  { cls:'sp-urgente',   label:'⚠ Urgente' },
-    concluido:{ cls:'sp-concluido', label:'Concluído' },
-    suspenso: { cls:'sp-suspenso',  label:'Suspenso' },
-  };
-  const honStatusMap   = { pago:'hs-pago', pendente:'hs-pendente', inadimpl:'hs-inadimpl' };
-  const honStatusLabel = { pago:'Pago', pendente:'Pendente', inadimpl:'Inadimplente' };
-  const tipoHonLabel   = { fixo:'Honorário Fixo', retainer:'Retainer', exito:'Êxito', consulta:'Consulta', parcelado:'Parcelado' };
-  const prioridadeMap  = { alta:'prioridade-alta', media:'prioridade-media', baixa:'prioridade-baixa' };
-  const prioridadeLabel= { alta:'Alta', media:'Média', baixa:'Baixa' };
-
-  const main = document.getElementById('mainContent');
-
-const id = new URLSearchParams(window.location.search).get('id');
-
-if (!id) {
-  main.innerHTML = `
-    <div class="not-found">
-      <h2>Processo não encontrado</h2>
-      <p>Nenhum ID informado.</p>
-      <a href="processos.html">← Voltar</a>
-    </div>
-  `;
-  return;
-}
-
-async function carregarProcesso() {
-
-  try {
-
-    const resposta = await fetch(`http://localhost:8080/processos/${id}`);
-
-    if (!resposta.ok) {
-      throw new Error('Processo não encontrado');
-    }
-
-    const processo = await resposta.json();
-
-    const honorarios = [];
-
-    const cliente = processo.cliente || null;
-
-  document.getElementById('pageTitle').textContent = processo.numero || 'Processo';
-  document.title = (processo.numero || 'Processo') + ' — JurisFlow';
-
-  const area    = normArea(processo.areaJuridica);
-  const aClasse = areaMap[area]   || 'area-civel';
-  const aLabel  = areaLabel[area] || processo.areaJuridica || '—';
-  const st      = statusMap[processo.status] || statusMap.andamento;
-  const prio    = processo.prioridade;
-  const andamento = processo.andamento || 0;
-
-  function honRows() {
-    if (!honorarios.length) return '<div class="empty-state">Nenhum honorário vinculado a este processo</div>';
-    return honorarios.map(h => {
-      const sCls   = honStatusMap[h.status]   || 'hs-pendente';
-      const sLabel = honStatusLabel[h.status] || h.status;
-      const tipo   = tipoHonLabel[h.tipoHonorario] || h.tipoHonorario || '—';
-      const cor    = h.status === 'pago' ? 'var(--green)' : h.status === 'inadimpl' ? 'var(--red)' : 'var(--amber)';
-      return `<div class="hon-row">
-        <div class="hon-info">
-          <div class="hon-tipo">${tipo}</div>
-          <div class="hon-sub">${fmtCompetencia(h.competencia)} · ${h.clienteNome || '—'}</div>
-        </div>
-        <span class="hon-val" style="color:${cor};">${fmtMoeda(h.valorTotal)}</span>
-        <span class="hon-status ${sCls}">${sLabel}</span>
-      </div>`;
-    }).join('');
+  function fmtMoeda(value) {
+    if (value === null || value === undefined || value === '') return NAO_INFORMADO;
+    const numero = Number(value);
+    if (!Number.isFinite(numero)) return NAO_INFORMADO;
+    return numero.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
   }
 
-  main.innerHTML = `
-    <div class="breadcrumb">
-      <a href="processos.html">📁 Processos</a>
-      <span class="sep">›</span>
-      <span>${processo.numero || 'Processo'}</span>
-    </div>
+  function moedaInput(value) {
+    if (value === null || value === undefined || value === '') return '';
+    const numero = Number(value);
+    return Number.isFinite(numero) ? numero.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
+  }
 
-    <div class="proc-header">
-      <div class="proc-header-icon">📁</div>
-      <div class="proc-header-info">
-        <div class="proc-numero">${v(processo.numero)}</div>
-        <div class="proc-titulo">${v(processo.tipoAcao)}</div>
-        <div class="proc-meta">
-          <span class="area-badge ${aClasse}">${aLabel}</span>
-          <span class="status-proc ${st.cls}">${st.label}</span>
-          ${prio ? `<span class="${prioridadeMap[prio]||'prioridade-media'}">${prioridadeLabel[prio]||prio}</span>` : ''}
-        </div>
-      </div>
-      <div class="proc-actions">
-        <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
-       <button id="btnEditarProcesso" class="btn-primary">
-  ✏️ Editar Processo
-</button>
-      </div>
-    </div>
+  function parseMoeda(value) {
+    const textoValor = String(value ?? '').trim();
+    if (!textoValor) return null;
+    const numero = Number(textoValor.replace(/\./g, '').replace(',', '.'));
+    return Number.isFinite(numero) ? numero : null;
+  }
 
-    <div class="detail-grid">
-      <div class="info-card">
-        <div class="ic-header">🏛️ Dados Judiciais</div>
-        <div class="ic-body">
-          <div class="ic-row">
-            <div class="ic-field">
-              <div class="ic-label">Tribunal</div>
-              <div class="ic-value ${!processo.tribunal?'nd':''}">${v(processo.tribunal)}</div>
-            </div>
-            <div class="ic-field">
-              <div class="ic-label">Comarca</div>
-              <div class="ic-value ${!processo.comarca?'nd':''}">${v(processo.comarca)}</div>
-            </div>
-          </div>
-          <div class="ic-row">
-            <div class="ic-field">
-              <div class="ic-label">Vara</div>
-              <div class="ic-value ${!processo.vara?'nd':''}">${v(processo.vara)}</div>
-            </div>
-            <div class="ic-field">
-              <div class="ic-label">Juiz</div>
-              <div class="ic-value ${!processo.juiz?'nd':''}">${v(processo.juiz)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+  function parseInteiro(value) {
+    const textoValor = String(value ?? '').trim();
+    if (!textoValor) return null;
+    const numero = Number(textoValor);
+    return Number.isInteger(numero) ? numero : null;
+  }
 
-      <div class="info-card">
-        <div class="ic-header">📅 Datas e Prazos</div>
-        <div class="ic-body">
-          <div class="ic-row">
-            <div class="ic-field">
-              <div class="ic-label">Abertura</div>
-              <div class="ic-value">${fmtData(processo.dataAbertura)}</div>
-            </div>
-            <div class="ic-field">
-              <div class="ic-label">Prazo Final</div>
-              <div class="ic-value">${prazoChip(processo.prazoFinal)}</div>
-            </div>
-          </div>
-          <div class="ic-row">
-            <div class="ic-field">
-              <div class="ic-label">Audiência</div>
-              <div class="ic-value ${!processo.dataAudiencia?'nd':''}">${fmtData(processo.dataAudiencia)}</div>
-            </div>
-            <div class="ic-field">
-              <div class="ic-label">Prioridade</div>
-              <div class="ic-value">${prio ? `<span class="${prioridadeMap[prio]||'prioridade-media'}">${prioridadeLabel[prio]||prio}</span>` : '—'}</div>
-            </div>
-          </div>
-          <div class="ic-field">
-            <div class="ic-label">Andamento</div>
-            <div class="ic-value">
-              <div class="progress-wrap">
-                <div class="progress-bar"><div class="progress-fill" style="width:${andamento}%;"></div></div>
-                <span style="font-size:.8rem;font-weight:700;color:var(--navy);min-width:36px;">${andamento}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  function textoOuNull(value) {
+    const textoValor = String(value ?? '').trim();
+    return textoValor || null;
+  }
 
-    ${cliente ? `
-    <div class="client-link-card" onclick="window.location.href='detalhes-cliente.html?id=${cliente.id}'">
-      <div class="client-avatar" style="background:${getCor(cliente.id)};">${getIniciais(cliente.nome)}</div>
-      <div class="client-info">
-        <div class="client-name">${cliente.nome}</div>
-        <div class="client-sub">${v(cliente.tipoCliente)} · ${v(cliente.areaJuridica)}</div>
-      </div>
-      <span style="color:var(--gray-400);font-size:.85rem;">Ver perfil →</span>
-    </div>
-    ` : ''}
+  const areaMap = { civel:'area-civel', trabalhista:'area-trabalhista', empresarial:'area-empresarial', criminal:'area-criminal', familia:'area-familia' };
+  const areaLabel = { civel:'Cível', trabalhista:'Trabalhista', empresarial:'Empresarial', criminal:'Criminal', familia:'Família' };
+  const statusMap = {
+    em_andamento: { cls:'sp-em-andamento', label:'Em andamento' },
+    audiencia_designada: { cls:'sp-audiencia-designada', label:'Audiência designada' },
+    suspenso: { cls:'sp-suspenso', label:'Suspenso' },
+    encerrado: { cls:'sp-encerrado', label:'Encerrado' },
+    arquivado: { cls:'sp-arquivado', label:'Arquivado' }
+  };
+  const prioridadeMap = { urgente:'prioridade-urgente', alta:'prioridade-alta', media:'prioridade-media', baixa:'prioridade-baixa' };
+  const prioridadeLabel = { urgente:'Urgente', alta:'Alta', media:'Média', baixa:'Baixa' };
 
-    <div class="info-card">
-      <div class="ic-header">💼 Financeiro</div>
-      <div class="ic-body">
-        <div class="ic-row">
-          <div class="ic-field">
-            <div class="ic-label">Valor da Causa</div>
-            <div class="ic-value" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--navy);">${fmtMoeda(processo.valorCausa)}</div>
-          </div>
-          <div class="ic-field">
-            <div class="ic-label">Honorários Contratados</div>
-            <div class="ic-value" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold);">${fmtMoeda(processo.honorarios)}</div>
-          </div>
-        </div>
-        <div class="ic-row">
-          <div class="ic-field">
-            <div class="ic-label">Status Financeiro</div>
-            <div class="ic-value">${v(processo.statusFinanceiro)}</div>
-          </div>
-          <div class="ic-field">
-            <div class="ic-label">Forma de Pagamento</div>
-            <div class="ic-value ${!processo.formaPagamento?'nd':''}">${v(processo.formaPagamento)}</div>
-          </div>
-        </div>
-        ${processo.observacoes ? `<div class="ic-field"><div class="ic-label">Observações</div><div class="andamento-obs">${processo.observacoes}</div></div>` : ''}
-      </div>
-    </div>
+  function normalizarStatus(status) {
+    const valor = normalizarTexto(status);
+    if (valor === 'andamento' || valor === 'em andamento') return { value:'em_andamento', ...statusMap.em_andamento, padronizado:true };
+    if (valor === 'audiencia' || valor === 'audiencia designada') return { value:'audiencia_designada', ...statusMap.audiencia_designada, padronizado:true };
+    if (valor === 'concluido' || valor === 'encerrado') return { value:'encerrado', ...statusMap.encerrado, padronizado:true };
+    if (valor === 'suspenso') return { value:'suspenso', ...statusMap.suspenso, padronizado:true };
+    if (valor === 'arquivado') return { value:'arquivado', ...statusMap.arquivado, padronizado:true };
+    if (!valor) return { value:'', label:NAO_INFORMADO, cls:'sp-nao-padronizado', padronizado:true };
+    return { value:valor, label:'Status não padronizado', cls:'sp-nao-padronizado', padronizado:false };
+  }
 
-    <div class="section-card">
-      <div class="sc-head">
-        <span class="sc-title">💰 Honorários Lançados</span>
-        <span class="sc-count">${honorarios.length}</span>
-      </div>
-      ${honRows()}
-    </div>
-  `;
-    } catch (erro) {
+  function valorStatusEdicao(status) {
+    const statusInfo = normalizarStatus(status);
+    return statusInfo.padronizado ? statusInfo.value : '';
+  }
 
-    console.error(erro);
+  function normalizarPrioridade(prioridade) {
+    const valor = normalizarTexto(prioridade);
+    return ['baixa','media','alta','urgente'].includes(valor) ? valor : '';
+  }
 
+  function toast(mensagem, tipo = 'info') {
+    if (window.JurisFlow?.showToast) {
+      window.JurisFlow.showToast(mensagem, tipo);
+      return;
+    }
+    alert(mensagem);
+  }
+
+  function mostrarNaoEncontrado(titulo, mensagem) {
     main.innerHTML = `
       <div class="not-found">
-        <h2>Erro</h2>
-        <p>Não foi possível carregar o processo.</p>
+        <h2>${escapeHtml(titulo)}</h2>
+        <p>${escapeHtml(mensagem)}</p>
+        <a href="processos.html">← Voltar para processos</a>
       </div>
     `;
   }
-}
-document.addEventListener('click', e => {
 
-  const btn = e.target.closest('#btnEditarProcesso');
-
-  if (btn) {
-    window.location.href = `novo-processo.html?id=${id}`;
+  function campo(label, value, extraClass = '') {
+    const raw = value === null || value === undefined || value === '' ? NAO_INFORMADO : value;
+    const nd = raw === NAO_INFORMADO ? ' nd' : '';
+    return `
+      <div class="ic-field">
+        <div class="ic-label">${escapeHtml(label)}</div>
+        <div class="ic-value${nd} ${extraClass}">${escapeHtml(raw)}</div>
+      </div>
+    `;
   }
 
-});
+  function campoVinculado(label, value) {
+    const raw = value === null || value === undefined || value === '' ? NAO_INFORMADO : value;
+    const nd = raw === NAO_INFORMADO ? ' nd' : '';
+    return `
+      <div class="linked-field">
+        <div class="linked-label">${escapeHtml(label)}</div>
+        <div class="linked-value${nd}">${escapeHtml(raw)}</div>
+      </div>
+    `;
+  }
 
-carregarProcesso();
+  function origemInfo(origem) {
+    const valor = String(origem ?? '').trim();
+    if (valor === 'PROCESSO_AUTOMATICO') {
+      return { label:'Automático do processo', cls:'origin-auto' };
+    }
+    if (valor === 'MANUAL') {
+      return { label:'Manual', cls:'origin-manual' };
+    }
+    return { label:'Manual ou legado', cls:'origin-legacy' };
+  }
+
+  function tipoCompromissoLabel(tipo) {
+    const valor = normalizarTexto(tipo);
+    const labels = {
+      audiencia: 'Audiência',
+      prazo: 'Prazo',
+      reuniao: 'Reunião',
+      lembrete: 'Lembrete',
+      tarefa: 'Tarefa',
+      protocolo: 'Protocolo'
+    };
+    return labels[valor] || texto(tipo);
+  }
+
+  function horaLabel(hora) {
+    return texto(hora, 'Sem horário definido');
+  }
+
+  function competenciaLabel(valor) {
+    const competencia = String(valor ?? '').trim();
+    const match = competencia.match(/^(\d{4})-(\d{2})/);
+    if (!match) return texto(competencia);
+
+    const data = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+    return data.toLocaleDateString('pt-BR', { month:'short', year:'numeric' });
+  }
+
+  function setSecaoErro(bodyId, countId, mensagem) {
+    const body = document.getElementById(bodyId);
+    const count = document.getElementById(countId);
+    if (count) count.textContent = 'Erro';
+    if (body) body.innerHTML = `<div class="empty-state">${escapeHtml(mensagem)}</div>`;
+  }
+
+  function renderizarCompromissos(compromissos) {
+    const body = document.getElementById('compromissosProcessoBody');
+    const count = document.getElementById('compromissosProcessoCount');
+    if (!body || !count) return;
+
+    const lista = Array.isArray(compromissos) ? compromissos : [];
+    count.textContent = `${lista.length}`;
+
+    if (!lista.length) {
+      body.innerHTML = '<div class="empty-state">Nenhum compromisso vinculado a este processo.</div>';
+      return;
+    }
+
+    body.innerHTML = `
+      <div class="linked-list">
+        ${lista.map(compromisso => {
+          const origem = origemInfo(compromisso.origem);
+          const chave = textoOuNull(compromisso.chaveIntegracao);
+          return `
+            <div class="linked-item">
+              <div class="linked-top">
+                <div>
+                  <div class="linked-title">${escapeHtml(texto(compromisso.titulo))}</div>
+                  <div class="linked-meta">${escapeHtml(tipoCompromissoLabel(compromisso.tipo))} · ${escapeHtml(fmtData(compromisso.data))}</div>
+                </div>
+                <span class="origin-badge ${origem.cls}">${escapeHtml(origem.label)}</span>
+              </div>
+              <div class="linked-grid">
+                ${campoVinculado('Tipo', tipoCompromissoLabel(compromisso.tipo))}
+                ${campoVinculado('Data', fmtData(compromisso.data))}
+                ${campoVinculado('Hora', horaLabel(compromisso.hora))}
+                ${campoVinculado('Status', compromisso.status)}
+                ${campoVinculado('Prioridade', compromisso.prioridade)}
+                ${campoVinculado('Origem', origem.label)}
+              </div>
+              <div class="linked-desc">${escapeHtml(texto(compromisso.descricao))}</div>
+              ${chave ? `<div class="tech-ref">chaveIntegracao: ${escapeHtml(chave)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderizarHonorarios(honorarios) {
+    const body = document.getElementById('honorariosProcessoBody');
+    const count = document.getElementById('honorariosProcessoCount');
+    if (!body || !count) return;
+
+    const lista = Array.isArray(honorarios) ? honorarios : [];
+    count.textContent = `${lista.length}`;
+
+    if (!lista.length) {
+      body.innerHTML = '<div class="empty-state">Nenhum honorário vinculado a este processo.</div>';
+      return;
+    }
+
+    body.innerHTML = `
+      <div class="linked-list">
+        ${lista.map(honorario => {
+          const origem = origemInfo(honorario.origem);
+          const chave = textoOuNull(honorario.chaveIntegracao);
+          return `
+            <div class="linked-item">
+              <div class="linked-top">
+                <div>
+                  <div class="linked-title">${escapeHtml(texto(honorario.tipoHonorario, 'Honorário'))}</div>
+                  <div class="linked-meta">${escapeHtml(fmtMoeda(honorario.valorTotal))} · ${escapeHtml(competenciaLabel(honorario.competencia))}</div>
+                </div>
+                <span class="origin-badge ${origem.cls}">${escapeHtml(origem.label)}</span>
+              </div>
+              <div class="linked-grid">
+                ${campoVinculado('Tipo', honorario.tipoHonorario)}
+                ${campoVinculado('Valor total', fmtMoeda(honorario.valorTotal))}
+                ${campoVinculado('Competência', competenciaLabel(honorario.competencia))}
+                ${campoVinculado('Status', honorario.status)}
+                ${campoVinculado('Forma de pagamento', honorario.formaPagamento)}
+                ${campoVinculado('Origem', origem.label)}
+              </div>
+              <div class="linked-desc">${escapeHtml(texto(honorario.descricao))}</div>
+              ${chave ? `<div class="tech-ref">chaveIntegracao: ${escapeHtml(chave)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  async function buscarLista(url) {
+    const resposta = await fetch(url);
+    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+    const data = await resposta.json();
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function carregarVinculosProcesso() {
+    const [compromissos, honorarios] = await Promise.allSettled([
+      buscarLista(`${API_BASE}/compromissos/processo/${processoId}`),
+      buscarLista(`${API_BASE}/honorarios/processo/${processoId}`)
+    ]);
+
+    if (compromissos.status === 'fulfilled') {
+      renderizarCompromissos(compromissos.value);
+    } else {
+      console.error('Erro ao carregar compromissos do processo:', compromissos.reason);
+      setSecaoErro(
+        'compromissosProcessoBody',
+        'compromissosProcessoCount',
+        'Não foi possível carregar os compromissos vinculados a este processo.'
+      );
+    }
+
+    if (honorarios.status === 'fulfilled') {
+      renderizarHonorarios(honorarios.value);
+    } else {
+      console.error('Erro ao carregar honorários do processo:', honorarios.reason);
+      setSecaoErro(
+        'honorariosProcessoBody',
+        'honorariosProcessoCount',
+        'Não foi possível carregar os honorários vinculados a este processo.'
+      );
+    }
+  }
+
+  function preencherClientesComAtual() {
+    const cliente = processoAtual?.cliente;
+    if (!cliente?.id || clientes.some(c => Number(c.id) === Number(cliente.id))) return;
+    clientes.push({ id: cliente.id, nome: cliente.nome || NAO_INFORMADO });
+  }
+
+  function clienteValido(id) {
+    const numero = Number(id);
+    return Number.isInteger(numero) && numero > 0 && clientes.some(c => Number(c.id) === numero);
+  }
+
+  async function carregarClientes() {
+    try {
+      const resposta = await fetch(`${API_BASE}/clientes`);
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      const data = await resposta.json();
+      clientes = Array.isArray(data) ? data : [];
+    } catch (erro) {
+      console.error('Erro ao carregar clientes:', erro);
+      clientes = [];
+    }
+    preencherClientesComAtual();
+  }
+
+  function renderizarPerfil(processo) {
+    const cliente = processo.cliente || null;
+    const area = normArea(processo.areaJuridica);
+    const areaClasse = areaMap[area] || '';
+    const areaTexto = areaLabel[area] || texto(processo.areaJuridica);
+    const status = normalizarStatus(processo.status);
+    const prioridade = normalizarPrioridade(processo.prioridade);
+    const prioridadeHtml = prioridade
+      ? `<span class="${prioridadeMap[prioridade]}">${prioridadeLabel[prioridade]}</span>`
+      : `<span class="ic-value nd">${escapeHtml(texto(processo.prioridade))}</span>`;
+    const ultMovimentacaoHtml = datePart(processo.ultMovimentacao)
+      ? campo('Última movimentação', fmtData(processo.ultMovimentacao))
+      : '';
+    const dataCadastroHtml = datePart(processo.dataCadastro)
+      ? campo('Data de cadastro', fmtData(processo.dataCadastro))
+      : '';
+
+    document.getElementById('pageTitle').textContent = texto(processo.numero, 'Processo');
+    document.title = `${texto(processo.numero, 'Processo')} — JurisFlow`;
+
+    main.innerHTML = `
+      <div class="breadcrumb">
+        <a href="processos.html">📁 Processos</a>
+        <span class="sep">›</span>
+        <span>${escapeHtml(texto(processo.numero, 'Processo'))}</span>
+      </div>
+
+      <div class="proc-header">
+        <div class="proc-header-icon">📁</div>
+        <div class="proc-header-info">
+          <div class="proc-numero">${escapeHtml(texto(processo.numero))}</div>
+          <div class="proc-titulo">${escapeHtml(texto(processo.tipoAcao))}</div>
+          <div class="proc-meta">
+            <span class="area-badge ${areaClasse}">${escapeHtml(areaTexto)}</span>
+            <span class="status-proc ${status.cls}" title="${escapeHtml(processo.status || '')}">${escapeHtml(status.label)}</span>
+            ${prioridade ? prioridadeHtml : ''}
+          </div>
+        </div>
+        <div class="proc-actions">
+          <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
+          <button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>
+        </div>
+      </div>
+
+      ${cliente ? `
+      <div class="client-link-card" onclick="window.location.href='detalhes-cliente.html?id=${cliente.id}'">
+        <div class="client-avatar" style="background:${getCor(cliente.id)};">${escapeHtml(getIniciais(cliente.nome))}</div>
+        <div class="client-info">
+          <div class="client-name">${escapeHtml(texto(cliente.nome))}</div>
+          <div class="client-sub">Cliente vinculado #${escapeHtml(cliente.id)}</div>
+        </div>
+        <span style="color:var(--gray-400);font-size:.85rem;">Ver perfil →</span>
+      </div>` : ''}
+
+      <div class="detail-grid">
+        <div class="info-card">
+          <div class="ic-header">⚖️ Identificação</div>
+          <div class="ic-body">
+            <div class="ic-row">
+              ${campo('Número do processo', processo.numero)}
+              ${campo('Tipo de ação', processo.tipoAcao)}
+            </div>
+            <div class="ic-row">
+              ${campo('Área jurídica', processo.areaJuridica)}
+              ${campo('Status', status.label)}
+            </div>
+            <div class="ic-row">
+              <div class="ic-field">
+                <div class="ic-label">Prioridade</div>
+                <div class="ic-value">${prioridadeHtml}</div>
+              </div>
+              ${campo('Cliente', cliente?.nome)}
+            </div>
+            ${processo.descricao ? `<div class="ic-field"><div class="ic-label">Descrição</div><div class="description-box">${escapeHtml(processo.descricao)}</div></div>` : campo('Descrição', null)}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="ic-header">🏛️ Dados Judiciais</div>
+          <div class="ic-body">
+            <div class="ic-row">
+              ${campo('Tribunal', processo.tribunal)}
+              ${campo('Comarca', processo.comarca)}
+            </div>
+            <div class="ic-row">
+              ${campo('Vara', processo.vara)}
+              ${campo('Juiz', processo.juiz)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="info-card">
+          <div class="ic-header">📅 Datas e prazos</div>
+          <div class="ic-body">
+            <div class="ic-row">
+              ${campo('Data de abertura', fmtData(processo.dataAbertura))}
+              <div class="ic-field">
+                <div class="ic-label">Prazo final</div>
+                <div class="ic-value">${datePart(processo.prazoFinal) ? prazoChip(processo.prazoFinal) : '<span class="nd">Sem prazo definido</span>'}</div>
+              </div>
+            </div>
+            <div class="ic-row">
+              ${campo('Data de audiência', fmtData(processo.dataAudiencia, 'Sem audiência definida'))}
+              ${ultMovimentacaoHtml}
+            </div>
+            ${dataCadastroHtml ? `<div class="ic-row">${dataCadastroHtml}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="ic-header">💼 Financeiro</div>
+          <div class="ic-body">
+            <div class="ic-row">
+              ${campo('Valor da causa', fmtMoeda(processo.valorCausa))}
+              ${campo('Valor informado no processo', fmtMoeda(processo.valorHonorario))}
+            </div>
+            <div class="ic-row">
+              ${campo('Status financeiro', processo.statusFinanceiro)}
+              ${campo('Forma de pagamento', processo.formaPagamento)}
+            </div>
+            <div class="ic-row">
+              ${campo('Número de parcelas', processo.parcelasHonorario)}
+              ${campo('Vencimento dos honorários', fmtData(processo.vencimentoHonorario))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="sc-head">
+          <span class="sc-title">📅 Compromissos vinculados</span>
+          <span class="sc-count" id="compromissosProcessoCount">Carregando</span>
+        </div>
+        <div id="compromissosProcessoBody">
+          <div class="empty-state">Carregando compromissos vinculados...</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="sc-head">
+          <span class="sc-title">💰 Honorários vinculados</span>
+          <span class="sc-count" id="honorariosProcessoCount">Carregando</span>
+        </div>
+        <div id="honorariosProcessoBody">
+          <div class="empty-state">Carregando honorários vinculados...</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="sc-head">
+          <span class="sc-title">📋 Histórico e documentos</span>
+        </div>
+        <div class="empty-state">Histórico do processo, anexos e documentos ainda não estão disponíveis nesta etapa.</div>
+      </div>
+    `;
+  }
+
+  function inserirModal() {
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="edit-overlay" id="editOverlay">
+        <div class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+          <div class="edit-head">
+            <div>
+              <div class="edit-title" id="editTitle">Editar Processo</div>
+              <div class="edit-sub" id="editSubtitle"></div>
+            </div>
+            <button class="edit-close" type="button" id="editClose">×</button>
+          </div>
+          <form id="editForm">
+            <div class="edit-body">
+              <div class="edit-grid">
+                <div class="edit-field"><label for="editNumero">Número</label><input id="editNumero" type="text"></div>
+                <div class="edit-field"><label for="editTipoAcao">Tipo de ação</label><input id="editTipoAcao" type="text"></div>
+                <div class="edit-field"><label for="editAreaJuridica">Área jurídica</label><input id="editAreaJuridica" type="text"></div>
+                <div class="edit-field">
+                  <label for="editStatus">Status</label>
+                  <select id="editStatus">
+                    <option value="">Selecione um status oficial</option>
+                    <option value="em_andamento">Em andamento</option>
+                    <option value="audiencia_designada">Audiência designada</option>
+                    <option value="suspenso">Suspenso</option>
+                    <option value="encerrado">Encerrado</option>
+                    <option value="arquivado">Arquivado</option>
+                  </select>
+                  <span class="edit-error">Selecione um status oficial.</span>
+                </div>
+                <div class="edit-field">
+                  <label for="editPrioridade">Prioridade</label>
+                  <select id="editPrioridade">
+                    <option value="">Não informado</option>
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
+                <div class="edit-field cliente-edit-wrap" id="editClienteField">
+                  <label for="editClienteBusca">Cliente</label>
+                  <input id="editClienteBusca" type="text" autocomplete="off">
+                  <input id="editClienteId" type="hidden">
+                  <div class="cliente-dropdown" id="editClienteDropdown"></div>
+                  <span class="edit-error">Selecione um cliente válido da lista.</span>
+                </div>
+                <div class="edit-field"><label for="editTribunal">Tribunal</label><input id="editTribunal" type="text"></div>
+                <div class="edit-field"><label for="editComarca">Comarca</label><input id="editComarca" type="text"></div>
+                <div class="edit-field"><label for="editVara">Vara</label><input id="editVara" type="text"></div>
+                <div class="edit-field"><label for="editJuiz">Juiz</label><input id="editJuiz" type="text"></div>
+                <div class="edit-field"><label for="editDataAbertura">Data de abertura</label><input id="editDataAbertura" type="date"></div>
+                <div class="edit-field"><label for="editDataAudiencia">Data de audiência</label><input id="editDataAudiencia" type="date"></div>
+                <div class="edit-field"><label for="editPrazoFinal">Prazo final</label><input id="editPrazoFinal" type="date"></div>
+                <div class="edit-field"><label for="editUltMovimentacao">Última movimentação</label><input id="editUltMovimentacao" type="date"></div>
+                <div class="edit-field"><label for="editValorCausa">Valor da causa</label><input id="editValorCausa" type="text" inputmode="decimal"></div>
+                <div class="edit-field"><label for="editValorHonorario">Valor de honorários</label><input id="editValorHonorario" type="text" inputmode="decimal"></div>
+                <div class="edit-field"><label for="editStatusFinanceiro">Status financeiro</label><input id="editStatusFinanceiro" type="text"></div>
+                <div class="edit-field"><label for="editFormaPagamento">Forma de pagamento</label><input id="editFormaPagamento" type="text"></div>
+                <div class="edit-field"><label for="editParcelasHonorario">Número de parcelas</label><input id="editParcelasHonorario" type="number" min="0" step="1"></div>
+                <div class="edit-field"><label for="editVencimentoHonorario">Vencimento dos honorários</label><input id="editVencimentoHonorario" type="date"></div>
+                <div class="edit-field full"><label for="editDescricao">Descrição</label><textarea id="editDescricao"></textarea></div>
+              </div>
+            </div>
+            <div class="edit-actions">
+              <button class="btn-act btn-outline-act" type="button" id="editCancel">Cancelar</button>
+              <button class="btn-act btn-navy-act" type="submit" id="editSubmit">Salvar alterações</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+  }
+
+  function setClienteEdicao(cliente) {
+    document.getElementById('editClienteBusca').value = cliente?.nome || '';
+    document.getElementById('editClienteId').value = cliente?.id || '';
+    document.getElementById('editClienteField').classList.remove('has-error');
+    document.getElementById('editClienteDropdown').classList.remove('open');
+  }
+
+  function renderClientesDropdown(query) {
+    const dropdown = document.getElementById('editClienteDropdown');
+    const q = normalizarTexto(query);
+    const lista = clientes
+      .filter(cliente => normalizarTexto(cliente.nome).includes(q) || String(cliente.id).includes(q))
+      .slice(0, 12);
+
+    if (!q) {
+      dropdown.classList.remove('open');
+      dropdown.innerHTML = '';
+      return;
+    }
+
+    dropdown.innerHTML = lista.length
+      ? lista.map(cliente => `
+          <div class="cliente-option" data-id="${cliente.id}">
+            <strong>${escapeHtml(texto(cliente.nome))}</strong>
+            <span>Cliente #${escapeHtml(cliente.id)}</span>
+          </div>
+        `).join('')
+      : '<div class="cliente-option"><strong>Nenhum cliente encontrado</strong><span>Selecione um cliente já cadastrado.</span></div>';
+
+    dropdown.querySelectorAll('.cliente-option[data-id]').forEach(item => {
+      item.addEventListener('mousedown', event => {
+        event.preventDefault();
+        const cliente = clientes.find(c => Number(c.id) === Number(item.dataset.id));
+        if (cliente) setClienteEdicao(cliente);
+      });
+    });
+
+    dropdown.classList.add('open');
+  }
+
+  function abrirModalEdicao() {
+    if (!processoAtual) return;
+
+    preencherClientesComAtual();
+
+    document.getElementById('editSubtitle').textContent = texto(processoAtual.numero, 'Processo sem número');
+    document.getElementById('editNumero').value = processoAtual.numero || '';
+    document.getElementById('editTipoAcao').value = processoAtual.tipoAcao || '';
+    document.getElementById('editAreaJuridica').value = processoAtual.areaJuridica || '';
+    document.getElementById('editStatus').value = valorStatusEdicao(processoAtual.status);
+    document.getElementById('editStatus').closest('.edit-field').classList.remove('has-error');
+    document.getElementById('editPrioridade').value = normalizarPrioridade(processoAtual.prioridade);
+    setClienteEdicao(processoAtual.cliente);
+    document.getElementById('editTribunal').value = processoAtual.tribunal || '';
+    document.getElementById('editComarca').value = processoAtual.comarca || '';
+    document.getElementById('editVara').value = processoAtual.vara || '';
+    document.getElementById('editJuiz').value = processoAtual.juiz || '';
+    document.getElementById('editDataAbertura').value = datePart(processoAtual.dataAbertura);
+    document.getElementById('editDataAudiencia').value = datePart(processoAtual.dataAudiencia);
+    document.getElementById('editPrazoFinal').value = datePart(processoAtual.prazoFinal);
+    document.getElementById('editUltMovimentacao').value = datePart(processoAtual.ultMovimentacao);
+    document.getElementById('editValorCausa').value = moedaInput(processoAtual.valorCausa);
+    document.getElementById('editValorHonorario').value = moedaInput(processoAtual.valorHonorario);
+    document.getElementById('editStatusFinanceiro').value = processoAtual.statusFinanceiro || '';
+    document.getElementById('editFormaPagamento').value = processoAtual.formaPagamento || '';
+    document.getElementById('editParcelasHonorario').value = processoAtual.parcelasHonorario ?? '';
+    document.getElementById('editVencimentoHonorario').value = datePart(processoAtual.vencimentoHonorario);
+    document.getElementById('editDescricao').value = processoAtual.descricao || '';
+    document.getElementById('editOverlay').classList.add('open');
+  }
+
+  function fecharModalEdicao() {
+    document.getElementById('editOverlay').classList.remove('open');
+    document.getElementById('editClienteDropdown').classList.remove('open');
+  }
+
+  function payloadEdicao() {
+    return {
+      numero: textoOuNull(document.getElementById('editNumero').value),
+      tipoAcao: textoOuNull(document.getElementById('editTipoAcao').value),
+      areaJuridica: textoOuNull(document.getElementById('editAreaJuridica').value),
+      status: textoOuNull(document.getElementById('editStatus').value),
+      descricao: textoOuNull(document.getElementById('editDescricao').value),
+      dataAbertura: textoOuNull(document.getElementById('editDataAbertura').value),
+      dataAudiencia: textoOuNull(document.getElementById('editDataAudiencia').value),
+      prazoFinal: textoOuNull(document.getElementById('editPrazoFinal').value),
+      tribunal: textoOuNull(document.getElementById('editTribunal').value),
+      comarca: textoOuNull(document.getElementById('editComarca').value),
+      vara: textoOuNull(document.getElementById('editVara').value),
+      juiz: textoOuNull(document.getElementById('editJuiz').value),
+      prioridade: textoOuNull(document.getElementById('editPrioridade').value),
+      valorCausa: parseMoeda(document.getElementById('editValorCausa').value),
+      statusFinanceiro: textoOuNull(document.getElementById('editStatusFinanceiro').value),
+      ultMovimentacao: textoOuNull(document.getElementById('editUltMovimentacao').value),
+      valorHonorario: parseMoeda(document.getElementById('editValorHonorario').value),
+      formaPagamento: textoOuNull(document.getElementById('editFormaPagamento').value),
+      parcelasHonorario: parseInteiro(document.getElementById('editParcelasHonorario').value),
+      vencimentoHonorario: textoOuNull(document.getElementById('editVencimentoHonorario').value),
+      clienteId: Number(document.getElementById('editClienteId').value)
+    };
+  }
+
+  async function salvarEdicao(event) {
+    event.preventDefault();
+    const statusField = document.getElementById('editStatus').closest('.edit-field');
+    const clienteField = document.getElementById('editClienteField');
+    const payload = payloadEdicao();
+    let valido = true;
+
+    statusField.classList.toggle('has-error', !payload.status);
+    if (!payload.status) valido = false;
+
+    clienteField.classList.toggle('has-error', !clienteValido(payload.clienteId));
+    if (!clienteValido(payload.clienteId)) valido = false;
+
+    if (!valido) {
+      toast('Corrija os campos destacados antes de salvar.', 'warning');
+      return;
+    }
+
+    const submit = document.getElementById('editSubmit');
+    submit.disabled = true;
+    submit.textContent = 'Salvando...';
+
+    try {
+      const resposta = await fetch(`${API_BASE}/processos/${processoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+
+      fecharModalEdicao();
+      await carregarProcesso();
+      toast('Processo atualizado com sucesso.', 'success');
+    } catch (erro) {
+      console.error('Erro ao atualizar processo:', erro);
+      toast('Erro ao atualizar processo.', 'error');
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Salvar alterações';
+    }
+  }
+
+  async function carregarProcesso() {
+    try {
+      const resposta = await fetch(`${API_BASE}/processos/${processoId}`);
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      processoAtual = await resposta.json();
+      renderizarPerfil(processoAtual);
+      await Promise.all([
+        carregarClientes(),
+        carregarVinculosProcesso()
+      ]);
+    } catch (erro) {
+      console.error('Erro ao carregar processo:', erro);
+      mostrarNaoEncontrado('Processo não encontrado', 'Não foi possível carregar o processo informado.');
+    }
+  }
+
+  if (!Number.isInteger(processoId) || processoId <= 0) {
+    mostrarNaoEncontrado('Processo não encontrado', 'O ID informado na URL é inválido.');
+    return;
+  }
+
+  inserirModal();
+  document.getElementById('editClose').addEventListener('click', fecharModalEdicao);
+  document.getElementById('editCancel').addEventListener('click', fecharModalEdicao);
+  document.getElementById('editOverlay').addEventListener('click', event => {
+    if (event.target.id === 'editOverlay') fecharModalEdicao();
+  });
+  document.getElementById('editForm').addEventListener('submit', salvarEdicao);
+  document.getElementById('editClienteBusca').addEventListener('input', event => {
+    document.getElementById('editClienteId').value = '';
+    document.getElementById('editClienteField').classList.remove('has-error');
+    renderClientesDropdown(event.target.value);
+  });
+  document.getElementById('editClienteBusca').addEventListener('blur', () => {
+    setTimeout(() => document.getElementById('editClienteDropdown').classList.remove('open'), 160);
+  });
+  document.addEventListener('click', event => {
+    if (event.target.closest('#btnEditarProcesso')) abrirModalEdicao();
+  });
+
+  carregarProcesso();
 })();
 </script>
 </body>
