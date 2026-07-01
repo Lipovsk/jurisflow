@@ -2,6 +2,9 @@ package com.jurisflow.jurisflow.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+
 @Entity
 public class Honorario {
 
@@ -13,12 +16,27 @@ public class Honorario {
     private Long id;
 
     private String tipoHonorario;
-    private Double valorTotal;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal valorBruto;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal desconto;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal acrescimos;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal valorTotal;
+
     private String competencia;
     private String status;
     private String formaPagamento;
     private String descricao;
+    private String responsavel;
+    private String observacoesInternas;
     private String origem;
+    private String dataCadastro;
 
     @Column(unique = true)
     private String chaveIntegracao;
@@ -35,6 +53,13 @@ public class Honorario {
         return id;
     }
 
+    @PrePersist
+    public void preencherDataCadastro() {
+        if (dataCadastro == null || dataCadastro.isBlank()) {
+            dataCadastro = Instant.now().toString();
+        }
+    }
+
     public String getTipoHonorario() {
         return tipoHonorario;
     }
@@ -43,11 +68,35 @@ public class Honorario {
         this.tipoHonorario = tipoHonorario;
     }
 
-    public Double getValorTotal() {
+    public BigDecimal getValorBruto() {
+        return valorBruto;
+    }
+
+    public void setValorBruto(BigDecimal valorBruto) {
+        this.valorBruto = valorBruto;
+    }
+
+    public BigDecimal getDesconto() {
+        return desconto;
+    }
+
+    public void setDesconto(BigDecimal desconto) {
+        this.desconto = desconto;
+    }
+
+    public BigDecimal getAcrescimos() {
+        return acrescimos;
+    }
+
+    public void setAcrescimos(BigDecimal acrescimos) {
+        this.acrescimos = acrescimos;
+    }
+
+    public BigDecimal getValorTotal() {
         return valorTotal;
     }
 
-    public void setValorTotal(Double valorTotal) {
+    public void setValorTotal(BigDecimal valorTotal) {
         this.valorTotal = valorTotal;
     }
 
@@ -83,6 +132,22 @@ public class Honorario {
         this.descricao = descricao;
     }
 
+    public String getResponsavel() {
+        return responsavel;
+    }
+
+    public void setResponsavel(String responsavel) {
+        this.responsavel = responsavel;
+    }
+
+    public String getObservacoesInternas() {
+        return observacoesInternas;
+    }
+
+    public void setObservacoesInternas(String observacoesInternas) {
+        this.observacoesInternas = observacoesInternas;
+    }
+
     public String getOrigem() {
         return origem;
     }
@@ -97,6 +162,10 @@ public class Honorario {
 
     public void setChaveIntegracao(String chaveIntegracao) {
         this.chaveIntegracao = chaveIntegracao;
+    }
+
+    public String getDataCadastro() {
+        return dataCadastro;
     }
 
     public Cliente getCliente() {

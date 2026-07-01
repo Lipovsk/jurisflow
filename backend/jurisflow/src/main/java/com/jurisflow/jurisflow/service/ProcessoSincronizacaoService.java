@@ -8,6 +8,8 @@ import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Set;
@@ -105,17 +107,21 @@ public class ProcessoSincronizacaoService {
 
     private void sincronizarHonorario(Processo processo) {
         String chave = chaveHonorario(processo);
-        Double valorHonorario = processo.getValorHonorario();
 
-        if (valorHonorario == null || valorHonorario <= 0) {
+        if (processo.getValorHonorario() == null || processo.getValorHonorario() <= 0) {
             removerHonorarioAutomatico(chave);
             return;
         }
+
+        BigDecimal valorHonorario = moeda(BigDecimal.valueOf(processo.getValorHonorario()));
 
         Honorario honorario = honorarioRepository.findByChaveIntegracao(chave)
                 .orElseGet(Honorario::new);
 
         honorario.setTipoHonorario(tipoHonorario(processo.getFormaPagamento()));
+        honorario.setValorBruto(valorHonorario);
+        honorario.setDesconto(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+        honorario.setAcrescimos(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
         honorario.setValorTotal(valorHonorario);
         honorario.setCompetencia(competencia(processo.getVencimentoHonorario()));
         honorario.setStatus(statusHonorario(processo.getStatusFinanceiro()));
@@ -253,6 +259,10 @@ public class ProcessoSincronizacaoService {
 
     private String valorOuNull(String valor) {
         return isBlank(valor) ? null : valor.trim();
+    }
+
+    private BigDecimal moeda(BigDecimal valor) {
+        return valor.setScale(2, RoundingMode.HALF_UP);
     }
 
     private boolean isBlank(String valor) {

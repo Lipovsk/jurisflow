@@ -10,7 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/honorarios")
@@ -41,7 +44,11 @@ public class HonorarioController {
 
     @GetMapping("/{id}")
     public Honorario buscarPorId(@PathVariable Long id) {
-        return honorarioRepository.findById(id).orElse(null);
+        return honorarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Honorario nao encontrado."
+                ));
     }
 
     @GetMapping("/cliente/{clienteId}")
@@ -56,67 +63,59 @@ public class HonorarioController {
 
     @PostMapping
     public Honorario criar(@RequestBody HonorarioRequest request) {
-        Cliente cliente = null;
-        Processo processo = null;
-
-        if (request.getClienteId() != null) {
-            cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
-        }
-
-        if (request.getProcessoId() != null) {
-            processo = processoRepository.findById(request.getProcessoId()).orElse(null);
-        }
+        Cliente cliente = buscarClienteObrigatorio(request.getClienteId());
+        Processo processo = buscarProcessoOpcional(request.getProcessoId(), cliente);
 
         Honorario honorario = new Honorario();
 
         honorario.setTipoHonorario(request.getTipoHonorario());
-        honorario.setValorTotal(request.getValorTotal());
         honorario.setCompetencia(request.getCompetencia());
         honorario.setStatus(request.getStatus());
         honorario.setFormaPagamento(request.getFormaPagamento());
         honorario.setDescricao(request.getDescricao());
+        honorario.setResponsavel(request.getResponsavel());
+        honorario.setObservacoesInternas(request.getObservacoesInternas());
         honorario.setCliente(cliente);
         honorario.setProcesso(processo);
         honorario.setOrigem(Honorario.ORIGEM_MANUAL);
         honorario.setChaveIntegracao(null);
+        aplicarValores(honorario, request, true);
 
         return honorarioRepository.save(honorario);
     }
 
     @PutMapping("/{id}")
     public Honorario atualizar(@PathVariable Long id, @RequestBody HonorarioRequest request) {
-        return honorarioRepository.findById(id).map(honorario -> {
-            bloquearSeGerenciadoPeloProcesso(honorario);
+        Honorario honorario = honorarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Honorario nao encontrado."
+                ));
 
-            Cliente cliente = null;
-            Processo processo = null;
+        bloquearSeGerenciadoPeloProcesso(honorario);
 
-            if (request.getClienteId() != null) {
-                cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
-            }
+        Cliente cliente = request.getClienteId() != null
+                ? buscarClienteExistente(request.getClienteId())
+                : honorario.getCliente();
 
-            if (request.getProcessoId() != null) {
-                processo = processoRepository.findById(request.getProcessoId()).orElse(null);
-            }
+        Processo processo = request.getProcessoId() != null
+                ? buscarProcessoExistente(request.getProcessoId())
+                : honorario.getProcesso();
 
-            honorario.setTipoHonorario(request.getTipoHonorario());
-            honorario.setValorTotal(request.getValorTotal());
-            honorario.setCompetencia(request.getCompetencia());
-            honorario.setStatus(request.getStatus());
-            honorario.setFormaPagamento(request.getFormaPagamento());
-            honorario.setDescricao(request.getDescricao());
+        validarProcessoDoCliente(processo, cliente);
 
-            if (cliente != null) {
-                honorario.setCliente(cliente);
-            }
+        honorario.setTipoHonorario(request.getTipoHonorario());
+        honorario.setCompetencia(request.getCompetencia());
+        honorario.setStatus(request.getStatus());
+        honorario.setFormaPagamento(request.getFormaPagamento());
+        honorario.setDescricao(request.getDescricao());
+        honorario.setResponsavel(request.getResponsavel());
+        honorario.setObservacoesInternas(request.getObservacoesInternas());
+        honorario.setCliente(cliente);
+        honorario.setProcesso(processo);
+        aplicarValores(honorario, request, false);
 
-            if (processo != null) {
-                honorario.setProcesso(processo);
-            }
-
-            return honorarioRepository.save(honorario);
-
-        }).orElse(null);
+        return honorarioRepository.save(honorario);
     }
 
     @DeleteMapping("/{id}")
@@ -125,6 +124,130 @@ public class HonorarioController {
             bloquearSeGerenciadoPeloProcesso(honorario);
             honorarioRepository.delete(honorario);
         });
+    }
+
+    private Cliente buscarClienteObrigatorio(Long clienteId) {
+        if (clienteId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "clienteId e obrigatorio para criar honorario."
+            );
+        }
+
+        return buscarClienteExistente(clienteId);
+    }
+
+    private Cliente buscarClienteExistente(Long clienteId) {
+        return clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Cliente informado nao existe."
+                ));
+    }
+
+    private Processo buscarProcessoOpcional(Long processoId, Cliente cliente) {
+        if (processoId == null) {
+            return null;
+        }
+
+        Processo processo = buscarProcessoExistente(processoId);
+        validarProcessoDoCliente(processo, cliente);
+        return processo;
+    }
+
+    private Processo buscarProcessoExistente(Long processoId) {
+        return processoRepository.findById(processoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Processo informado nao existe."
+                ));
+    }
+
+    private void validarProcessoDoCliente(Processo processo, Cliente cliente) {
+        if (processo == null) {
+            return;
+        }
+
+        if (cliente == null || cliente.getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Honorario com processo vinculado precisa ter cliente."
+            );
+        }
+
+        if (processo.getCliente() == null || processo.getCliente().getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Processo informado nao possui cliente vinculado."
+            );
+        }
+
+        if (!Objects.equals(processo.getCliente().getId(), cliente.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Processo informado nao pertence ao cliente informado."
+            );
+        }
+    }
+
+    private void aplicarValores(Honorario honorario, HonorarioRequest request, boolean criacao) {
+        BigDecimal valorBruto = primeiroValorNaoNulo(
+                request.getValorBruto(),
+                request.getValorTotal(),
+                criacao ? null : honorario.getValorBruto(),
+                criacao ? null : honorario.getValorTotal()
+        );
+
+        if (valorBruto == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Informe valorBruto ou valorTotal para o honorario."
+            );
+        }
+
+        BigDecimal desconto = primeiroValorNaoNulo(
+                request.getDesconto(),
+                criacao ? null : honorario.getDesconto(),
+                BigDecimal.ZERO
+        );
+
+        BigDecimal acrescimos = primeiroValorNaoNulo(
+                request.getAcrescimos(),
+                criacao ? null : honorario.getAcrescimos(),
+                BigDecimal.ZERO
+        );
+
+        valorBruto = moeda(valorBruto);
+        desconto = moeda(desconto);
+        acrescimos = moeda(acrescimos);
+
+        BigDecimal valorTotal = moeda(valorBruto.subtract(desconto).add(acrescimos));
+
+        if (valorTotal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Valor total do honorario nao pode ser negativo."
+            );
+        }
+
+        honorario.setValorBruto(valorBruto);
+        honorario.setDesconto(desconto);
+        honorario.setAcrescimos(acrescimos);
+        honorario.setValorTotal(valorTotal);
+    }
+
+    private BigDecimal primeiroValorNaoNulo(BigDecimal... valores) {
+        for (BigDecimal valor : valores) {
+            if (valor != null) {
+                return valor;
+            }
+        }
+
+        return null;
+    }
+
+    private BigDecimal moeda(BigDecimal valor) {
+        return valor.setScale(2, RoundingMode.HALF_UP);
     }
 
     private void bloquearSeGerenciadoPeloProcesso(Honorario honorario) {
@@ -147,11 +270,16 @@ public class HonorarioController {
 
     public static class HonorarioRequest {
         private String tipoHonorario;
-        private Double valorTotal;
+        private BigDecimal valorBruto;
+        private BigDecimal desconto;
+        private BigDecimal acrescimos;
+        private BigDecimal valorTotal;
         private String competencia;
         private String status;
         private String formaPagamento;
         private String descricao;
+        private String responsavel;
+        private String observacoesInternas;
         private Long clienteId;
         private Long processoId;
 
@@ -163,11 +291,35 @@ public class HonorarioController {
             this.tipoHonorario = tipoHonorario;
         }
 
-        public Double getValorTotal() {
+        public BigDecimal getValorBruto() {
+            return valorBruto;
+        }
+
+        public void setValorBruto(BigDecimal valorBruto) {
+            this.valorBruto = valorBruto;
+        }
+
+        public BigDecimal getDesconto() {
+            return desconto;
+        }
+
+        public void setDesconto(BigDecimal desconto) {
+            this.desconto = desconto;
+        }
+
+        public BigDecimal getAcrescimos() {
+            return acrescimos;
+        }
+
+        public void setAcrescimos(BigDecimal acrescimos) {
+            this.acrescimos = acrescimos;
+        }
+
+        public BigDecimal getValorTotal() {
             return valorTotal;
         }
 
-        public void setValorTotal(Double valorTotal) {
+        public void setValorTotal(BigDecimal valorTotal) {
             this.valorTotal = valorTotal;
         }
 
@@ -201,6 +353,22 @@ public class HonorarioController {
 
         public void setDescricao(String descricao) {
             this.descricao = descricao;
+        }
+
+        public String getResponsavel() {
+            return responsavel;
+        }
+
+        public void setResponsavel(String responsavel) {
+            this.responsavel = responsavel;
+        }
+
+        public String getObservacoesInternas() {
+            return observacoesInternas;
+        }
+
+        public void setObservacoesInternas(String observacoesInternas) {
+            this.observacoesInternas = observacoesInternas;
         }
 
         public Long getClienteId() {
