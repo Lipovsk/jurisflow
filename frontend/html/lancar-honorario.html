@@ -145,15 +145,15 @@
 
           <!-- Competência -->
           <div class="fg">
-            <label class="flabel req">Competência</label>
+            <label class="flabel">Competência</label>
             <div class="competencia-row">
-              <select class="finput" id="compMes" required>
+              <select class="finput" id="compMes">
                 <option value="">Mês</option>
                 <option value="01">Janeiro</option>
                 <option value="02">Fevereiro</option>
                 <option value="03">Março</option>
                 <option value="04">Abril</option>
-                <option value="05" selected>Maio</option>
+                <option value="05">Maio</option>
                 <option value="06">Junho</option>
                 <option value="07">Julho</option>
                 <option value="08">Agosto</option>
@@ -162,14 +162,15 @@
                 <option value="11">Novembro</option>
                 <option value="12">Dezembro</option>
               </select>
-              <select class="finput" id="compAno" required>
+              <select class="finput" id="compAno">
+                <option value="">Ano</option>
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
+                <option value="2026">2026</option>
                 <option value="2027">2027</option>
               </select>
             </div>
-            <span class="ferr">Selecione a competência</span>
+            <span class="ferr">Preencha mês e ano, ou deixe ambos em branco</span>
           </div>
 
           <!-- Responsável -->
@@ -348,32 +349,11 @@
             <input type="hidden" id="formaPagamento" value="pix">
           </div>
 
-          <div class="fg">
-            <label class="flabel req">Data de Vencimento</label>
-            <input type="date" class="finput" id="dataVencimento" required>
-            <span class="ferr">Informe a data de vencimento</span>
-          </div>
-
-          <div class="fg col-2">
-            <label class="flabel">Parcelamento</label>
-            <div class="parcelas-wrap" id="parcelasWrap">
-              <button type="button" class="parbtn active" data-p="1">1x</button>
-              <button type="button" class="parbtn" data-p="2">2x</button>
-              <button type="button" class="parbtn" data-p="3">3x</button>
-              <button type="button" class="parbtn" data-p="4">4x</button>
-              <button type="button" class="parbtn" data-p="5">5x</button>
-              <button type="button" class="parbtn" data-p="6">6x</button>
-              <button type="button" class="parbtn" data-p="10">10x</button>
-              <button type="button" class="parbtn" data-p="12">12x</button>
-            </div>
-            <input type="hidden" id="numeroParcelas" value="1">
-          </div>
-
-          <!-- Alerta de parcelamento -->
-          <div class="fg col-3" id="parcelamentoInfo" style="display:none;">
+          <div class="fg col-3">
+            <label class="flabel">Parcelamento, vencimento e baixa</label>
             <div style="padding:12px 16px;background:var(--amber-soft);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius-sm);font-size:.82rem;color:#92400E;display:flex;align-items:center;gap:8px;">
               <span>📅</span>
-              <span id="parcelamentoTexto"></span>
+              <span>Parcelamento, vencimento e baixa de pagamento serão configurados na próxima etapa financeira.</span>
             </div>
           </div>
 
@@ -386,7 +366,7 @@
           <div class="fcard-icon navy">✅</div>
           <div>
             <div class="fcard-title">Status e Finalização</div>
-            <div class="fcard-sub">Defina o status inicial e notificações</div>
+            <div class="fcard-sub">Defina o status inicial e observações</div>
           </div>
         </div>
 
@@ -411,31 +391,12 @@
             <input type="hidden" id="statusHonorario" value="pendente">
           </div>
 
-          <!-- Data de recebimento (aparece quando Pago) -->
-          <div class="fg" id="campoDataPgto" style="display:none;">
-            <label class="flabel">Data de Recebimento</label>
-            <input type="date" class="finput" id="dataRecebimento">
-          </div>
-
-          <!-- Valor recebido (aparece quando Parcialmente Pago) -->
-          <div class="fg" id="campoValorParcial" style="display:none;">
-            <label class="flabel">Valor Já Recebido</label>
-            <div class="finput-icon-wrap">
-              <span class="finput-pfx">R$</span>
-              <input type="text" class="finput has-pfx" id="valorRecebido" placeholder="0,00" data-mask="currency">
-            </div>
-          </div>
-
           <div class="fg col-3">
-            <label class="flabel">Notificação ao Cliente</label>
-            <label class="notif-toggle" id="notifToggle">
-              <input type="checkbox" id="enviarNotif">
-              <div class="nt-switch"></div>
-              <div>
-                <div class="nt-text">Enviar cobrança por e-mail ao cliente</div>
-                <div class="nt-sub">O cliente receberá um e-mail com os detalhes do honorário e link de pagamento</div>
-              </div>
-            </label>
+            <label class="flabel">Recebimento e cobrança</label>
+            <div style="padding:12px 16px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.15);border-radius:var(--radius-sm);font-size:.82rem;color:var(--gray-600);display:flex;align-items:center;gap:8px;">
+              <span>ℹ️</span>
+              <span>Baixa de pagamento, recebimento parcial e cobrança automática serão configurados na próxima etapa financeira.</span>
+            </div>
           </div>
 
           <div class="fg col-3">
@@ -461,15 +422,15 @@
           </div>
           <div class="pc-item">
             <div class="pc-item-label">Competência</div>
-            <div class="pc-item-value" id="pcCompetencia">Maio / 2026</div>
+            <div class="pc-item-value" id="pcCompetencia">—</div>
           </div>
           <div class="pc-item">
             <div class="pc-item-label">Total Líquido</div>
             <div class="pc-item-value gold" id="pcTotal">R$ 0,00</div>
           </div>
           <div class="pc-item">
-            <div class="pc-item-label">Vencimento</div>
-            <div class="pc-item-value" id="pcVencimento">—</div>
+            <div class="pc-item-label">Processo</div>
+            <div class="pc-item-value" id="pcProcesso">Sem processo</div>
           </div>
           <div class="pc-item">
             <div class="pc-item-label">Forma de Pagamento</div>
@@ -487,7 +448,7 @@
       <div class="form-footer">
         <button type="button" class="btn-form-cancel" id="btnCancelarBottom">← Voltar</button>
         <div style="display:flex;gap:10px;align-items:center;">
-          <button type="button" class="btn-form-draft" id="btnRascunho">Salvar Rascunho</button>
+          <button type="button" class="btn-form-draft" id="btnRascunho">Limpar formulário</button>
           <button type="submit" class="btn-form-save" id="btnSalvarBottom">
             <span class="bfs-icon">✓</span>
             <span class="bfs-text">Lançar Honorário</span>

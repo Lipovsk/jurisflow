@@ -14,22 +14,30 @@ let processosBackend = [];
 async function carregarClientesBackend() {
   try {
     const response = await fetch('http://localhost:8080/clientes');
-    clientesBackend = await response.json();
+    if (!response.ok) throw new Error(`GET /clientes retornou ${response.status}`);
+    const dados = await response.json();
+    clientesBackend = Array.isArray(dados) ? dados : [];
   } catch (erro) {
     console.error('Erro clientes:', erro);
+    clientesBackend = [];
+    window.JurisFlow?.showToast('Não foi possível carregar os clientes reais da API.', 'error');
   }
 }
 
 async function carregarProcessosBackend() {
   try {
     const response = await fetch('http://localhost:8080/processos');
-    processosBackend = await response.json();
+    if (!response.ok) throw new Error(`GET /processos retornou ${response.status}`);
+    const dados = await response.json();
+    processosBackend = Array.isArray(dados) ? dados : [];
   } catch (erro) {
     console.error('Erro processos:', erro);
+    processosBackend = [];
+    window.JurisFlow?.showToast('Não foi possível carregar os processos reais da API.', 'warning');
   }
 }
 
-function getClientesMock() {
+function getClientesDisponiveis() {
   return clientesBackend.map(c => ({
     id: String(c.id),
     nome: c.nome,
@@ -38,13 +46,20 @@ function getClientesMock() {
   }));
 }
 
-function getProcessosMock() {
+function getProcessosDisponiveis() {
   return processosBackend.map(p => ({
     id: String(p.id),
     num: p.numero || '',
     area: p.areaJuridica || '',
-    clienteId: p.cliente?.id || ''
+    clienteId: String(p.cliente?.id || p.clienteId || '')
   }));
+}
+
+function normalizarTexto(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 const TIPO_LABELS = {
@@ -79,11 +94,65 @@ function maskCurrency(v) {
 
 function parseCurrency(v) {
   if (!v) return 0;
-  return parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0;
+  const limpo = String(v)
+    .trim()
+    .replace(/^R\$\s?/i, '')
+    .replace(/[^\d,.-]/g, '');
+  if (!limpo) return 0;
+  const normalizado = limpo.includes(',')
+    ? limpo.replace(/\./g, '').replace(',', '.')
+    : limpo.replace(/\.(?=\d{3}(\D|$))/g, '');
+  return Number.parseFloat(normalizado) || 0;
 }
 
 function formatBRL(n) {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function toPayloadMoney(n) {
+  return Number(Number(n || 0).toFixed(2));
+}
+
+function getValoresHonorario() {
+  const bruto = parseCurrency(document.getElementById('valorBruto')?.value);
+  const acrescimos = parseCurrency(document.getElementById('acrescimos')?.value);
+  const descInp = document.getElementById('desconto')?.value;
+  const descMode = document.getElementById('descTypeBtn')?.dataset.mode || 'pct';
+  let desconto = 0;
+
+  if (descInp) {
+    const raw = parseCurrency(descInp);
+    desconto = descMode === 'pct' ? (bruto * raw / 100) : raw;
+  }
+
+  return {
+    valorBruto: bruto,
+    desconto,
+    acrescimos,
+    valorTotal: bruto - desconto + acrescimos
+  };
+}
+
+function clienteSelecionado() {
+  const id = document.getElementById('clienteId')?.value;
+  return getClientesDisponiveis().find(c => c.id === id) || null;
+}
+
+function processoSelecionado() {
+  const id = document.getElementById('processoId')?.value;
+  return getProcessosDisponiveis().find(p => p.id === id) || null;
+}
+
+function processoPertenceAoCliente(processo, clienteId) {
+  return Boolean(processo && clienteId && String(processo.clienteId) === String(clienteId));
+}
+
+function limparProcessoSelecionado() {
+  const input = document.getElementById('processoBusca');
+  const hidden = document.getElementById('processoId');
+  if (input) input.value = '';
+  if (hidden) hidden.value = '';
+  updatePreview();
 }
 
 function applyMasks() {
@@ -97,6 +166,7 @@ function applyMasks() {
 
 // ── Validation ────────────────────────────────────────────
 function setField(input, ok, msg) {
+  if (!input) return;
   const g = input.closest('.fg');
   if (!g) return;
   g.classList.toggle('has-error', !ok);
@@ -113,13 +183,57 @@ function validateForm() {
     setField(el, v);
     if (!v) ok = false;
   });
-  const clienteId = document.getElementById('clienteId');
-  if (!clienteId?.value) {
-    const inp = document.getElementById('clienteBusca');
-    inp?.closest('.fg')?.classList.add('has-error');
-    inp?.classList.add('error');
+
+  const clienteInput = document.getElementById('clienteBusca');
+  const clienteHidden = document.getElementById('clienteId');
+  const cliente = clienteSelecionado();
+  if (!clienteHidden?.value || !cliente) {
+    setField(clienteInput, false, 'Selecione um cliente da lista');
     ok = false;
   }
+
+  const processoInput = document.getElementById('processoBusca');
+  const processoHidden = document.getElementById('processoId');
+  const processoInformado = Boolean(processoInput?.value.trim() || processoHidden?.value);
+  if (processoInformado) {
+    const processo = processoSelecionado();
+    if (!processo) {
+      setField(processoInput, false, 'Selecione um processo da lista ou deixe em branco');
+      ok = false;
+    } else if (!processoPertenceAoCliente(processo, clienteHidden?.value)) {
+      setField(processoInput, false, 'O processo selecionado não pertence ao cliente');
+      ok = false;
+    } else {
+      setField(processoInput, true);
+    }
+  } else {
+    setField(processoInput, true);
+  }
+
+  const compMes = document.getElementById('compMes');
+  const compAno = document.getElementById('compAno');
+  if (Boolean(compMes?.value) !== Boolean(compAno?.value)) {
+    setField(compMes?.value ? compAno : compMes, false, 'Preencha mês e ano, ou deixe ambos em branco');
+    ok = false;
+  } else {
+    setField(compMes, true);
+    setField(compAno, true);
+  }
+
+  const valores = getValoresHonorario();
+  const valorBrutoInput = document.getElementById('valorBruto');
+  if (valores.valorBruto <= 0) {
+    setField(valorBrutoInput, false, 'Informe um valor bruto maior que zero');
+    ok = false;
+  }
+
+  if (valores.valorTotal < 0) {
+    setField(document.getElementById('desconto'), false, 'O valor total não pode ser negativo');
+    ok = false;
+  } else {
+    setField(document.getElementById('desconto'), true);
+  }
+
   return ok;
 }
 
@@ -163,7 +277,7 @@ function initClienteAutocomplete() {
       dropdown.querySelectorAll('.ac-item').forEach(item => {
         item.addEventListener('mousedown', e => {
           e.preventDefault();
-          const c = getClientesMock().find(x => x.id === item.dataset.id);
+          const c = getClientesDisponiveis().find(x => x.id === item.dataset.id);
           if (c) selectCliente(c);
         });
       });
@@ -178,16 +292,23 @@ function initClienteAutocomplete() {
     input.classList.remove('error');
     input.classList.add('valid');
     input.closest('.fg')?.classList.remove('has-error');
+    const processo = processoSelecionado();
+    if (processo && !processoPertenceAoCliente(processo, c.id)) {
+      limparProcessoSelecionado();
+      window.JurisFlow?.showToast('Processo removido porque pertence a outro cliente.', 'warning');
+    }
     updatePreview();
     window.JurisFlow?.showToast(`Cliente "${c.nome}" vinculado.`, 'success');
   }
 
   input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
+    const q = input.value.trim();
     hidden.value = '';
+    limparProcessoSelecionado();
     if (!q) { dropdown.classList.remove('active'); return; }
-    const results = getClientesMock().filter(c =>
-      c.nome.toLowerCase().includes(q) || c.cpf.includes(q)
+    const busca = normalizarTexto(q);
+    const results = getClientesDisponiveis().filter(c =>
+      normalizarTexto(c.nome).includes(busca) || c.cpf.includes(q)
     );
     openDropdown(results, q);
   });
@@ -213,8 +334,14 @@ function initProcessoAutocomplete() {
   if (!input) return;
 
   function openDropdown(results, q) {
+    const clienteId = document.getElementById('clienteId')?.value;
+    if (!clienteId) {
+      dropdown.innerHTML = '<div class="ac-empty">Selecione um cliente antes de vincular um processo</div>';
+      dropdown.classList.add('active');
+      return;
+    }
     if (!results.length) {
-      dropdown.innerHTML = `<div class="ac-empty">Nenhum processo encontrado</div>`;
+      dropdown.innerHTML = '<div class="ac-empty">Nenhum processo encontrado para este cliente</div>';
     } else {
       dropdown.innerHTML = results.map(p => `
         <div class="ac-item" data-id="${p.id}">
@@ -227,8 +354,16 @@ function initProcessoAutocomplete() {
       dropdown.querySelectorAll('.ac-item').forEach(item => {
         item.addEventListener('mousedown', e => {
           e.preventDefault();
-          const p = getProcessosMock().find(x => x.id === item.dataset.id);
-          if (p) { input.value = p.num; hidden.value = p.id; dropdown.classList.remove('active'); }
+          const p = getProcessosDisponiveis().find(x => x.id === item.dataset.id);
+          if (p) {
+            input.value = p.num;
+            hidden.value = p.id;
+            dropdown.classList.remove('active');
+            input.classList.remove('error');
+            input.classList.add('valid');
+            input.closest('.fg')?.classList.remove('has-error');
+            updatePreview();
+          }
         });
       });
     }
@@ -236,17 +371,25 @@ function initProcessoAutocomplete() {
   }
 
   input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
+    const q = input.value.trim();
     hidden.value = '';
     if (!q) { dropdown.classList.remove('active'); return; }
-    const results = getProcessosMock().filter(p =>
-      p.num.includes(q) || p.area.toLowerCase().includes(q)
+    const clienteId = document.getElementById('clienteId')?.value;
+    const busca = normalizarTexto(q);
+    const results = getProcessosDisponiveis().filter(p =>
+      processoPertenceAoCliente(p, clienteId) &&
+      (normalizarTexto(p.num).includes(busca) || normalizarTexto(p.area).includes(busca))
     );
     openDropdown(results, q);
   });
 
   input.addEventListener('blur', () => {
     setTimeout(() => dropdown.classList.remove('active'), 180);
+    if (!hidden.value && input.value.trim()) {
+      input.value = '';
+      window.JurisFlow?.showToast('Selecione um processo da lista ou deixe em branco.', 'warning');
+      updatePreview();
+    }
   });
 
   document.addEventListener('click', e => {
@@ -306,35 +449,9 @@ function initPagamento() {
 
 // ── Parcelamento ──────────────────────────────────────────
 function initParcelamento() {
-  const btns = document.querySelectorAll('.parbtn');
-  const hidden = document.getElementById('numeroParcelas');
-  const info = document.getElementById('parcelamentoInfo');
-  const texto = document.getElementById('parcelamentoTexto');
-
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      btns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const p = parseInt(btn.dataset.p);
-      if (hidden) hidden.value = p;
-      atualizarParcelamento(p);
-      updatePreview();
-    });
-  });
-
-  function atualizarParcelamento(p) {
-    const total = parseCurrency(document.getElementById('vrTotal')?.textContent.replace('R$ ', '').replace('.', '').replace(',', '.'));
-    if (p <= 1) {
-      info.style.display = 'none';
-      document.getElementById('vrParcelaHint').style.display = 'none';
-    } else {
-      const por = total / p;
-      texto.textContent = `${p}x de R$ ${formatBRL(por)} — primeira parcela no vencimento definido`;
-      info.style.display = 'block';
-      const hint = document.getElementById('vrParcelaHint');
-      hint.textContent = `${p}x de R$ ${formatBRL(por)}`;
-      hint.style.display = 'block';
-    }
+  const pFooter = document.getElementById('pcParcelas');
+  if (pFooter) {
+    pFooter.textContent = 'Parcelamento, vencimento e baixa serão configurados na próxima etapa financeira.';
   }
 }
 
@@ -351,22 +468,15 @@ function initStatusHonorario() {
       btn.classList.add('active');
       const s = btn.dataset.s;
       if (hidden) hidden.value = s;
-      campoPgto.style.display = s === 'pago' ? 'block' : 'none';
-      campoParcial.style.display = s === 'parcial' ? 'block' : 'none';
+      if (campoPgto) campoPgto.style.display = 'none';
+      if (campoParcial) campoParcial.style.display = 'none';
       updatePreview();
     });
   });
 }
 
-// ── Notif Toggle ──────────────────────────────────────────
+// ── Notificações ficam para a etapa financeira ────────────
 function initNotifToggle() {
-  const toggle = document.getElementById('notifToggle');
-  const checkbox = document.getElementById('enviarNotif');
-  if (!toggle) return;
-  toggle.addEventListener('click', () => {
-    toggle.classList.toggle('on');
-    if (checkbox) checkbox.checked = toggle.classList.contains('on');
-  });
 }
 
 // ── Desconto toggle (%/R$) ────────────────────────────────
@@ -375,6 +485,7 @@ function initDescontoToggle() {
   const pfx = document.getElementById('descPfx');
   const inp = document.getElementById('desconto');
   if (!btn) return;
+  inp?.addEventListener('input', recalcularValores);
   btn.addEventListener('click', () => {
     const isP = btn.dataset.mode === 'pct';
     btn.dataset.mode = isP ? 'val' : 'pct';
@@ -387,35 +498,14 @@ function initDescontoToggle() {
 
 // ── Recalcular Valores ────────────────────────────────────
 function recalcularValores() {
-  const bruto = parseCurrency(document.getElementById('valorBruto')?.value);
-  const acrescimo = parseCurrency(document.getElementById('acrescimos')?.value);
-  const descInp = document.getElementById('desconto')?.value;
-  const descMode = document.getElementById('descTypeBtn')?.dataset.mode || 'pct';
-  let descValor = 0;
+  const valores = getValoresHonorario();
 
-  if (descInp) {
-    const raw = parseFloat(descInp.replace(',', '.')) || 0;
-    descValor = descMode === 'pct' ? (bruto * raw / 100) : raw;
-  }
+  document.getElementById('vrBruto').textContent = `R$ ${formatBRL(valores.valorBruto)}`;
+  document.getElementById('vrDesconto').textContent = `— R$ ${formatBRL(valores.desconto)}`;
+  document.getElementById('vrAcrescimos').textContent = `+ R$ ${formatBRL(valores.acrescimos)}`;
+  document.getElementById('vrTotal').textContent = `R$ ${formatBRL(valores.valorTotal)}`;
 
-  const total = Math.max(0, bruto - descValor + acrescimo);
-
-  document.getElementById('vrBruto').textContent = `R$ ${formatBRL(bruto)}`;
-  document.getElementById('vrDesconto').textContent = `— R$ ${formatBRL(descValor)}`;
-  document.getElementById('vrAcrescimos').textContent = `+ R$ ${formatBRL(acrescimo)}`;
-  document.getElementById('vrTotal').textContent = `R$ ${formatBRL(total)}`;
-
-  document.getElementById('pcTotal').textContent = `R$ ${formatBRL(total)}`;
-
-  // Atualizar parcelamento hint
-  const pAtual = parseInt(document.getElementById('numeroParcelas')?.value || 1);
-  if (pAtual > 1) {
-    const hint = document.getElementById('vrParcelaHint');
-    hint.textContent = `${pAtual}x de R$ ${formatBRL(total / pAtual)}`;
-    hint.style.display = 'block';
-    const texto = document.getElementById('parcelamentoTexto');
-    if (texto) texto.textContent = `${pAtual}x de R$ ${formatBRL(total / pAtual)} — primeira parcela no vencimento definido`;
-  }
+  document.getElementById('pcTotal').textContent = `R$ ${formatBRL(valores.valorTotal)}`;
 
   // Mostrar preview se tiver dados
   updatePreview();
@@ -423,42 +513,35 @@ function recalcularValores() {
 
 // ── Preview ───────────────────────────────────────────────
 function updatePreview() {
-  const clienteNome = document.getElementById('clienteBusca')?.value;
+  const clienteResumo = document.getElementById('clienteBusca')?.value;
   const total = document.getElementById('vrTotal')?.textContent || 'R$ 0,00';
   const tipo = document.getElementById('tipoHonorario')?.value || 'fixo';
   const pgto = document.getElementById('formaPagamento')?.value || 'pix';
   const status = document.getElementById('statusHonorario')?.value || 'pendente';
   const mes = document.getElementById('compMes')?.value;
   const ano = document.getElementById('compAno')?.value;
-  const venc = document.getElementById('dataVencimento')?.value;
-  const parcelas = parseInt(document.getElementById('numeroParcelas')?.value || 1);
+  const processoResumo = document.getElementById('processoBusca')?.value;
 
   const pc = document.getElementById('previewCard');
 
-  if (!clienteNome) {
+  if (!clienteResumo) {
     pc.classList.remove('visible');
     return;
   }
   pc.classList.add('visible');
 
-  document.getElementById('pcCliente').textContent = clienteNome;
+  document.getElementById('pcCliente').textContent = clienteResumo;
   document.getElementById('pcTotal').textContent = total;
   document.getElementById('pcBadgeTipo').textContent = TIPO_LABELS[tipo] || tipo;
   document.getElementById('pcPgto').textContent = PGTO_LABELS[pgto] || pgto;
-  document.getElementById('pcCompetencia').textContent = mes ? `${MESES[parseInt(mes)]} / ${ano}` : '—';
-  document.getElementById('pcVencimento').textContent = venc
-    ? new Date(venc + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+  document.getElementById('pcCompetencia').textContent = (mes && ano) ? `${MESES[parseInt(mes)]} / ${ano}` : '—';
+  document.getElementById('pcProcesso').textContent = processoResumo || 'Sem processo';
 
   const statusLabels = { pendente: 'Pendente', parcial: 'Parc. Pago', pago: 'Pago', inadimpl: 'Inadimplente' };
   document.getElementById('pcStatus').textContent = statusLabels[status] || status;
 
   const pFooter = document.getElementById('pcParcelas');
-  if (parcelas > 1) {
-    const totalNum = parseCurrency(total.replace('R$ ', ''));
-    pFooter.textContent = `Parcelado em ${parcelas}x de R$ ${formatBRL(totalNum / parcelas)}`;
-  } else {
-    pFooter.textContent = 'Pagamento à vista';
-  }
+  pFooter.textContent = 'Parcelamento, vencimento e baixa serão configurados na próxima etapa financeira.';
 }
 
 // ── Char Counter ──────────────────────────────────────────
@@ -485,11 +568,6 @@ function initCompetencia() {
   ['compMes', 'compAno'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', updatePreview);
   });
-}
-
-// ── Data vencimento listener ──────────────────────────────
-function initDataVencimento() {
-  document.getElementById('dataVencimento')?.addEventListener('change', updatePreview);
 }
 
 // ── Progress tracker ──────────────────────────────────────
@@ -521,7 +599,76 @@ function initFormSubmit() {
   const form = document.getElementById('formHonorario');
   const btnTop = document.getElementById('btnSalvar');
 
-  function doSave(e) {
+  async function lerMensagemErro(response) {
+    const texto = await response.text();
+    if (!texto) return `HTTP ${response.status}`;
+    try {
+      const json = JSON.parse(texto);
+      return json.message || json.erro || json.error || texto;
+    } catch {
+      return texto;
+    }
+  }
+
+  function getSelectText(id) {
+    const select = document.getElementById(id);
+    return select?.selectedOptions?.[0]?.textContent?.trim() || select?.value?.trim() || '';
+  }
+
+  function getCompetenciaPayload() {
+    const mes = document.getElementById('compMes')?.value;
+    const ano = document.getElementById('compAno')?.value;
+    return (mes && ano) ? `${ano}-${mes.padStart(2, '0')}` : '';
+  }
+
+  function montarPayload() {
+    const g = id => document.getElementById(id);
+    const v = id => g(id)?.value?.trim() || '';
+    const valores = getValoresHonorario();
+    const payload = {
+      tipoHonorario: v('tipoHonorario') || 'fixo',
+      valorBruto: toPayloadMoney(valores.valorBruto),
+      desconto: toPayloadMoney(valores.desconto),
+      acrescimos: toPayloadMoney(valores.acrescimos),
+      valorTotal: toPayloadMoney(valores.valorTotal),
+      status: v('statusHonorario') || 'pendente',
+      formaPagamento: v('formaPagamento') || 'pix',
+      descricao: v('descServicos'),
+      responsavel: getSelectText('responsavel'),
+      clienteId: Number(v('clienteId'))
+    };
+
+    const competencia = getCompetenciaPayload();
+    if (competencia) payload.competencia = competencia;
+
+    const observacoesInternas = v('observacoes');
+    if (observacoesInternas) payload.observacoesInternas = observacoesInternas;
+
+    const processoId = v('processoId');
+    if (processoId) payload.processoId = Number(processoId);
+
+    return payload;
+  }
+
+  function setSaving(saving) {
+    [
+      document.getElementById('btnSalvar'),
+      document.getElementById('btnSalvarBottom'),
+    ].forEach(b => {
+      if (!b) return;
+      if (!b.dataset.originalHtml) b.dataset.originalHtml = b.innerHTML;
+      b.disabled = saving;
+      if (saving) {
+        const t = b.querySelector('.bfs-text');
+        if (t) t.textContent = 'Lançando...';
+        else b.textContent = 'Lançando...';
+      } else {
+        b.innerHTML = b.dataset.originalHtml;
+      }
+    });
+  }
+
+  async function doSave(e) {
     if (e?.type === 'submit') e.preventDefault();
     if (!validateForm()) {
       window.JurisFlow?.showToast('Corrija os campos obrigatórios antes de lançar.', 'warning');
@@ -529,112 +676,30 @@ function initFormSubmit() {
       return;
     }
 
-    const allBtns = [
-      document.getElementById('btnSalvar'),
-      document.getElementById('btnSalvarBottom'),
-    ];
-    allBtns.forEach(b => {
-      if (!b) return;
-      b.disabled = true;
-      const t = b.querySelector('.bfs-text');
-      if (t) t.textContent = 'Lançando…';
-      else b.textContent = 'Lançando…';
-    });
+    setSaving(true);
 
-    const notif = document.getElementById('enviarNotif')?.checked;
-
-    const g = id => document.getElementById(id);
-    const v = id => g(id)?.value?.trim() || '';
-
-    const totalEl = g('vrTotal');
-    const totalStr = totalEl ? totalEl.textContent.replace('R$ ', '').replace(/\./g, '').replace(',', '.') : '0';
-
-    const honorario = {
-      clienteId: g('clienteId')?.value || '',
-      clienteNome: v('clienteBusca'),
-      processoId: g('processoId')?.value || '',
-      processoNumero: v('processoBusca'),
-      tipoHonorario: v('tipoHonorario') || 'fixo',
-      competencia: (v('compAno') && v('compMes')) ? v('compAno') + '-' + v('compMes').padStart(2, '0') : '',
-      valorBruto: v('valorBruto').replace(/\./g, '').replace(',', '.'),
-      desconto: v('desconto'),
-      acrescimos: v('acrescimos').replace(/\./g, '').replace(',', '.'),
-      valorTotal: totalStr,
-      meioPagamento: v('formaPagamento') || 'pix',
-      parcelas: parseInt(v('numeroParcelas') || '1'),
-      vencimento: v('dataVencimento'),
-      status: v('statusHonorario') || 'pendente',
-      descServicos: v('descServicos'),
-      observacoes: v('observacoes'),
-      dataCadastro: new Date().toISOString(),
-    };
-
-    fetch('http://localhost:8080/honorarios', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        tipoHonorario: honorario.tipoHonorario,
-        valorTotal: parseFloat(honorario.valorTotal),
-        competencia: honorario.competencia,
-        status: honorario.status,
-        formaPagamento: honorario.meioPagamento,
-        descricao: honorario.descServicos,
-        clienteId: Number(honorario.clienteId),
-        processoId: honorario.processoId
-          ? Number(honorario.processoId)
-          : null
-      })
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Erro ao salvar honorário');
-        }
-
-        return res.json();
-      })
-      .then(data => {
-
-        console.log('Honorário salvo:', data);
-
-        window.JurisFlow?.showToast(
-          '✅ Honorário lançado com sucesso!',
-          'success'
-        );
-
-        if (notif) {
-          setTimeout(() => {
-            window.JurisFlow?.showToast(
-              '📧 Cobrança enviada ao cliente.',
-              'info'
-            );
-          }, 700);
-        }
-
-        setTimeout(() => {
-          window.location.href = 'financeiro.html';
-        }, 1500);
-
-      })
-      .catch(erro => {
-
-        console.error(erro);
-
-        window.JurisFlow?.showToast(
-          'Erro ao salvar honorário.',
-          'error'
-        );
-
+    try {
+      const response = await fetch('http://localhost:8080/honorarios', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(montarPayload())
       });
 
-    setTimeout(() => {
-      window.JurisFlow?.showToast('✅ Honorário lançado com sucesso!', 'success');
-      if (notif) {
-        setTimeout(() => window.JurisFlow?.showToast('📧 Cobrança enviada ao cliente por e-mail.', 'info'), 700);
+      if (!response.ok) {
+        throw new Error(await lerMensagemErro(response));
       }
-      setTimeout(() => { window.location.href = 'financeiro.html'; }, 1600);
-    }, 800);
+
+      window.JurisFlow?.showToast('Honorário lançado com sucesso.', 'success');
+      setTimeout(() => {
+        window.location.href = 'honorarios.html';
+      }, 900);
+    } catch (erro) {
+      console.error('Erro ao salvar honorário:', erro);
+      setSaving(false);
+      window.JurisFlow?.showToast(`Honorário não foi salvo. ${erro.message || 'Verifique os dados e tente novamente.'}`, 'error');
+    }
   }
 
   form?.addEventListener('submit', doSave);
@@ -643,15 +708,37 @@ function initFormSubmit() {
 
 // ── Cancel ────────────────────────────────────────────────
 function initCancel() {
+  function selecionarBotaoPadrao(selector, dataKey, value) {
+    document.querySelectorAll(selector).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset[dataKey] === value);
+    });
+  }
+
   document.querySelectorAll('#btnCancelar, #btnCancelarBottom').forEach(btn => {
     btn.addEventListener('click', () => {
       if (confirm('Deseja cancelar? Os dados não salvos serão perdidos.')) {
-        window.location.href = 'financeiro.html';
+        window.location.href = 'honorarios.html';
       }
     });
   });
   document.getElementById('btnRascunho')?.addEventListener('click', () => {
-    window.JurisFlow?.showToast('Rascunho salvo com sucesso.', 'info');
+    if (confirm('Limpar todos os dados preenchidos?')) {
+      document.getElementById('formHonorario')?.reset();
+      document.getElementById('clienteId').value = '';
+      document.getElementById('processoId').value = '';
+      document.getElementById('tipoHonorario').value = 'fixo';
+      document.getElementById('formaPagamento').value = 'pix';
+      document.getElementById('statusHonorario').value = 'pendente';
+      selecionarBotaoPadrao('.thbtn', 'tipo', 'fixo');
+      selecionarBotaoPadrao('.pgbtn', 'pgto', 'pix');
+      selecionarBotaoPadrao('.shbtn', 's', 'pendente');
+      const campoHora = document.getElementById('campoHora');
+      if (campoHora) campoHora.style.display = 'none';
+      document.querySelectorAll('.error, .valid').forEach(el => el.classList.remove('error', 'valid'));
+      document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+      recalcularValores();
+      updatePreview();
+    }
   });
 }
 
@@ -672,15 +759,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDescontoToggle();
   initCharCounters();
   initCompetencia();
-  initDataVencimento();
   initProgressTracker();
   initFormSubmit();
   initCancel();
 
-  // Set default vencimento to end of current month
-  const hoje = new Date();
-  const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-  const vencInput = document.getElementById('dataVencimento');
-  if (vencInput) vencInput.value = fimMes.toISOString().split('T')[0];
   updatePreview();
 });
