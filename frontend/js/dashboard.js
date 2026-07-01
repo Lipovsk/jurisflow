@@ -609,6 +609,55 @@ const API = {
     }
   },
 };
+
+function normalizarTextoDashboard(valor) {
+  return String(valor ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizarStatusHonorario(status) {
+  const valor = normalizarTextoDashboard(status).replace(/[_-]+/g, ' ');
+  if (valor === 'pago' || valor === 'quitado' || valor === 'em dia') return 'pago';
+  if (valor === 'inadimplente' || valor === 'inadimpl' || valor === 'atrasado') return 'inadimplente';
+  return 'pendente';
+}
+
+function valorHonorarioDashboard(honorario) {
+  const valor = honorario?.valorTotal;
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
+  const texto = String(valor ?? '').trim();
+  if (!texto) return 0;
+  const normalizado = texto.includes(',')
+    ? texto.replace(/\./g, '').replace(',', '.')
+    : texto;
+  const numero = Number(normalizado);
+  return Number.isFinite(numero) ? numero : 0;
+}
+
+function competenciaAtualDashboard() {
+  const agora = new Date();
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function mesAtualDashboard() {
+  return new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
+function formatarMoedaDashboard(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
+
+function setDashboardText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
 async function carregarDashboardReal() {
 
   try {
@@ -627,6 +676,10 @@ async function carregarDashboardReal() {
 
     ]);
 
+    [clientesRes, processosRes, compromissosRes, honorariosRes].forEach(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    });
+
     const clientes = await clientesRes.json();
     const processos = await processosRes.json();
     const compromissos = await compromissosRes.json();
@@ -642,6 +695,12 @@ async function carregarDashboardReal() {
   } catch (erro) {
 
     console.error('Erro ao carregar dashboard:', erro);
+    atualizarCardsDashboard({
+      clientes: [],
+      processos: [],
+      compromissos: [],
+      honorarios: []
+    });
 
   }
 
@@ -649,46 +708,59 @@ async function carregarDashboardReal() {
 
 function atualizarCardsDashboard(dados) {
   const clientes = Array.isArray(dados.clientes) ? dados.clientes : [];
-  const totalClientes = clientes.filter(c => (c.status || '').toLowerCase() === 'ativo').length;
-
-  const totalProcessos = Array.isArray(dados.processos) ? dados.processos.length : 0;
-
+  const processos = Array.isArray(dados.processos) ? dados.processos : [];
   const compromissos = Array.isArray(dados.compromissos) ? dados.compromissos : [];
-  const totalPrazos = compromissos.filter(c => c.tipo === 'prazo').length;
-
   const honorarios = Array.isArray(dados.honorarios) ? dados.honorarios : [];
-  const totalHonorarios = honorarios.reduce(
-    (soma, h) => soma + (h.valorTotal || 0),
-    0
-  );
+  const competenciaAtual = competenciaAtualDashboard();
+  const mesAtual = mesAtualDashboard();
 
-  const cards = document.querySelectorAll('[data-count]');
+  const clientesAtivos = clientes.filter(c => normalizarTextoDashboard(c.status) === 'ativo');
+  const prazos = compromissos.filter(c => normalizarTextoDashboard(c.tipo) === 'prazo');
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const emSeteDias = new Date(hoje);
+  emSeteDias.setDate(hoje.getDate() + 7);
 
-  document.getElementById('dashClientes').textContent = totalClientes;
-document.getElementById('dashProcessos').textContent = totalProcessos;
-document.getElementById('dashPrazos').textContent = totalPrazos;
-
-  document.getElementById('dashHonorarios').textContent =
-  totalHonorarios.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
+  const prazosSemana = prazos.filter(c => {
+    if (!c.data) return false;
+    const data = new Date(`${c.data}T00:00:00`);
+    return data >= hoje && data <= emSeteDias;
   });
 
-  // ===== PRAZOS CRÍTICOS =====
-  const prazosCriticos = dados.compromissos
-    .filter(c => c.tipo === 'prazo')
-    .sort((a, b) => new Date(a.data) - new Date(b.data))
+  const honorariosPagosMes = honorarios.filter(
+    h => normalizarStatusHonorario(h.status) === 'pago'
+      && String(h.competencia || '').startsWith(competenciaAtual)
+  );
+  const honorariosPendentes = honorarios.filter(h => normalizarStatusHonorario(h.status) === 'pendente');
+  const honorariosInadimplentes = honorarios.filter(h => normalizarStatusHonorario(h.status) === 'inadimplente');
+  const recebidoMes = honorariosPagosMes.reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
+  const pendenteTotal = honorariosPendentes.reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
+  const inadimplenteTotal = honorariosInadimplentes.reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
+  const lancadoTotal = honorarios.reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
+
+  setDashboardText('dashClientes', clientesAtivos.length);
+  setDashboardText('dashProcessos', processos.length);
+  setDashboardText('dashPrazos', prazosSemana.length);
+  setDashboardText('dashHonorarios', formatarMoedaDashboard(recebidoMes));
+  setDashboardText('dashClientesFooter', `${clientes.length} cliente(s) cadastrado(s)`);
+  setDashboardText('dashProcessosFooter', `${processos.length} processo(s) no backend`);
+  setDashboardText('dashPrazosFooter', `${prazosSemana.length} prazo(s) nos próximos 7 dias`);
+  setDashboardText('dashHonorariosFooter', `${honorariosPagosMes.length} recebimento(s) em ${mesAtual}`);
+  setDashboardText('dashHonorariosLabel', `Recebido em ${mesAtual}`);
+  setDashboardText('dashFinanceiroTitulo', `Honorários — ${mesAtual}`);
+
+  const prazosCriticos = [...prazosSemana]
+    .sort((a, b) => new Date(`${a.data}T00:00:00`) - new Date(`${b.data}T00:00:00`))
     .slice(0, 5);
 
   const prazosBox = document.getElementById('dashPrazosCriticos');
-
   if (prazosBox) {
     prazosBox.innerHTML = prazosCriticos.length
       ? prazosCriticos.map(c => `
         <div class="prazo-item">
           <div class="prazo-date urgent">
-            <div class="day">${new Date(c.data + 'T00:00:00').getDate()}</div>
-            <div class="mon">${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short' })}</div>
+            <div class="day">${new Date(`${c.data}T00:00:00`).getDate()}</div>
+            <div class="mon">${new Date(`${c.data}T00:00:00`).toLocaleDateString('pt-BR', { month: 'short' })}</div>
           </div>
           <div class="prazo-info">
             <div class="prazo-title">${c.titulo || 'Prazo sem título'}</div>
@@ -697,17 +769,15 @@ document.getElementById('dashPrazos').textContent = totalPrazos;
           <span class="prazo-tag urgente">Prazo</span>
         </div>
       `).join('')
-      : '<div style="padding:16px;color:#999;">Nenhum prazo cadastrado</div>';
+      : '<div style="padding:16px;color:#999;">Nenhum prazo cadastrado nos próximos 7 dias</div>';
   }
 
-  // ===== AUDIÊNCIAS =====
-  const audiencias = dados.compromissos
-    .filter(c => c.tipo === 'audiencia')
-    .sort((a, b) => new Date(a.data) - new Date(b.data))
+  const audiencias = compromissos
+    .filter(c => normalizarTextoDashboard(c.tipo) === 'audiencia')
+    .sort((a, b) => new Date(`${a.data || ''}T00:00:00`) - new Date(`${b.data || ''}T00:00:00`))
     .slice(0, 3);
 
   const audBox = document.getElementById('dashAudiencias');
-
   if (audBox) {
     audBox.innerHTML = audiencias.length
       ? audiencias.map(c => `
@@ -722,20 +792,15 @@ document.getElementById('dashPrazos').textContent = totalPrazos;
       : '<div style="padding:16px;color:#999;">Nenhuma audiência cadastrada</div>';
   }
 
-  // ===== CLIENTES RECENTES =====
-  const clientesRecentes = [...dados.clientes]
-    .slice(-5)
-    .reverse();
-
+  const clientesRecentes = [...clientes].slice(-5).reverse();
   const cliBox = document.getElementById('dashClientesRecentes');
 
   function getIniciaisLocal(nome) {
-    if (!nome) return '?';
-    const p = String(nome).trim().split(' ').filter(Boolean);
-    if (!p.length) return '?';
-    return p.length === 1
-      ? p[0].substring(0, 2).toUpperCase()
-      : (p[0][0] + p[1][0]).toUpperCase();
+    const partes = String(nome || '').trim().split(' ').filter(Boolean);
+    if (!partes.length) return '?';
+    return partes.length === 1
+      ? partes[0].substring(0, 2).toUpperCase()
+      : (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
   }
 
   if (cliBox) {
@@ -753,33 +818,25 @@ document.getElementById('dashPrazos').textContent = totalPrazos;
       : '<div style="padding:16px;color:#999;">Nenhum cliente cadastrado</div>';
   }
 
-  // ===== ALERTAS =====
-  const alertasBox = document.getElementById('dashAlertas');
-
   const alertas = [];
 
-  // prazos urgentes
-  dados.compromissos.forEach(c => {
-    if (c.tipo === 'prazo') {
-      alertas.push({
-        tipo: 'red',
-        texto: `Prazo próximo: ${c.titulo}`,
-        tempo: c.data,
-      });
-    }
+  prazosSemana.forEach(c => {
+    alertas.push({
+      tipo: 'red',
+      texto: `Prazo próximo: ${c.titulo || 'sem título'}`,
+      tempo: c.data || '',
+    });
   });
 
-  // honorários pendentes
-  dados.honorarios.forEach(h => {
-    if (h.status === 'pendente') {
-      alertas.push({
-        tipo: 'amber',
-        texto: `Honorário pendente — R$ ${Number(h.valorTotal || 0).toLocaleString('pt-BR')}`,
-        tempo: h.competencia || '',
-      });
-    }
+  honorariosPendentes.forEach(h => {
+    alertas.push({
+      tipo: 'amber',
+      texto: `Honorário pendente — ${formatarMoedaDashboard(valorHonorarioDashboard(h))}`,
+      tempo: h.competencia || '',
+    });
   });
 
+  const alertasBox = document.getElementById('dashAlertas');
   if (alertasBox) {
     alertasBox.innerHTML = alertas.length
       ? alertas.slice(0, 5).map(a => `
@@ -794,58 +851,50 @@ document.getElementById('dashPrazos').textContent = totalPrazos;
       : '<div style="padding:16px;color:#999;">Nenhum alerta encontrado</div>';
   }
 
-  // ===== FINANCEIRO =====
   const financeiroBox = document.getElementById('dashFinanceiro');
-
-  const recebidos = dados.honorarios
-    .filter(h => h.status === 'pago')
-    .reduce((s, h) => s + (h.valorTotal || 0), 0);
-
-  const pendentes = dados.honorarios
-    .filter(h => h.status === 'pendente')
-    .reduce((s, h) => s + (h.valorTotal || 0), 0);
-
-  const total = recebidos + pendentes;
-
-  const meta = 50000;
-
-  const percentual = Math.min((total / meta) * 100, 100);
-
   if (financeiroBox) {
+    const totalAberto = pendenteTotal + inadimplenteTotal;
+    const totalMes = honorarios
+      .filter(h => String(h.competencia || '').startsWith(competenciaAtual))
+      .reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
+    const percentualRecebido = totalMes ? Math.min((recebidoMes / totalMes) * 100, 100) : 0;
+
     financeiroBox.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
         <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
-          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">Recebido</div>
+          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">Recebido no mês</div>
           <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green);">
-            ${recebidos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            ${formatarMoedaDashboard(recebidoMes)}
           </div>
         </div>
 
         <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
-          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">A receber</div>
+          <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">A receber/inadimplente</div>
           <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--amber);">
-            ${pendentes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            ${formatarMoedaDashboard(totalAberto)}
           </div>
         </div>
       </div>
 
       <div style="margin-top:16px;">
         <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray-400);margin-bottom:6px;">
-          <span>Meta mensal</span>
-          <span style="color:var(--navy);font-weight:600;">${percentual.toFixed(0)}%</span>
+          <span>Recebido sobre o lançado no mês</span>
+          <span style="color:var(--navy);font-weight:600;">${percentualRecebido.toFixed(0)}%</span>
         </div>
         <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
           <div style="
             height:100%;
-            width:${percentual}%;
+            width:${percentualRecebido}%;
             background:linear-gradient(90deg,var(--gold),var(--gold-light));
             border-radius:3px;
           "></div>
         </div>
+        <div style="margin-top:8px;font-size:.72rem;color:var(--gray-400);">
+          Total lançado: ${formatarMoedaDashboard(lancadoTotal)}
+        </div>
       </div>
     `;
   }
-
 }
 // Exporta para uso em outros módulos
 // Exporta sem sobrescrever o .db do storage.js

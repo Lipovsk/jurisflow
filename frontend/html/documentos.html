@@ -95,6 +95,8 @@
       font-size:.8rem; transition:all .15s; color:var(--gray-600);
     }
     .btn-doc:hover { background:var(--gray-100); border-color:var(--navy); }
+    .docs-empty { padding:44px 20px; text-align:center; color:var(--gray-400); font-size:.84rem; }
+    .docs-empty strong { display:block; color:var(--navy); margin-bottom:6px; font-size:.95rem; }
 
     @media (max-width:700px) {
       td:nth-child(3),th:nth-child(3),
@@ -159,7 +161,7 @@
         <span class="upload-type">📊 XLSX</span>
         <span class="upload-type">🖼 JPEG/PNG</span>
       </div>
-      <input type="file" id="fileInput" multiple style="display:none;" />
+      <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display:none;" />
     </div>
 
     <div class="page-toolbar">
@@ -174,18 +176,20 @@
         <option value="laudo">Laudo</option>
         <option value="procuracao">Procuração</option>
         <option value="decisao">Decisão Judicial</option>
+        <option value="outros">Outros</option>
       </select>
       <button class="btn-primary" onclick="document.getElementById('fileInput').click()">＋ Upload</button>
     </div>
 
     <!-- Categorias -->
     <div class="cat-row" id="catRow">
-      <button class="cat-btn active" data-cat="">Todos <span class="cat-count">42</span></button>
-      <button class="cat-btn" data-cat="peticao">📄 Petições <span class="cat-count">18</span></button>
-      <button class="cat-btn" data-cat="contrato">📋 Contratos <span class="cat-count">9</span></button>
-      <button class="cat-btn" data-cat="laudo">🔍 Laudos <span class="cat-count">6</span></button>
-      <button class="cat-btn" data-cat="procuracao">✍️ Procurações <span class="cat-count">5</span></button>
-      <button class="cat-btn" data-cat="decisao">⚖️ Decisões <span class="cat-count">4</span></button>
+      <button class="cat-btn active" data-cat="">Todos <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="peticao">📄 Petições <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="contrato">📋 Contratos <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="laudo">🔍 Laudos <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="procuracao">✍️ Procurações <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="decisao">⚖️ Decisões <span class="cat-count">0</span></button>
+      <button class="cat-btn" data-cat="outros">📎 Outros <span class="cat-count">0</span></button>
     </div>
 
     <!-- Tabela -->
@@ -193,7 +197,7 @@
       <div class="docs-card-header">
         <div>
           <div class="dch-title">Repositório de Documentos</div>
-          <div class="dch-count" id="docCount">42 documentos</div>
+          <div class="dch-count" id="docCount">0 documentos</div>
         </div>
       </div>
       <div style="overflow-x:auto;">
@@ -218,58 +222,165 @@
 <script src="../js/dashboard.js"></script>
 <script>
 (function(){
-  const docs = [
-    { nome:'Contestação — Proc. 0012345-88.pdf', proc:'Maria Aparecida Souza', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'1.2 MB', data:'20/05/2026' },
-    { nome:'Recurso de Apelação — TJ-SP.pdf', proc:'Construtora Beta Ltda', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'856 KB', data:'19/05/2026' },
-    { nome:'Contrato de Honorários — João Ferreira.docx', proc:'João Paulo Ferreira', cat:'contrato', icon:'📋', cor:'#ECFDF5', tam:'234 KB', data:'15/05/2026' },
-    { nome:'Laudo Pericial — Proc. 0056789-11.pdf', proc:'Roberto Alves Costa', cat:'laudo', icon:'🔍', cor:'#FFFBEB', tam:'3.4 MB', data:'14/05/2026' },
-    { nome:'Procuração Ad Judicia — Tecno Solutions.pdf', proc:'Tecno Solutions S/A', cat:'procuracao', icon:'✍️', cor:'#F5F3FF', tam:'412 KB', data:'12/05/2026' },
-    { nome:'Decisão Interlocutória — Proc. 0098761-22.pdf', proc:'Tecno Solutions S/A', cat:'decisao', icon:'⚖️', cor:'#FEF2F2', tam:'678 KB', data:'10/05/2026' },
-    { nome:'Petição Inicial — Ação Trabalhista.docx', proc:'João Paulo Ferreira', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'520 KB', data:'08/05/2026' },
-    { nome:'Contrato de Prestação de Serviços — Beta.docx', proc:'Construtora Beta Ltda', cat:'contrato', icon:'📋', cor:'#ECFDF5', tam:'301 KB', data:'05/05/2026' },
-    { nome:'Alegações Finais — Proc. 0056789-11.pdf', proc:'Roberto Alves Costa', cat:'peticao', icon:'📄', cor:'#EEF3FF', tam:'980 KB', data:'02/05/2026' },
-    { nome:'Laudo Médico — Ana Lima Rodrigues.pdf', proc:'Ana Lima Rodrigues', cat:'laudo', icon:'🔍', cor:'#FFFBEB', tam:'2.1 MB', data:'28/04/2026' },
-    { nome:'Procuração — Holding Nobre Ltda.pdf', proc:'Holding Nobre Ltda', cat:'procuracao', icon:'✍️', cor:'#F5F3FF', tam:'387 KB', data:'25/04/2026' },
-    { nome:'Sentença — Proc. 0055443-11 (arquivado).pdf', proc:'Fernanda Melo Braga', cat:'decisao', icon:'⚖️', cor:'#FEF2F2', tam:'1.8 MB', data:'20/04/2026' },
-  ];
+  const STORE_KEY = 'jf_documentos';
+  const CATEGORIAS = ['', 'peticao', 'contrato', 'laudo', 'procuracao', 'decisao', 'outros'];
+  const catLabel = {
+    peticao:'Petição',
+    contrato:'Contrato',
+    laudo:'Laudo',
+    procuracao:'Procuração',
+    decisao:'Decisão Judicial',
+    outros:'Outros'
+  };
+  const catClass = {
+    peticao:'cb-peticao',
+    contrato:'cb-contrato',
+    laudo:'cb-laudo',
+    procuracao:'cb-procuracao',
+    decisao:'cb-decisao',
+    outros:'cb-outros'
+  };
 
-  const catLabel = { peticao:'Petição', contrato:'Contrato', laudo:'Laudo', procuracao:'Procuração', decisao:'Decisão Judicial' };
-  const catClass = { peticao:'cb-peticao', contrato:'cb-contrato', laudo:'cb-laudo', procuracao:'cb-procuracao', decisao:'cb-decisao' };
+  let docs = carregarDocs();
+  let activeCat = '';
+
+  function carregarDocs() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function salvarDocs() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(docs));
+  }
+
+  function escapeHtml(valor) {
+    return String(valor ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function normalizar(valor) {
+    return String(valor ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function uid() {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  function formatDate(timestamp) {
+    const data = timestamp ? new Date(timestamp) : new Date();
+    return data.toLocaleDateString('pt-BR');
+  }
+
+  function iconByName(nome) {
+    const ext = String(nome || '').split('.').pop().toLowerCase();
+    if (ext === 'pdf') return { icon:'📄', cor:'#EEF3FF' };
+    if (['doc', 'docx'].includes(ext)) return { icon:'📝', cor:'#ECFDF5' };
+    if (['xls', 'xlsx'].includes(ext)) return { icon:'📊', cor:'#FFFBEB' };
+    if (['jpg', 'jpeg', 'png'].includes(ext)) return { icon:'🖼', cor:'#F5F3FF' };
+    return { icon:'📎', cor:'#F1F5F9' };
+  }
+
+  function docFromFile(file) {
+    const visual = iconByName(file.name);
+    return {
+      id: uid(),
+      nome: file.name,
+      cat: 'outros',
+      icon: visual.icon,
+      cor: visual.cor,
+      tam: formatBytes(file.size),
+      data: formatDate(Date.now()),
+      origem: 'Upload local',
+      tipoArquivo: file.type || '',
+      lastModified: file.lastModified || null,
+      registradoEm: new Date().toISOString()
+    };
+  }
+
+  function atualizarContadores() {
+    CATEGORIAS.forEach(cat => {
+      const btn = document.querySelector(`.cat-btn[data-cat="${cat}"]`);
+      const count = cat ? docs.filter(d => d.cat === cat).length : docs.length;
+      const span = btn?.querySelector('.cat-count');
+      if (span) span.textContent = count;
+    });
+  }
 
   function render(list){
-    document.getElementById('docCount').textContent = list.length + ' documentos';
+    document.getElementById('docCount').textContent = `${list.length} documento(s)`;
+    atualizarContadores();
+
+    if (!list.length) {
+      document.getElementById('docsBody').innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="docs-empty">
+              <strong>Nenhum documento real cadastrado</strong>
+              <span>Os documentos aparecerão aqui somente depois de você selecionar arquivos.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
     document.getElementById('docsBody').innerHTML = list.map(d => `<tr>
       <td>
         <div class="doc-cell">
-          <div class="doc-icon" style="background:${d.cor};">${d.icon}</div>
+          <div class="doc-icon" style="background:${escapeHtml(d.cor)};">${escapeHtml(d.icon)}</div>
           <div>
-            <div class="doc-name">${d.nome}</div>
-            <div class="doc-proc">${d.proc}</div>
+            <div class="doc-name">${escapeHtml(d.nome)}</div>
+            <div class="doc-proc">${escapeHtml(d.origem || 'Upload local')}</div>
           </div>
         </div>
       </td>
-      <td><span class="cat-badge ${catClass[d.cat]}">${catLabel[d.cat]}</span></td>
-      <td class="doc-size">${d.tam}</td>
-      <td class="doc-date">${d.data}</td>
+      <td><span class="cat-badge ${catClass[d.cat] || 'cb-outros'}">${escapeHtml(catLabel[d.cat] || 'Outros')}</span></td>
+      <td class="doc-size">${escapeHtml(d.tam)}</td>
+      <td class="doc-date">${escapeHtml(d.data)}</td>
       <td>
         <div class="doc-actions">
-          <button class="btn-doc" title="Visualizar" onclick="window.JurisFlow.showToast('👁 Abrindo: ${d.nome}','info')">👁</button>
-          <button class="btn-doc" title="Download" onclick="window.JurisFlow.showToast('⬇️ Download: ${d.nome}','success')">⬇️</button>
+          <button class="btn-doc" title="Remover registro" data-action="delete" data-id="${escapeHtml(d.id)}">✕</button>
         </div>
       </td>
     </tr>`).join('');
   }
 
-  render(docs);
-
-  let activeCat = '';
   function applyFilters(){
-    const q = document.getElementById('searchInput').value.toLowerCase();
+    const q = normalizar(document.getElementById('searchInput').value);
     const cat = document.getElementById('filterCat').value || activeCat;
-    render(docs.filter(d =>
-      (!q || d.nome.toLowerCase().includes(q) || d.proc.toLowerCase().includes(q)) &&
-      (!cat || d.cat === cat)
-    ));
+    render(docs.filter(d => {
+      const texto = normalizar(`${d.nome} ${d.origem || ''} ${catLabel[d.cat] || ''}`);
+      return (!q || texto.includes(q)) && (!cat || d.cat === cat);
+    }));
+  }
+
+  function registrarArquivos(files) {
+    const validos = files.filter(file => file && file.name);
+    if (!validos.length) return;
+
+    const novos = validos.map(docFromFile);
+    docs = [...novos, ...docs];
+    salvarDocs();
+    applyFilters();
+    window.JurisFlow?.showToast(`${novos.length} documento(s) registrado(s).`, 'success');
   }
 
   document.getElementById('searchInput').addEventListener('input', applyFilters);
@@ -285,19 +396,31 @@
     applyFilters();
   });
 
-  // Upload zone
+  document.getElementById('docsBody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="delete"]');
+    if (!btn) return;
+    docs = docs.filter(doc => doc.id !== btn.dataset.id);
+    salvarDocs();
+    applyFilters();
+    window.JurisFlow?.showToast('Registro de documento removido.', 'success');
+  });
+
   const zone = document.getElementById('uploadZone');
-  zone.addEventListener('click', () => document.getElementById('fileInput').click());
+  const fileInput = document.getElementById('fileInput');
+  zone.addEventListener('click', () => fileInput.click());
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
   zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('drag');
-    const files = [...e.dataTransfer.files];
-    if(files.length) window.JurisFlow.showToast(`✅ ${files.length} arquivo(s) enviado(s) com sucesso!`, 'success');
+    e.preventDefault();
+    zone.classList.remove('drag');
+    registrarArquivos([...e.dataTransfer.files]);
   });
-  document.getElementById('fileInput').addEventListener('change', e => {
-    if(e.target.files.length) window.JurisFlow.showToast(`✅ ${e.target.files.length} arquivo(s) enviado(s) com sucesso!`, 'success');
+  fileInput.addEventListener('change', e => {
+    registrarArquivos([...e.target.files]);
+    fileInput.value = '';
   });
+
+  render(docs);
 })();
 </script>
 </body>
