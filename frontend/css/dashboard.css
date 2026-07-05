@@ -333,6 +333,32 @@ body {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  min-width: 0;
+}
+
+.main-wrapper,
+.clients-summary,
+.clients-table-card,
+.page-toolbar,
+.page-toolbar > * {
+  min-width: 0;
+}
+
+.clients-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.page-toolbar {
+  width: 100%;
+}
+
+.clients-table-card {
+  width: 100%;
+}
+
+.clients-table-card > div {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ── Stats Cards ─────────────────────────────────────────── */
