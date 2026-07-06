@@ -51,7 +51,10 @@ public class ProcessoController {
 
     @GetMapping("/{id}")
     public Processo buscarPorId(@PathVariable Long id) {
-        return processoRepository.findById(id).orElse(null);
+        return processoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Processo nao encontrado."
+        ));
     }
 
     @GetMapping("/cliente/{clienteId}")
@@ -92,7 +95,10 @@ public class ProcessoController {
 
             return processoSalvo;
 
-        }).orElse(null);
+        }).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Processo nao encontrado."
+        ));
     }
 
     private void preencherProcesso(Processo processo, ProcessoRequest request) {
