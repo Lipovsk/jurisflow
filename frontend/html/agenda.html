@@ -123,6 +123,87 @@
       background: #fee2e2;
       transform: translateY(-1px);
     }
+    .btn-abrir-processo {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #F5F3FF;
+      color: #7C3AED;
+    }
+    .btn-abrir-processo:hover {
+      background: #EDE9FE;
+      transform: translateY(-1px);
+    }
+    .agenda-filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      background: var(--gray-50);
+    }
+    .agenda-filter {
+      height: 36px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: var(--gray-700);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      outline: none;
+      padding: 0 10px;
+    }
+    .agenda-filter[type="search"] {
+      min-width: 230px;
+      flex: 1;
+    }
+    .agenda-filter:focus {
+      border-color: var(--navy-light);
+    }
+    .origin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: .68rem;
+      font-weight: 700;
+    }
+    .origin-automatico {
+      background: #F5F3FF;
+      color: #7C3AED;
+    }
+    .origin-manual {
+      background: #EEF3FF;
+      color: #2563EB;
+    }
+    .origin-legado {
+      background: #F3F4F6;
+      color: #4B5563;
+    }
+    .state-box {
+      padding: 24px;
+      color: var(--gray-400);
+      font-size: .85rem;
+      text-align: center;
+    }
+    .state-box strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .state-box.error strong {
+      color: var(--red);
+    }
 
     @media (max-width:1100px) { .agenda-layout { grid-template-columns:1fr; } }
   </style>
@@ -535,7 +616,7 @@
         <div class="quick-deadlines">
           <div class="qd-header">
             <div class="qd-title">⚡ Próximos Prazos</div>
-            <div class="qd-sub">Esta semana</div>
+            <div class="qd-sub">Dados reais do backend</div>
           </div>
           <div id="prazosRapidosBody"></div>
         </div>
@@ -546,14 +627,37 @@
       <div class="timeline-card">
         <div class="timeline-header">
           <div>
-            <div class="timeline-title">Agenda da Semana</div>
-            <div class="timeline-sub">20 a 26 de Maio de 2026</div>
+            <div class="timeline-title">Compromissos cadastrados</div>
+            <div class="timeline-sub" id="agendaTimelineSub">Dados reais do backend</div>
           </div>
           <div class="tab-row">
             <button class="tab-btn active" onclick="filterTl('',this)">Todos</button>
             <button class="tab-btn" onclick="filterTl('audiencia',this)">Audiências</button>
             <button class="tab-btn" onclick="filterTl('prazo',this)">Prazos</button>
           </div>
+        </div>
+        <div class="agenda-filters">
+          <input class="agenda-filter" type="search" id="agendaBusca" placeholder="Buscar por titulo, descricao, cliente ou processo">
+          <select class="agenda-filter" id="agendaStatus">
+            <option value="">Todos os status</option>
+            <option value="agendado">Agendado</option>
+            <option value="andamento">Em andamento</option>
+            <option value="concluido">Concluido</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <select class="agenda-filter" id="agendaPrioridade">
+            <option value="">Todas as prioridades</option>
+            <option value="baixa">Baixa</option>
+            <option value="media">Media</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+          <select class="agenda-filter" id="agendaOrigem">
+            <option value="">Todas as origens</option>
+            <option value="manual">Manual</option>
+            <option value="automatico">Automatico</option>
+            <option value="legado">Legado</option>
+          </select>
         </div>
         <div class="timeline-body" id="tlBody"></div>
       </div>
@@ -817,699 +921,6 @@
 </div><!-- /dw-panel -->
 
 <script src="../js/dashboard.js"></script>
-<script>
-(function(){
-  let compromissos = [];
-
-  // Mini calendar
-  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  let curDate = new Date();
-
-  async function carregarCompromissos() {
-    try {
-      const response = await fetch('http://localhost:8080/compromissos');
-      compromissos = await response.json();
-
-      renderCal();
-      renderPrazosRapidos();
-      renderTimeline();
-
-    } catch (erro) {
-      console.error('Erro ao carregar compromissos:', erro);
-      renderCal();
-    }
-  }
-
-  function renderCal(){
-    document.getElementById('calMonth').textContent = months[curDate.getMonth()] + ' ' + curDate.getFullYear();
-    const first = new Date(curDate.getFullYear(), curDate.getMonth(), 1).getDay();
-    const total = new Date(curDate.getFullYear(), curDate.getMonth()+1, 0).getDate();
-    const today = new Date();
-    let html = '';
-    for(let i=0;i<first;i++) html += `<div class="cal-day other-month">${new Date(curDate.getFullYear(),curDate.getMonth(),-(first-1-i)).getDate()}</div>`;
-    for(let d=1;d<=total;d++){
-      const isToday = d===today.getDate() && curDate.getMonth()===today.getMonth() && curDate.getFullYear()===today.getFullYear();
-      const hasEv = compromissos.some(c => {
-        if (!c.data) return false;
-
-        const dataComp = new Date(c.data + 'T00:00:00');
-
-        return (
-          dataComp.getDate() === d &&
-          dataComp.getMonth() === curDate.getMonth() &&
-          dataComp.getFullYear() === curDate.getFullYear()
-        );
-      });
-      html += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}">${d}</div>`;
-    }
-    document.getElementById('calDays').innerHTML = html;
-    document.querySelectorAll('.cal-day:not(.other-month)').forEach(el=>{
-      el.addEventListener('click',()=>{
-        document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
-        if(!el.classList.contains('today')) el.classList.add('selected');
-      });
-    });
-  }
-  document.getElementById('calPrev').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()-1); renderCal(); });
-  document.getElementById('calNext').addEventListener('click',()=>{ curDate.setMonth(curDate.getMonth()+1); renderCal(); });
-
-  // ── Drawer: Novo Compromisso ────────────────────────────
-  (function(){
-    const overlay  = document.getElementById('dwOverlay');
-    const drawer   = document.getElementById('ncDrawer');
-    const btnOpen  = document.getElementById('btnNovoCompromisso');
-    const btnClose = document.getElementById('dwClose');
-
-    function openDrawer() {
-      overlay.classList.add('open');
-      drawer.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => document.getElementById('ncTitulo')?.focus(), 80);
-    }
-    function closeDrawer() {
-      overlay.classList.remove('open');
-      drawer.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    btnOpen.addEventListener('click', openDrawer);
-    btnClose.addEventListener('click', closeDrawer);
-    document.getElementById('dwCancel').addEventListener('click', closeDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeDrawer();
-      if (e.altKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); openDrawer(); }
-    });
-
-    // ── Type selection ──────────────────────────────────
-    const typeIcons = { audiencia:'📋', prazo:'⏰', reuniao:'🤝', lembrete:'🔔', tarefa:'✅', protocolo:'📄' };
-    document.querySelectorAll('.nc-type').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nc-type').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const icon = typeIcons[btn.dataset.type] || '📋';
-        document.getElementById('dwHeaderIcon').textContent = icon;
-        updateSummary();
-      });
-    });
-
-    // ── Priority ─────────────────────────────────────────
-    document.querySelectorAll('.nc-pri').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nc-pri').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('ncPrioridade').value = btn.dataset.p;
-        updateSummary();
-      });
-    });
-
-    // ── Status ───────────────────────────────────────────
-    document.querySelectorAll('.nc-stat').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nc-stat').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('ncStatus').value = btn.dataset.s;
-        updateSummary();
-      });
-    });
-
-    // ── Dia inteiro toggle ────────────────────────────────
-    document.getElementById('ncDiaInteiro').addEventListener('change', function() {
-      document.getElementById('ncHoraInicioWrap').style.display = this.checked ? 'none' : '';
-      document.getElementById('ncHoraFimWrap').style.display    = this.checked ? 'none' : '';
-      updateSummary();
-    });
-
-    // ── Lembrete toggle ───────────────────────────────────
-    document.getElementById('ncLembreteToggle').addEventListener('change', function() {
-      document.getElementById('ncLembreteOptions').style.display = this.checked ? '' : 'none';
-    });
-
-    // ── Add reminder ──────────────────────────────────────
-    document.getElementById('ncAddReminder').addEventListener('click', () => {
-      const list = document.getElementById('ncReminderList');
-      const item = document.createElement('div');
-      item.className = 'nc-reminder-item';
-      item.innerHTML = `
-        <select class="dw-input" style="flex:1;">
-          <option value="15m">15 minutos antes</option>
-          <option value="1h">1 hora antes</option>
-          <option value="1d" selected>1 dia antes</option>
-          <option value="3d">3 dias antes</option>
-          <option value="7d">7 dias antes</option>
-        </select>
-        <button type="button" class="nc-reminder-del" onclick="this.closest('.nc-reminder-item').remove()">✕</button>
-      `;
-      list.appendChild(item);
-    });
-
-    // ── Client Autocomplete ───────────────────────────────
-    
-let CLIENTS_NC = [];
-
-async function carregarClientesAgenda() {
-  try {
-    const response = await fetch("http://localhost:8080/clientes");
-
-    CLIENTS_NC = await response.json();
-
-    CLIENTS_NC = CLIENTS_NC.map(c => ({
-      id: c.id,
-      nome: c.nome,
-      cpf: c.cpfCnpj || '',
-      ini: c.nome
-        .split(' ')
-        .map(n => n[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    }));
-
-  } catch (error) {
-    console.error("Erro ao carregar clientes:", error);
-  }
-}
-
-carregarClientesAgenda();
-    const clientInput = document.getElementById('ncClienteBusca');
-    const acDrop      = document.getElementById('ncAcDrop');
-
-    clientInput.addEventListener('input', () => {
-      const q = clientInput.value.trim().toLowerCase();
-      if (!q) { acDrop.classList.remove('active'); return; }
-      const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
-      const hits = CLIENTS_NC.filter(c => c.nome.toLowerCase().includes(q) || c.cpf.includes(q));
-      acDrop.innerHTML = hits.length
-        ? hits.map(c => `<div class="nc-ac-item" data-id="${c.id}" data-nome="${c.nome}"><div class="nc-ac-av">${c.ini}</div><div><div class="nc-ac-name">${c.nome.replace(re,'<mark>$1</mark>')}</div><div class="nc-ac-cpf">${c.cpf}</div></div></div>`).join('')
-        : `<div class="nc-ac-empty">Nenhum cliente encontrado</div>`;
-      acDrop.querySelectorAll('.nc-ac-item').forEach(item => {
-        item.addEventListener('mousedown', e => {
-          e.preventDefault();
-          clientInput.value = item.dataset.nome;
-          document.getElementById('ncClienteId').value = item.dataset.id;
-          acDrop.classList.remove('active');
-          updateSummary();
-        });
-      });
-      acDrop.classList.add('active');
-    });
-    clientInput.addEventListener('blur', () => setTimeout(() => acDrop.classList.remove('active'), 160));
-
-    // ── File Upload ───────────────────────────────────────
-    const uploadZone = document.getElementById('ncUploadZone');
-    const fileInput  = document.getElementById('ncFileInput');
-    const fileList   = document.getElementById('ncFileList');
-    document.getElementById('ncUploadBtn').addEventListener('click', () => fileInput.click());
-    uploadZone.addEventListener('click', e => { if (!e.target.closest('.nc-upload-btn')) fileInput.click(); });
-    uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-    uploadZone.addEventListener('drop', e => {
-      e.preventDefault(); uploadZone.classList.remove('drag-over');
-      addNcFiles([...e.dataTransfer.files]);
-    });
-    fileInput.addEventListener('change', () => { addNcFiles([...fileInput.files]); fileInput.value = ''; });
-
-    function addNcFiles(files) {
-      files.forEach(file => {
-        if (file.size > 10*1024*1024) { window.JurisFlow?.showToast(`"${file.name}" excede 10 MB.`, 'warning'); return; }
-        const ext  = file.name.split('.').pop().toUpperCase();
-        const icons = { PDF:'📕', DOC:'📘', DOCX:'📘', JPG:'🖼', JPEG:'🖼', PNG:'🖼' };
-        const icon = icons[ext] || '📎';
-        const size = file.size < 1024*1024 ? `${(file.size/1024).toFixed(0)} KB` : `${(file.size/1024/1024).toFixed(1)} MB`;
-        const item = document.createElement('div');
-        item.className = 'nc-file-item';
-        item.innerHTML = `<div class="nc-file-ico">${icon}</div><div class="nc-file-info"><div class="nc-file-name">${file.name}</div><div class="nc-file-meta">${ext} · ${size}</div></div><button class="nc-file-del" title="Remover">✕</button>`;
-        item.querySelector('.nc-file-del').addEventListener('click', () => item.remove());
-        fileList.appendChild(item);
-      });
-    }
-
-    // ── Char Counter ──────────────────────────────────────
-    const obsTA  = document.getElementById('ncObs');
-    const obsCtr = document.getElementById('ncObsCount');
-    obsTA.addEventListener('input', () => {
-      if (obsTA.value.length > 600) obsTA.value = obsTA.value.substring(0, 600);
-      obsCtr.textContent = obsTA.value.length;
-      obsCtr.style.color = obsTA.value.length > 500 ? 'var(--amber)' : 'var(--gray-400)';
-    });
-
-    // ── Live Summary ──────────────────────────────────────
-    ['ncTitulo','ncClienteBusca','ncProcesso','ncData','ncHoraInicio'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input',  updateSummary);
-      document.getElementById(id)?.addEventListener('change', updateSummary);
-    });
-
-    const TYPE_COLORS = {
-      audiencia: { bg:'var(--blue-soft)',           txt:'var(--blue-accent)' },
-      prazo:     { bg:'var(--red-soft)',             txt:'var(--red)' },
-      reuniao:   { bg:'rgba(201,168,76,.12)',        txt:'#8a6d1a' },
-      lembrete:  { bg:'var(--amber-soft)',           txt:'#b45309' },
-      tarefa:    { bg:'var(--green-soft)',           txt:'#065f46' },
-      protocolo: { bg:'#F5F3FF',                    txt:'#7C3AED' },
-    };
-    const PRI_COLORS = { baixa:'#065f46', media:'var(--blue-accent)', alta:'#b45309', urgente:'var(--red)' };
-    const PRI_NAMES  = { baixa:'🟢 Baixa', media:'🔵 Média', alta:'🟡 Alta', urgente:'🔴 Urgente' };
-    const STAT_NAMES = { agendado:'Agendado', andamento:'Em Andamento', concluido:'Concluído', cancelado:'Cancelado' };
-
-    function updateSummary() {
-      const titulo   = document.getElementById('ncTitulo').value.trim();
-      const cliente  = document.getElementById('ncClienteBusca').value.trim();
-      const processo = document.getElementById('ncProcesso').value.trim();
-      const data     = document.getElementById('ncData').value;
-      const hora     = document.getElementById('ncHoraInicio').value;
-      const pri      = document.getElementById('ncPrioridade').value;
-      const status   = document.getElementById('ncStatus').value;
-      const diaInt   = document.getElementById('ncDiaInteiro').checked;
-      const tipo     = document.querySelector('.nc-type.active');
-
-      const hint    = document.getElementById('dwsHint');
-      const content = document.getElementById('dwsSummaryContent');
-
-      if (!titulo && !cliente && !data) {
-        hint.style.display = ''; content.style.display = 'none'; return;
-      }
-      hint.style.display = 'none'; content.style.display = 'flex';
-
-      // Badge
-      if (tipo) {
-        const t = tipo.dataset.type;
-        const c = TYPE_COLORS[t] || TYPE_COLORS.audiencia;
-        const icon = typeIcons[t] || '📋';
-        const name = tipo.querySelector('.nc-type-name').textContent;
-        document.getElementById('dwsBadgeWrap').innerHTML =
-          `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:.73rem;font-weight:600;background:${c.bg};color:${c.txt}">${icon} ${name}</span>`;
-      }
-
-      // Rows
-      const rows = [];
-      if (titulo)    rows.push({ l:'Título',     v: titulo.length > 28 ? titulo.substring(0,28)+'…' : titulo });
-      if (cliente)   rows.push({ l:'Cliente',    v: cliente });
-      if (processo)  rows.push({ l:'Processo',   v: processo });
-      if (data) {
-        const d = new Date(data + 'T00:00:00');
-        rows.push({ l:'Data', v: d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) });
-      }
-      if (!diaInt && hora) rows.push({ l:'Horário', v: hora });
-      if (pri)    rows.push({ l:'Prioridade', v: PRI_NAMES[pri], color: PRI_COLORS[pri] });
-      if (status) rows.push({ l:'Status',     v: STAT_NAMES[status] });
-
-      document.getElementById('dwsRows').innerHTML = rows.map((r, i) =>
-        `${i > 0 ? '<div class="dws-sep"></div>' : ''}<div class="dws-item"><div class="dws-rlabel">${r.l}</div><div class="dws-rvalue"${r.color ? ` style="color:${r.color};font-weight:600"` : ''}>${r.v}</div></div>`
-      ).join('');
-    }
-
-    // ── Save ──────────────────────────────────────────────
-    function resetForm() {
-      ['ncTitulo','ncClienteBusca','ncClienteId','ncProcesso','ncDescricao','ncData','ncLocal','ncCidade','ncLink','ncTribunal','ncSala','ncObs']
-        .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-      document.getElementById('ncFileList').innerHTML = '';
-      document.getElementById('ncHoraInicio').value = '09:00';
-      document.getElementById('ncHoraFim').value    = '10:00';
-      document.querySelectorAll('.nc-type').forEach((b,i) => b.classList.toggle('active', i===0));
-      document.getElementById('dwHeaderIcon').textContent = '📋';
-      document.querySelectorAll('.nc-pri').forEach((b,i)  => b.classList.toggle('active', i===1));
-      document.querySelectorAll('.nc-stat').forEach((b,i) => b.classList.toggle('active', i===0));
-      document.getElementById('ncPrioridade').value = 'media';
-      document.getElementById('ncStatus').value     = 'agendado';
-      document.getElementById('ncDiaInteiro').checked = false;
-      document.getElementById('ncHoraInicioWrap').style.display = '';
-      document.getElementById('ncHoraFimWrap').style.display    = '';
-      obsCtr.textContent = '0'; obsCtr.style.color = 'var(--gray-400)';
-      updateSummary();
-    }
-
-   async function doSave(createAnother) {
-  const titulo = document.getElementById('ncTitulo').value.trim();
-  const data = document.getElementById('ncData').value;
-  const saveBtn = document.getElementById('dwSave');
-
-  if (!titulo) {
-    document.getElementById('ncTitulo').classList.add('error');
-    document.getElementById('ncTitulo').focus();
-    window.JurisFlow?.showToast('Preencha o título do compromisso.', 'warning');
-    return;
-  }
-
-  if (!data) {
-    document.getElementById('ncData').classList.add('error');
-    document.getElementById('ncData').focus();
-    window.JurisFlow?.showToast('Selecione a data do compromisso.', 'warning');
-    return;
-  }
-
-  const compromisso = {
-    titulo: titulo,
-    tipo: document.querySelector('.nc-type.active')?.dataset.type || 'audiencia',
-    data: data,
-    hora: document.getElementById('ncDiaInteiro').checked ? '' : document.getElementById('ncHoraInicio').value,
-    descricao: document.getElementById('ncDescricao').value.trim(),
-    status: document.getElementById('ncStatus').value,
-    prioridade: document.getElementById('ncPrioridade').value,
-    clienteId: Number(document.getElementById('ncClienteId').value) || null,
-    processoId: null
-  };
-
-  try {
-    saveBtn.disabled = true;
-    saveBtn.querySelector('.dwf-save-text').textContent = 'Salvando…';
-
-    const response = await fetch('http://localhost:8080/compromissos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(compromisso)
-    });
-
-    if (!response.ok) {
-      throw new Error('Erro ao salvar compromisso');
-    }
-
-    window.JurisFlow?.showToast(`"${titulo}" salvo no backend!`, 'success');
-
-    if (createAnother) {
-      resetForm();
-    } else {
-      closeDrawer();
-    }
-
-    await carregarCompromissos();
-
-  } catch (error) {
-    console.error(error);
-    window.JurisFlow?.showToast('Erro ao salvar compromisso no backend.', 'error');
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.querySelector('.dwf-save-text').textContent = '✓ Salvar Compromisso';
-  }
-}
-
-    document.getElementById('dwSave').addEventListener('click',      () => doSave(false));
-    document.getElementById('dwSaveOther').addEventListener('click', () => doSave(true));
-
-    // Remove error class on input
-    document.getElementById('ncTitulo').addEventListener('input', () =>
-      document.getElementById('ncTitulo').classList.remove('error'));
-    document.getElementById('ncData').addEventListener('change', () =>
-      document.getElementById('ncData').classList.remove('error'));
-  })();
-
-  function filterTl(tipo, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => {
-      b.classList.remove('active');
-    });
-
-    btn.classList.add('active');
-
-    renderTimeline(tipo);
-  }
-
-  window.filterTl = filterTl;
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  function parseCompromissoDate(data) {
-    return data ? new Date(data + 'T00:00:00') : null;
-  }
-
-  function formatarDataCurta(data) {
-    const date = parseCompromissoDate(data);
-    return date
-      ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-      : 'Sem data';
-  }
-
-  function formatarDataTimeline(c) {
-    const date = parseCompromissoDate(c.data);
-    const label = date
-      ? date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long' })
-      : 'Sem data';
-    return `${label}${c.hora ? ' · ' + c.hora : ''}`;
-  }
-
-  function tipoNormalizado(tipo) {
-    return String(tipo || 'compromisso').toLowerCase();
-  }
-
-  function tipoLabel(tipo) {
-    const labels = {
-      audiencia: 'Audiência',
-      prazo: 'Prazo',
-      reuniao: 'Reunião',
-      lembrete: 'Lembrete',
-      tarefa: 'Tarefa',
-      protocolo: 'Protocolo'
-    };
-    return labels[tipoNormalizado(tipo)] || 'Compromisso';
-  }
-
-  function corPorTipo(c) {
-    const tipo = tipoNormalizado(c.tipo);
-    if (tipo === 'prazo') return 'red';
-    if (tipo === 'lembrete') return 'gold';
-    if (tipo === 'tarefa') return 'green';
-    if (c.prioridade === 'urgente') return 'red';
-    return 'blue';
-  }
-
-  function iconePorTipo(tipo) {
-    const icons = {
-      audiencia: '📋',
-      prazo: '⏰',
-      reuniao: '🤝',
-      lembrete: '🔔',
-      tarefa: '✅',
-      protocolo: '📄'
-    };
-    return icons[tipoNormalizado(tipo)] || '📌';
-  }
-
-  function renderPrazosRapidos() {
-    const box = document.getElementById('prazosRapidosBody');
-    if (!box) return;
-
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const prazos = compromissos
-      .filter(c => c.tipo === 'prazo')
-      .filter(c => c.data)
-      .sort((a, b) => new Date(a.data) - new Date(b.data))
-      .slice(0, 5);
-
-    if (!prazos.length) {
-      box.innerHTML = `
-        <div style="padding:18px 20px;color:var(--gray-400);font-size:.82rem;">
-          Nenhum prazo cadastrado.
-        </div>
-      `;
-      return;
-    }
-
-    box.innerHTML = prazos.map(c => {
-      const data = new Date(c.data + 'T00:00:00');
-      const diff = Math.ceil((data - hoje) / 86400000);
-
-      const label =
-        diff === 0 ? 'Hoje' :
-        diff === 1 ? 'Amanhã' :
-        data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
-      const cor =
-        diff <= 0 ? '#DC2626' :
-        diff <= 3 ? '#D97706' :
-        '#2563EB';
-
-      const bg =
-        diff <= 0 ? '#FEF2F2' :
-        diff <= 3 ? '#FFFBEB' :
-        '#EEF3FF';
-
-      return `
-        <div class="deadline-item">
-          <div class="dl-strip" style="background:${cor};"></div>
-          <div class="dl-info">
-            <div class="dl-title">${c.titulo || 'Prazo sem título'}</div>
-            <div class="dl-client">${c.cliente?.nome || 'Cliente não informado'}</div>
-          </div>
-          <div class="dl-date" style="background:${bg};color:${cor};">${label}</div>
-        </div>
-      `;
-    }).join('');
-  }
-  function renderTimeline(filtro = '') {
-    const box = document.getElementById('tlBody');
-    if (!box) return;
-
-    let lista = [...compromissos]
-      .filter(c => c.data)
-      .sort((a, b) => new Date(a.data) - new Date(b.data));
-
-    if (filtro) {
-      lista = lista.filter(c => c.tipo === filtro);
-    }
-
-    if (!lista.length) {
-      box.innerHTML = `
-        <div style="padding:24px;color:var(--gray-400);font-size:.85rem;">
-          Nenhum compromisso encontrado.
-        </div>
-      `;
-      return;
-    }
-
-    box.innerHTML = lista.map(c => {
-      const tipo = c.tipo || 'lembrete';
-
-      const dotClass =
-        tipo === 'prazo' ? 'red' :
-        tipo === 'audiencia' ? 'blue' :
-        tipo === 'reuniao' ? 'gold' :
-        tipo === 'tarefa' ? 'green' :
-        'amber';
-
-      const icon =
-        tipo === 'prazo' ? '⏰' :
-        tipo === 'audiencia' ? '📋' :
-        tipo === 'reuniao' ? '🤝' :
-        tipo === 'tarefa' ? '✅' :
-        '🔔';
-
-      const tipoLabel =
-        tipo === 'prazo' ? 'Prazo' :
-        tipo === 'audiencia' ? 'Audiência' :
-        tipo === 'reuniao' ? 'Reunião' :
-        tipo === 'tarefa' ? 'Tarefa' :
-        'Lembrete';
-
-      const dataFormatada = new Date(c.data + 'T00:00:00')
-        .toLocaleDateString('pt-BR', {
-          weekday: 'long',
-          day: '2-digit',
-          month: 'long'
-        });
-
-      return `
-        <div class="tl-item" data-tipo="${tipoLabel}">
-          <div class="tl-left">
-            <div class="tl-dot ${dotClass}">${icon}</div>
-            <div class="tl-line"></div>
-          </div>
-
-          <div class="tl-content">
-            <div class="tl-date-tag">
-              ${dataFormatada} · ${c.hora || 'Dia inteiro'}
-            </div>
-
-            <div class="tl-event-title">
-              ${c.titulo || 'Compromisso sem título'}
-            </div>
-
-            <div class="tl-event-detail">
-              ${c.cliente?.nome ? 'Cliente: ' + c.cliente.nome : ''}
-              ${c.processo?.numero ? ' · Processo: ' + c.processo.numero : ''}
-            </div>
-
-            <div class="tl-tags">
-              <span class="tl-tag ${dotClass}">${tipoLabel}</span>
-              <span class="tl-tag ${dotClass}">${c.status || 'agendado'}</span>
-            </div>
-
-            <div class="tl-actions">
-              <button
-                type="button"
-                class="btn-concluir-compromisso"
-                data-id="${c.id}">
-                ✓ Concluir
-              </button>
-
-              <button
-                type="button"
-                class="btn-excluir-compromisso"
-                data-id="${c.id}">
-                🗑 Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  async function concluirCompromisso(id) {
-    try {
-      const responseGet = await fetch(`http://localhost:8080/compromissos/${id}`);
-      const compromisso = await responseGet.json();
-
-      const responsePut = await fetch(`http://localhost:8080/compromissos/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...compromisso,
-          clienteId: compromisso.cliente?.id,
-          processoId: compromisso.processo?.id,
-          status: 'concluido'
-        })
-      });
-
-      if (!responsePut.ok) {
-        throw new Error('Erro ao concluir compromisso');
-      }
-
-      window.JurisFlow?.showToast('Compromisso concluído com sucesso.', 'success');
-      carregarCompromissos();
-
-    } catch (erro) {
-      console.error(erro);
-      window.JurisFlow?.showToast('Erro ao concluir compromisso.', 'error');
-    }
-  }
-
-  async function excluirCompromisso(id) {
-    if (!confirm('Deseja realmente excluir este compromisso?')) return;
-
-    try {
-      const response = await fetch(`http://localhost:8080/compromissos/${id}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao excluir compromisso');
-      }
-
-      window.JurisFlow?.showToast('Compromisso excluído com sucesso.', 'success');
-      carregarCompromissos();
-
-    } catch (erro) {
-      console.error(erro);
-      window.JurisFlow?.showToast('Erro ao excluir compromisso.', 'error');
-    }
-  }
-
-  document.getElementById('tlBody').addEventListener('click', function(e) {
-    const concluir = e.target.closest('.btn-concluir-compromisso');
-    if (concluir) {
-      concluirCompromisso(concluir.dataset.id);
-      return;
-    }
-
-    const excluir = e.target.closest('.btn-excluir-compromisso');
-    if (excluir) {
-      excluirCompromisso(excluir.dataset.id);
-      return;
-    }
-  });
-
-  carregarCompromissos();
-})();
-</script>
+<script src="../js/agenda.js"></script>
 </body>
 </html>
