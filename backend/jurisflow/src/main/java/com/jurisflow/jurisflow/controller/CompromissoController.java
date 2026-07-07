@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/compromissos")
-@CrossOrigin(origins = "*")
 public class CompromissoController {
 
     private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =

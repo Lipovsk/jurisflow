@@ -212,7 +212,12 @@ function initLogout() {
   $$('[data-action="logout"]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (confirm('Deseja sair do JurisFlow?')) {
-        window.location.href = 'index.html';
+        if (window.JurisFlowAuth?.logout) {
+          window.JurisFlowAuth.logout();
+        } else {
+          sessionStorage.clear();
+          window.location.href = 'login.html';
+        }
       }
     });
   });
@@ -583,9 +588,7 @@ const API = {
 
   async get(endpoint) {
     try {
-      const res = await fetch(`${this.BASE_URL}${endpoint}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('jurisflow_token')}` },
-      });
+      const res = await fetch(`${this.BASE_URL}${endpoint}`);
       if (!res.ok) throw new Error(res.statusText);
       return res.json();
     } catch (err) {
@@ -600,7 +603,6 @@ const API = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('jurisflow_token')}`,
         },
         body: JSON.stringify(body),
       });

@@ -18,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/processos")
-@CrossOrigin(origins = "*")
 public class ProcessoController {
 
     private static final String PROCESSO_COM_VINCULOS_MANUAIS =

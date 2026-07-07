@@ -17,7 +17,6 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/honorarios")
-@CrossOrigin(origins = "*")
 public class HonorarioController {
 
     private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =

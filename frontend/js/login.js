@@ -40,6 +40,22 @@
     msgEl.textContent = '';
   }
 
+  function paginaInicialPreferida() {
+    try {
+      const preferencias = JSON.parse(localStorage.getItem('jurisflow_preferencias_v1') || '{}');
+      const pagina = preferencias?.paginaInicial;
+      const permitidas = new Set(['dashboard.html', 'clientes.html', 'processos.html', 'agenda.html', 'honorarios.html', 'financeiro.html']);
+      return permitidas.has(pagina) ? pagina : 'dashboard.html';
+    } catch {
+      return 'dashboard.html';
+    }
+  }
+
+  async function lerErroApi(response) {
+    const body = await response.json().catch(() => null);
+    return body?.message || body?.erro || body?.error || 'E-mail ou senha inválidos.';
+  }
+
   // Live validation
   emailInput.addEventListener('input', () => {
     if (emailInput.value && !isValidEmail(emailInput.value)) {
@@ -103,10 +119,9 @@
     btnLogin.disabled = true;
 
     try {
-      // Simula chamada à API — substituir por fetch real ao Spring Boot
-      await simulateLogin(emailInput.value.trim(), passInput.value);
-      // Redireciona para o dashboard
-      window.location.href = 'dashboard.html';
+      const data = await autenticar(emailInput.value.trim(), passInput.value);
+      window.JurisFlowAuth.salvarSessao(data);
+      window.location.href = paginaInicialPreferida();
     } catch (err) {
       btnLogin.classList.remove('loading');
       btnLogin.disabled = false;
@@ -115,28 +130,25 @@
     }
   });
 
-  /**
-   * Autenticação: tenta chamar o backend real. Se o endpoint não existir
-   * ou ocorrer erro de rede, retorna erro informativo sem usar credenciais demo.
-   */
-  async function simulateLogin(email, password) {
+  async function autenticar(email, senha) {
     try {
       const res = await fetch('http://localhost:8080/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, senha })
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.message || 'E-mail ou senha incorretos.');
+        throw new Error(await lerErroApi(res));
       }
 
       const data = await res.json();
-      if (data?.token) localStorage.setItem('jurisflow_token', data.token);
+      if (!data?.token || !data?.usuario) {
+        throw new Error('Resposta de autenticação inválida.');
+      }
       return data;
     } catch (err) {
-      throw new Error('Serviço de autenticação indisponível. Verifique o backend.');
+      throw new Error(err.message || 'Serviço de autenticação indisponível. Verifique o backend.');
     }
   }
 
@@ -171,15 +183,8 @@
       return;
     }
     forgotEmail.classList.remove('error-field');
-    btnForgot.classList.add('loading');
-    btnForgot.disabled = true;
-
-    await new Promise(r => setTimeout(r, 1200));
-
-    btnForgot.classList.remove('loading');
+    modalSuccess.querySelector('span').textContent = 'Recuperação de senha ainda não está disponível.';
     modalSuccess.classList.add('show');
-
-    setTimeout(closeModal, 3000);
   });
 
 })();

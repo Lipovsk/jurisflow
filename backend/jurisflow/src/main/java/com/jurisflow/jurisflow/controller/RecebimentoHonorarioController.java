@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/recebimentos")
-@CrossOrigin(origins = "*")
 public class RecebimentoHonorarioController {
 
     private final RecebimentoHonorarioService recebimentoHonorarioService;

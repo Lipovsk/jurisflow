@@ -1,91 +1,95 @@
 package com.jurisflow.jurisflow.controller;
 
-import org.springframework.http.HttpStatus;
+import com.jurisflow.jurisflow.model.PerfilUsuario;
+import com.jurisflow.jurisflow.model.Usuario;
+import com.jurisflow.jurisflow.security.UsuarioAutenticado;
+import com.jurisflow.jurisflow.service.AutenticacaoService;
+import com.jurisflow.jurisflow.service.AutenticacaoService.LoginResult;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-import java.util.regex.Pattern;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private final AutenticacaoService autenticacaoService;
+
+    public AuthController(AutenticacaoService autenticacaoService) {
+        this.autenticacaoService = autenticacaoService;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        if (request == null || request.getEmail() == null || request.getPassword() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new LoginResponse(null, "E-mail e senha são obrigatórios."));
-        }
-
-        String email = request.getEmail().trim();
-        String password = request.getPassword();
-
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new LoginResponse(null, "Informe um e-mail válido."));
-        }
-
-        if (password.length() < 6) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new LoginResponse(null, "A senha deve ter ao menos 6 caracteres."));
-        }
-
-        String token = UUID.randomUUID().toString();
-        return ResponseEntity.ok(new LoginResponse(token, null));
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResult result = autenticacaoService.autenticar(request.email(), request.senhaNormalizada());
+        Usuario usuario = result.usuario();
+        return ResponseEntity.ok(new LoginResponse(
+                result.token().token(),
+                "Bearer",
+                result.token().expiresAt(),
+                UsuarioResponse.from(usuario)
+        ));
     }
 
-    public static class LoginRequest {
-        private String email;
-        private String password;
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> me(Authentication authentication) {
+        UsuarioAutenticado principal = (UsuarioAutenticado) authentication.getPrincipal();
+        return ResponseEntity.ok(new MeResponse(
+                principal.id(),
+                principal.nome(),
+                principal.email(),
+                principal.perfil(),
+                principal.ativo()
+        ));
+    }
 
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
+    public record LoginRequest(
+            @NotBlank @Email String email,
+            String senha,
+            String password
+    ) {
+        String senhaNormalizada() {
+            return senha != null ? senha : password;
         }
     }
 
-    public static class LoginResponse {
-        private String token;
-        private String message;
+    public record LoginResponse(
+            String token,
+            String tokenType,
+            Instant expiresAt,
+            UsuarioResponse usuario
+    ) {}
 
-        public LoginResponse(String token, String message) {
-            this.token = token;
-            this.message = message;
-        }
-
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
+    public record UsuarioResponse(
+            Long id,
+            String nome,
+            String email,
+            PerfilUsuario perfil
+    ) {
+        static UsuarioResponse from(Usuario usuario) {
+            return new UsuarioResponse(
+                    usuario.getId(),
+                    usuario.getNome(),
+                    usuario.getEmail(),
+                    usuario.getPerfil()
+            );
         }
     }
+
+    public record MeResponse(
+            Long id,
+            String nome,
+            String email,
+            PerfilUsuario perfil,
+            boolean ativo
+    ) {}
 }
