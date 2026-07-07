@@ -188,6 +188,19 @@
       pointer-events: none;
     }
 
+    .toolbar-select {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: var(--gray-700);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      outline: none;
+    }
+
     .hon-table-card {
       background: var(--white);
       border: 1px solid var(--gray-100);
@@ -344,6 +357,32 @@
       color: #DC2626;
     }
 
+    .origin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .origin-manual {
+      background: #EEF3FF;
+      color: #2563EB;
+    }
+
+    .origin-automatico {
+      background: #F5F3FF;
+      color: #7C3AED;
+    }
+
+    .origin-legado {
+      background: #F3F4F6;
+      color: #4B5563;
+    }
+
     .actions-cell {
       display: flex;
       align-items: center;
@@ -401,19 +440,34 @@
       background: #FEF2F2;
     }
 
+    .btn-open {
+      color: #7C3AED;
+      border-color: #DDD6FE;
+    }
+
+    .btn-open:hover {
+      background: #F5F3FF;
+    }
+
     .empty-state,
-    .loading-state {
+    .loading-state,
+    .error-state {
       padding: 54px 20px;
       text-align: center;
       color: var(--gray-400);
     }
 
     .empty-state strong,
-    .loading-state strong {
+    .loading-state strong,
+    .error-state strong {
       display: block;
       margin-bottom: 6px;
       color: var(--navy);
       font-size: .95rem;
+    }
+
+    .error-state strong {
+      color: #DC2626;
     }
 
     .modal-overlay {
@@ -438,7 +492,7 @@
 
     .modal-box {
       width: 100%;
-      max-width: 560px;
+      max-width: 760px;
       background: var(--white);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
@@ -487,6 +541,8 @@
 
     .modal-body {
       padding: 20px 22px;
+      max-height: min(70vh, 720px);
+      overflow-y: auto;
     }
 
     .form-grid {
@@ -532,6 +588,12 @@
       min-height: 88px;
       padding-top: 10px;
       resize: vertical;
+    }
+
+    .field input[readonly] {
+      background: var(--gray-50);
+      color: var(--gray-500);
+      cursor: not-allowed;
     }
 
     .field input:focus,
@@ -701,9 +763,15 @@
         <button class="filter-tab" type="button" data-filter="pendente">Pendentes</button>
         <button class="filter-tab" type="button" data-filter="inadimplente">Inadimplentes</button>
       </div>
+      <select class="toolbar-select" id="origemFilter" aria-label="Filtrar por origem">
+        <option value="todos">Todas as origens</option>
+        <option value="manual">Manual</option>
+        <option value="automatico">Automatico do processo</option>
+        <option value="legado">Legado</option>
+      </select>
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="search" id="searchInput" placeholder="Buscar por cliente ou número do processo">
+        <input type="search" id="searchInput" placeholder="Buscar por cliente, processo, descricao ou responsavel">
       </div>
     </section>
 
@@ -721,16 +789,18 @@
               <th>Cliente</th>
               <th>Processo</th>
               <th>Tipo de Honorário</th>
-              <th>Valor</th>
+              <th>Valores</th>
               <th>Competência</th>
               <th>Forma de Pagamento</th>
+              <th>Origem</th>
+              <th>Cadastro</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="honorariosBody">
             <tr>
-              <td colspan="8">
+              <td colspan="10">
                 <div class="loading-state">
                   <strong>Carregando honorários</strong>
                   <span>Buscando dados reais no backend.</span>
@@ -756,21 +826,11 @@
     <form id="editForm">
       <div class="modal-body">
         <div class="form-grid">
+          <input id="editClienteId" type="hidden">
+          <input id="editProcessoId" type="hidden">
           <div class="field">
             <label for="editTipo">Tipo de Honorário</label>
             <input id="editTipo" type="text" required>
-          </div>
-          <div class="field">
-            <label for="editValor">Valor</label>
-            <input id="editValor" type="number" min="0" step="0.01" required>
-          </div>
-          <div class="field">
-            <label for="editCompetencia">Competência</label>
-            <input id="editCompetencia" type="month">
-          </div>
-          <div class="field">
-            <label for="editForma">Forma de Pagamento</label>
-            <input id="editForma" type="text">
           </div>
           <div class="field">
             <label for="editStatus">Status</label>
@@ -780,9 +840,49 @@
               <option value="inadimplente">Inadimplente</option>
             </select>
           </div>
+          <div class="field">
+            <label for="editValorBruto">Valor Bruto</label>
+            <input id="editValorBruto" type="text" inputmode="decimal" required>
+          </div>
+          <div class="field">
+            <label for="editDesconto">Desconto</label>
+            <input id="editDesconto" type="text" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="editAcrescimos">Acrescimos</label>
+            <input id="editAcrescimos" type="text" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="editValorTotal">Valor Total</label>
+            <input id="editValorTotal" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="editCompetencia">Competência</label>
+            <input id="editCompetencia" type="text" placeholder="AAAA-MM">
+          </div>
+          <div class="field">
+            <label for="editForma">Forma de Pagamento</label>
+            <input id="editForma" type="text">
+          </div>
+          <div class="field">
+            <label for="editResponsavel">Responsavel</label>
+            <input id="editResponsavel" type="text">
+          </div>
+          <div class="field">
+            <label for="editClienteNome">Cliente</label>
+            <input id="editClienteNome" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="editProcessoNumero">Processo</label>
+            <input id="editProcessoNumero" type="text" readonly>
+          </div>
           <div class="field full">
             <label for="editDescricao">Descrição</label>
             <textarea id="editDescricao"></textarea>
+          </div>
+          <div class="field full">
+            <label for="editObservacoes">Observacoes Internas</label>
+            <textarea id="editObservacoes"></textarea>
           </div>
         </div>
       </div>
@@ -796,348 +896,7 @@
 
 <script src="../js/storage.js"></script>
 <script src="../js/dashboard.js"></script>
-<script>
-(() => {
-  const API_BASE = 'http://localhost:8080';
+<script src="../js/honorarios.js"></script>
 
-  let honorarios = [];
-  let filtroAtual = 'todos';
-  let buscaAtual = '';
-  let honorarioEditandoId = null;
-
-  const byId = id => document.getElementById(id);
-
-  function toast(mensagem, tipo = 'info') {
-    if (window.JurisFlow?.showToast) {
-      window.JurisFlow.showToast(mensagem, tipo);
-      return;
-    }
-    alert(mensagem);
-  }
-
-  function escapeHtml(valor) {
-    return String(valor ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  function normalizarTexto(valor) {
-    return String(valor ?? '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  }
-
-  function normalizarStatus(status) {
-    const valor = normalizarTexto(status).trim();
-    if (valor === 'pago' || valor === 'em dia' || valor === 'quitado') return 'pago';
-    if (valor === 'inadimplente' || valor === 'atrasado') return 'inadimplente';
-    return 'pendente';
-  }
-
-  function statusLabel(status) {
-    const valor = normalizarStatus(status);
-    if (valor === 'pago') return 'Pago';
-    if (valor === 'inadimplente') return 'Inadimplente';
-    return 'Pendente';
-  }
-
-  function moeda(valor) {
-    return Number(valor || 0).toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
-  }
-
-  function competenciaLabel(valor) {
-    if (!valor) return 'Não informada';
-    const partes = String(valor).split('-');
-    if (partes.length < 2) return valor;
-    const data = new Date(Number(partes[0]), Number(partes[1]) - 1, 1);
-    return data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-  }
-
-  function iniciais(nome) {
-    const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
-    if (!partes.length) return 'JF';
-    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
-    return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
-  }
-
-  function clienteNome(honorario) {
-    return honorario.cliente?.nome || 'Cliente não vinculado';
-  }
-
-  function clienteDoc(honorario) {
-    return honorario.cliente?.cpfCnpj || honorario.cliente?.cpf || '';
-  }
-
-  function processoNumero(honorario) {
-    return honorario.processo?.numero || 'Sem processo';
-  }
-
-  function processoResumo(honorario) {
-    return honorario.processo?.tipoAcao || honorario.processo?.areaJuridica || '';
-  }
-
-  function montarRequest(honorario, extras = {}) {
-    return {
-      tipoHonorario: honorario.tipoHonorario || '',
-      valorTotal: Number(honorario.valorTotal || 0),
-      competencia: honorario.competencia || '',
-      status: honorario.status || 'pendente',
-      formaPagamento: honorario.formaPagamento || '',
-      descricao: honorario.descricao || '',
-      clienteId: honorario.cliente?.id || null,
-      processoId: honorario.processo?.id || null,
-      ...extras
-    };
-  }
-
-  async function carregarHonorarios() {
-    byId('honorariosBody').innerHTML = `
-      <tr>
-        <td colspan="8">
-          <div class="loading-state">
-            <strong>Carregando honorários</strong>
-            <span>Buscando dados reais no backend.</span>
-          </div>
-        </td>
-      </tr>
-    `;
-    byId('tableCount').textContent = 'Carregando dados da API...';
-
-    try {
-      const resposta = await fetch(`${API_BASE}/honorarios`);
-      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-      honorarios = await resposta.json();
-      renderizar();
-    } catch (erro) {
-      console.error('Erro ao carregar honorários:', erro);
-      honorarios = [];
-      renderizar();
-      toast('Erro ao carregar honorários do backend.', 'error');
-    }
-  }
-
-  function honorariosFiltrados() {
-    return honorarios.filter(honorario => {
-      const status = normalizarStatus(honorario.status);
-      const textoBusca = normalizarTexto(`${clienteNome(honorario)} ${processoNumero(honorario)}`);
-
-      const passaStatus = filtroAtual === 'todos' || status === filtroAtual;
-      const passaBusca = !buscaAtual || textoBusca.includes(buscaAtual);
-
-      return passaStatus && passaBusca;
-    });
-  }
-
-  function renderizarCards() {
-    const totalRecebido = honorarios
-      .filter(h => normalizarStatus(h.status) === 'pago')
-      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
-
-    const totalPendente = honorarios
-      .filter(h => normalizarStatus(h.status) === 'pendente')
-      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
-
-    const totalInadimplente = honorarios
-      .filter(h => normalizarStatus(h.status) === 'inadimplente')
-      .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
-
-    byId('cardRecebido').textContent = moeda(totalRecebido);
-    byId('cardPendente').textContent = moeda(totalPendente);
-    byId('cardInadimplente').textContent = moeda(totalInadimplente);
-    byId('cardQuantidade').textContent = honorarios.length;
-  }
-
-  function renderizarTabela(lista) {
-    byId('tableCount').textContent = `${lista.length} honorário(s) encontrado(s)`;
-
-    if (!lista.length) {
-      byId('honorariosBody').innerHTML = `
-        <tr>
-          <td colspan="8">
-            <div class="empty-state">
-              <strong>Nenhum honorário encontrado</strong>
-              <span>Ajuste os filtros ou cadastre um novo honorário.</span>
-            </div>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    byId('honorariosBody').innerHTML = lista.map(honorario => {
-      const status = normalizarStatus(honorario.status);
-      const pago = status === 'pago';
-      const cliente = clienteNome(honorario);
-      const processo = processoNumero(honorario);
-
-      return `
-        <tr>
-          <td>
-            <div class="client-cell">
-              <div class="client-avatar">${escapeHtml(iniciais(cliente))}</div>
-              <div>
-                <div class="cell-main">${escapeHtml(cliente)}</div>
-                <div class="cell-sub">${escapeHtml(clienteDoc(honorario) || 'Sem documento')}</div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="process-num">${escapeHtml(processo)}</div>
-            <div class="cell-sub">${escapeHtml(processoResumo(honorario))}</div>
-          </td>
-          <td>${escapeHtml(honorario.tipoHonorario || 'Não informado')}</td>
-          <td><span class="value-cell">${moeda(honorario.valorTotal)}</span></td>
-          <td>${escapeHtml(competenciaLabel(honorario.competencia))}</td>
-          <td>${escapeHtml(honorario.formaPagamento || 'Não informada')}</td>
-          <td><span class="status-badge status-${status}">${statusLabel(honorario.status)}</span></td>
-          <td>
-            <div class="actions-cell">
-              <button class="btn-action btn-pay" type="button" ${pago ? 'disabled' : ''} onclick="marcarComoPago(${honorario.id})">💰 Marcar como Pago</button>
-              <button class="btn-action btn-edit" type="button" onclick="abrirModalEdicao(${honorario.id})">✏️ Editar</button>
-              <button class="btn-action btn-delete" type="button" onclick="excluirHonorario(${honorario.id})">🗑️ Excluir</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  function renderizar() {
-    renderizarCards();
-    renderizarTabela(honorariosFiltrados());
-  }
-
-  async function atualizarHonorario(id, payload, mensagemSucesso) {
-    const resposta = await fetch(`${API_BASE}/honorarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-
-    const atualizado = await resposta.json();
-    honorarios = honorarios.map(h => h.id === id ? atualizado : h);
-    renderizar();
-    toast(mensagemSucesso, 'success');
-  }
-
-  async function marcarComoPago(id) {
-    const honorario = honorarios.find(h => h.id === id);
-    if (!honorario) return;
-
-    try {
-      await atualizarHonorario(
-        id,
-        montarRequest(honorario, { status: 'pago' }),
-        'Honorário marcado como pago.'
-      );
-    } catch (erro) {
-      console.error('Erro ao marcar honorário como pago:', erro);
-      toast('Erro ao atualizar status do honorário.', 'error');
-    }
-  }
-
-  async function excluirHonorario(id) {
-    const honorario = honorarios.find(h => h.id === id);
-    const nome = clienteNome(honorario || {});
-
-    if (!confirm(`Deseja excluir o honorário de ${nome}?`)) return;
-
-    try {
-      const resposta = await fetch(`${API_BASE}/honorarios/${id}`, { method: 'DELETE' });
-      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-
-      honorarios = honorarios.filter(h => h.id !== id);
-      renderizar();
-      toast('Honorário excluído com sucesso.', 'success');
-    } catch (erro) {
-      console.error('Erro ao excluir honorário:', erro);
-      toast('Erro ao excluir honorário.', 'error');
-    }
-  }
-
-  function abrirModalEdicao(id) {
-    const honorario = honorarios.find(h => h.id === id);
-    if (!honorario) return;
-
-    honorarioEditandoId = id;
-    byId('editModalSubtitle').textContent = `${clienteNome(honorario)} · ${processoNumero(honorario)}`;
-    byId('editTipo').value = honorario.tipoHonorario || '';
-    byId('editValor').value = Number(honorario.valorTotal || 0).toFixed(2);
-    byId('editCompetencia').value = honorario.competencia || '';
-    byId('editForma').value = honorario.formaPagamento || '';
-    byId('editStatus').value = normalizarStatus(honorario.status);
-    byId('editDescricao').value = honorario.descricao || '';
-    byId('editModal').classList.add('open');
-  }
-
-  function fecharModalEdicao() {
-    honorarioEditandoId = null;
-    byId('editModal').classList.remove('open');
-  }
-
-  byId('editForm').addEventListener('submit', async event => {
-    event.preventDefault();
-    const honorario = honorarios.find(h => h.id === honorarioEditandoId);
-    if (!honorario) return;
-
-    const payload = montarRequest(honorario, {
-      tipoHonorario: byId('editTipo').value.trim(),
-      valorTotal: Number(byId('editValor').value || 0),
-      competencia: byId('editCompetencia').value,
-      status: byId('editStatus').value,
-      formaPagamento: byId('editForma').value.trim(),
-      descricao: byId('editDescricao').value.trim()
-    });
-
-    try {
-      await atualizarHonorario(honorario.id, payload, 'Honorário atualizado com sucesso.');
-      fecharModalEdicao();
-    } catch (erro) {
-      console.error('Erro ao editar honorário:', erro);
-      toast('Erro ao salvar alterações do honorário.', 'error');
-    }
-  });
-
-  byId('editModal').addEventListener('click', event => {
-    if (event.target === byId('editModal')) fecharModalEdicao();
-  });
-
-  byId('filterTabs').addEventListener('click', event => {
-    const botao = event.target.closest('.filter-tab');
-    if (!botao) return;
-
-    document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-    botao.classList.add('active');
-    filtroAtual = botao.dataset.filter;
-    renderizar();
-  });
-
-  byId('searchInput').addEventListener('input', event => {
-    buscaAtual = normalizarTexto(event.target.value);
-    renderizar();
-  });
-
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') fecharModalEdicao();
-  });
-
-  window.carregarHonorarios = carregarHonorarios;
-  window.marcarComoPago = marcarComoPago;
-  window.excluirHonorario = excluirHonorario;
-  window.abrirModalEdicao = abrirModalEdicao;
-  window.fecharModalEdicao = fecharModalEdicao;
-
-  document.addEventListener('DOMContentLoaded', carregarHonorarios);
-})();
-</script>
 </body>
 </html>
