@@ -59,6 +59,9 @@
   function formatarData(data) {
     const parsed = parseData(data);
     if (!parsed) return 'Sem data';
+    if (typeof window.JurisFlowFormatarData === 'function') {
+      return window.JurisFlowFormatarData(data);
+    }
     return parsed.toLocaleDateString('pt-BR', {
       weekday: 'long',
       day: '2-digit',
@@ -228,7 +231,7 @@
       const diff = data ? Math.ceil((data - hoje) / 86400000) : null;
       const label = diff === 0 ? 'Hoje'
         : diff === 1 ? 'Amanha'
-          : data ? data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : 'Sem data';
+          : data ? formatarData(c.data) : 'Sem data';
       const cor = diff != null && diff <= 0 ? '#DC2626'
         : diff != null && diff <= 3 ? '#D97706'
           : '#2563EB';

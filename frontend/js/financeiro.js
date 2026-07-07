@@ -108,6 +108,9 @@
   function formatarData(valor) {
     const texto = String(valor ?? '');
     if (!texto) return '--';
+    if (typeof window.JurisFlowFormatarData === 'function') {
+      return window.JurisFlowFormatarData(texto);
+    }
     const data = /^\d{4}-\d{2}-\d{2}$/.test(texto)
       ? new Date(`${texto}T00:00:00`)
       : new Date(texto);

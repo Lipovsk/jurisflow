@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clientes — JurisFlow</title>
+  <script src="../js/preferencias-aparencia.js"></script>
   <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/preferencias-aparencia.css">
   <style>
     .page-toolbar {
       display: flex;
@@ -687,6 +689,9 @@
 
         function formatarDataCadastro(iso) {
           if (!iso) return NAO_INFORMADO;
+          if (typeof window.JurisFlowFormatarData === 'function') {
+            return 'Cliente desde ' + window.JurisFlowFormatarData(iso);
+          }
 
           try {
             const texto = String(iso);

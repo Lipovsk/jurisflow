@@ -107,6 +107,9 @@
 
   function dataLabel(valor) {
     if (!valor) return '--';
+    if (typeof window.JurisFlowFormatarData === 'function') {
+      return window.JurisFlowFormatarData(valor);
+    }
     const textoData = String(valor);
     const data = /^\d{4}-\d{2}-\d{2}$/.test(textoData)
       ? new Date(`${textoData}T00:00:00`)

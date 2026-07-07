@@ -22,6 +22,9 @@ const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 function formatDate(date) {
+  if (typeof window.JurisFlowFormatarData === 'function') {
+    return window.JurisFlowFormatarData(date);
+  }
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 

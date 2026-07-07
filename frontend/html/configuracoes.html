@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configurações — JurisFlow</title>
+  <script src="../js/preferencias-aparencia.js"></script>
   <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/preferencias-aparencia.css">
   <style>
     .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
 
@@ -484,7 +486,7 @@
             </div>
             <div class="cfg-card-body">
               <div class="theme-opts">
-                <div class="theme-card selected" data-theme="light">
+                <div class="theme-card selected" data-theme="claro">
                   <div class="theme-preview">
                     <div class="tp-sb" style="background:#0D1B2A;"></div>
                     <div class="tp-ct" style="background:#F8F9FB;">
@@ -495,7 +497,7 @@
                   </div>
                   <div class="theme-label">☀️ Tema Claro</div>
                 </div>
-                <div class="theme-card" data-theme="dark">
+                <div class="theme-card" data-theme="escuro">
                   <div class="theme-preview">
                     <div class="tp-sb" style="background:#060D17;"></div>
                     <div class="tp-ct" style="background:#111827;">
@@ -517,14 +519,14 @@
             </div>
             <div class="cfg-card-body">
               <div class="color-opts">
-                <div class="color-opt selected" style="background:#0D1B2A;" title="Navy (padrão)"></div>
-                <div class="color-opt" style="background:#C9A84C;" title="Dourado"></div>
-                <div class="color-opt" style="background:#2563EB;" title="Azul"></div>
-                <div class="color-opt" style="background:#059669;" title="Verde"></div>
-                <div class="color-opt" style="background:#7C3AED;" title="Roxo"></div>
-                <div class="color-opt" style="background:#DC2626;" title="Vermelho"></div>
-                <div class="color-opt" style="background:#0D9488;" title="Teal"></div>
-                <div class="color-opt" style="background:#374151;" title="Cinza escuro"></div>
+                <div class="color-opt selected" data-color="azul" style="background:#0D1B2A;" title="Navy (padrão)"></div>
+                <div class="color-opt" data-color="dourado" style="background:#C9A84C;" title="Dourado"></div>
+                <div class="color-opt" data-color="azulVivo" style="background:#2563EB;" title="Azul"></div>
+                <div class="color-opt" data-color="verde" style="background:#059669;" title="Verde"></div>
+                <div class="color-opt" data-color="roxo" style="background:#7C3AED;" title="Roxo"></div>
+                <div class="color-opt" data-color="vermelho" style="background:#DC2626;" title="Vermelho"></div>
+                <div class="color-opt" data-color="teal" style="background:#0D9488;" title="Teal"></div>
+                <div class="color-opt" data-color="cinza" style="background:#374151;" title="Cinza escuro"></div>
               </div>
             </div>
           </div>
@@ -541,7 +543,7 @@
                     <button class="fc-btn" id="fontMinus">−</button>
                     <span class="fc-val" id="fontSizeVal">100%</span>
                     <button class="fc-btn" id="fontPlus">+</button>
-                    <span class="field-hint">(80% – 120%)</span>
+                    <span class="field-hint">Pequeno, padrão ou grande</span>
                   </div>
                 </div>
                 <div class="field">
@@ -554,21 +556,23 @@
                 </div>
                 <div class="field">
                   <label>Formato de Data</label>
-                  <select>
-                    <option selected>DD/MM/AAAA</option>
-                    <option>MM/DD/AAAA</option>
-                    <option>AAAA-MM-DD</option>
+                  <select id="prefFormatoData">
+                    <option value="ddmmyyyy" selected>DD/MM/AAAA</option>
+                    <option value="iso">AAAA-MM-DD</option>
+                    <option value="longo">DD de mês de AAAA</option>
                   </select>
                 </div>
                 <div class="field">
                   <label>Página Inicial Padrão</label>
-                  <select>
-                    <option selected>Dashboard</option>
-                    <option>Agenda</option>
-                    <option>Processos</option>
-                    <option>Clientes</option>
-                    <option>Financeiro</option>
+                  <select id="prefPaginaInicial">
+                    <option value="dashboard.html" selected>Dashboard</option>
+                    <option value="clientes.html">Clientes</option>
+                    <option value="processos.html">Processos</option>
+                    <option value="agenda.html">Agenda</option>
+                    <option value="honorarios.html">Honorários</option>
+                    <option value="financeiro.html">Financeiro</option>
                   </select>
+                  <span class="field-hint">Preferência salva para navegação inicial; login e autenticação não são alterados.</span>
                 </div>
               </div>
             </div>
@@ -1203,201 +1207,6 @@ OAB/SP 12.345 — Advogado Sênior</textarea>
 </div><!-- /main-wrapper -->
 
 <script src="../js/dashboard.js"></script>
-<script>
-(function () {
-
-  /* ── Navegação interna ── */
-  const navBtns = document.querySelectorAll('.snav-item[data-target]');
-  const sections = document.querySelectorAll('.cfg-section');
-
-  navBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      navBtns.forEach(b => b.classList.remove('active'));
-      sections.forEach(s => s.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('sec-' + btn.dataset.target)?.classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-
-  /* ── Upload de avatar ── */
-  document.getElementById('avatarInput')?.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('avatarPreview').innerHTML =
-        `<img src="${e.target.result}" alt="Avatar">`;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  /* ── Upload de logos ── */
-  ['logoInput', 'docLogoInput'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', function () {
-      const file = this.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      const previewId = id === 'logoInput' ? 'logoPreview' : 'docLogoPreview';
-      reader.onload = e => {
-        document.getElementById(previewId).innerHTML =
-          `<img src="${e.target.result}" alt="Logo">`;
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-
-  /* ── Força da senha ── */
-  document.getElementById('novaSenha')?.addEventListener('input', function () {
-    const v = this.value;
-    let strength = 0;
-    if (v.length >= 8) strength++;
-    if (/[A-Z]/.test(v)) strength++;
-    if (/[0-9]/.test(v)) strength++;
-    if (/[^A-Za-z0-9]/.test(v)) strength++;
-
-    const fill = document.getElementById('strengthFill');
-    const text = document.getElementById('strengthText');
-    const colors = ['#EF4444', '#F59E0B', '#10B981', '#059669'];
-    const labels = ['Fraca', 'Moderada', 'Boa', 'Forte'];
-
-    if (v) {
-      fill.style.width = (strength / 4 * 100) + '%';
-      fill.style.background = colors[strength - 1] || colors[0];
-      text.textContent = labels[strength - 1] || labels[0];
-      text.style.color = colors[strength - 1] || colors[0];
-    } else {
-      fill.style.width = '0';
-      text.textContent = '';
-    }
-  });
-
-  /* ── Alterar senha ── */
-  document.getElementById('btnAlterarSenha')?.addEventListener('click', () => {
-    const atual = document.getElementById('senhaAtual').value;
-    const nova = document.getElementById('novaSenha').value;
-    const conf = document.getElementById('confirmaSenha').value;
-    if (!atual || !nova || !conf) {
-      window.JurisFlow.showToast('⚠️ Preencha todos os campos de senha.', 'warning'); return;
-    }
-    if (nova !== conf) {
-      window.JurisFlow.showToast('❌ Nova senha e confirmação não coincidem.', 'error'); return;
-    }
-    if (nova.length < 8) {
-      window.JurisFlow.showToast('❌ A senha deve ter pelo menos 8 caracteres.', 'error'); return;
-    }
-    window.JurisFlow.showToast('✅ Senha alterada com sucesso!', 'success');
-    ['senhaAtual', 'novaSenha', 'confirmaSenha'].forEach(id => { document.getElementById(id).value = ''; });
-    document.getElementById('strengthFill').style.width = '0';
-    document.getElementById('strengthText').textContent = '';
-  });
-
-  /* ── Tamanho da fonte ── */
-  let fontSize = 100;
-  document.getElementById('fontMinus')?.addEventListener('click', () => {
-    if (fontSize > 80) { fontSize -= 10; document.getElementById('fontSizeVal').textContent = fontSize + '%'; }
-  });
-  document.getElementById('fontPlus')?.addEventListener('click', () => {
-    if (fontSize < 120) { fontSize += 10; document.getElementById('fontSizeVal').textContent = fontSize + '%'; }
-  });
-
-  /* ── Tema ── */
-  document.querySelectorAll('.theme-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-    });
-  });
-
-  /* ── Cores ── */
-  document.querySelectorAll('.color-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-    });
-  });
-
-  /* ── Tags ── */
-  window.addTagFromInput = function (inputId, listId) {
-    const input = document.getElementById(inputId);
-    const list = document.getElementById(listId);
-    if (!input || !list || !input.value.trim()) return;
-    const tag = document.createElement('div');
-    tag.className = 'tag-item';
-    tag.innerHTML = `${input.value.trim()} <span class="tag-remove">✕</span>`;
-    list.appendChild(tag);
-    input.value = '';
-    input.focus();
-  };
-
-  document.querySelectorAll('.tag-input-row input').forEach(input => {
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const listId = this.id.replace('Input', 'List');
-        window.addTagFromInput(this.id, listId);
-      }
-    });
-  });
-
-  document.querySelectorAll('.tag-list').forEach(list => {
-    list.addEventListener('click', e => {
-      if (e.target.classList.contains('tag-remove')) e.target.closest('.tag-item').remove();
-    });
-  });
-
-  /* ── Usuários ── */
-  document.getElementById('btnAddUser')?.addEventListener('click', () => {
-    const panel = document.getElementById('addUserPanel');
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-  });
-  document.getElementById('btnCancelAddUser')?.addEventListener('click', () => {
-    document.getElementById('addUserPanel').style.display = 'none';
-  });
-  document.getElementById('btnSaveUser')?.addEventListener('click', () => {
-    const nome = document.getElementById('newUserNome').value.trim();
-    if (!nome) { window.JurisFlow.showToast('⚠️ Informe o nome do usuário.', 'warning'); return; }
-    window.JurisFlow.showToast(`✅ Usuário "${nome}" adicionado com sucesso!`, 'success');
-    document.getElementById('addUserPanel').style.display = 'none';
-    ['newUserNome', 'newUserEmail', 'newUserCargo'].forEach(id => { document.getElementById(id).value = ''; });
-  });
-
-  /* ── Footer ── */
-  document.getElementById('btnSalvar')?.addEventListener('click', () => {
-    window.JurisFlow.showToast('✅ Configurações salvas com sucesso!', 'success');
-  });
-  document.getElementById('btnCancelar')?.addEventListener('click', () => {
-    if (confirm('Deseja descartar as alterações não salvas?'))
-      window.JurisFlow.showToast('↩ Alterações descartadas.', 'info');
-  });
-  document.getElementById('btnRestaurar')?.addEventListener('click', () => {
-    if (confirm('Restaurar TODAS as configurações para o padrão de fábrica? Esta ação não pode ser desfeita.'))
-      window.JurisFlow.showToast('↺ Configurações restauradas ao padrão.', 'warning');
-  });
-
-  /* ── Ações de dados ── */
-  document.querySelectorAll('[data-action-type]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const msgs = {
-        export:  '📤 Exportando dados… o arquivo será baixado em instantes.',
-        import:  '📥 Selecione o arquivo de importação.',
-        backup:  '💾 Backup iniciado! Você receberá um e-mail quando concluir.',
-        restore: '⚠️ Restaurando backup… o sistema será reiniciado.',
-        clear:   '🗑️ Dados de teste removidos com sucesso!',
-      };
-      const type = btn.dataset.actionType;
-      window.JurisFlow.showToast(msgs[type], type === 'restore' ? 'warning' : 'success');
-    });
-  });
-
-  /* ── Integrações ── */
-  document.querySelectorAll('[data-integration]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      window.JurisFlow.showToast(`🔗 Conectando ao ${btn.dataset.integration}…`, 'info');
-    });
-  });
-
-})();
-</script>
+<script src="../js/configuracoes.js"></script>
 </body>
 </html>

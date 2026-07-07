@@ -1,0 +1,76 @@
+:root {
+  --jf-cor-principal: var(--navy);
+  --jf-escala-fonte: 100%;
+}
+
+html.jf-fonte-pequeno { font-size: 14.4px; }
+html.jf-fonte-padrao { font-size: 16px; }
+html.jf-fonte-grande { font-size: 17.6px; }
+
+.btn-primary,
+.qbtn-primary,
+.snav-item.active,
+.filter-tab.active,
+.fab-main-btn {
+  background: var(--jf-cor-principal, var(--navy)) !important;
+}
+
+.btn-primary:hover,
+.qbtn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.nav-item.active {
+  color: var(--gold-light);
+}
+
+.nav-item.active::before,
+.stat-progress-fill.blue,
+.fc-bar-fill,
+.area-fill {
+  background: var(--jf-cor-principal, var(--navy)) !important;
+}
+
+.card-action,
+.lc-action,
+.cell-main,
+.page-title,
+.cfg-card-title,
+.table-title {
+  color: var(--jf-cor-principal, var(--navy));
+}
+
+html.jf-tema-escuro {
+  --white: #111827;
+  --gray-50: #0B1220;
+  --gray-100: #1F2937;
+  --gray-200: #374151;
+  --gray-400: #9CA3AF;
+  --gray-600: #CBD5E1;
+  --gray-800: #E5E7EB;
+  --navy: #E5E7EB;
+  --navy-mid: #CBD5E1;
+  --navy-light: #F8FAFC;
+  --blue-soft: rgba(37, 99, 235, .18);
+  --green-soft: rgba(16, 185, 129, .16);
+  --red-soft: rgba(239, 68, 68, .16);
+  --amber-soft: rgba(245, 158, 11, .16);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, .5);
+}
+
+html.jf-tema-escuro body {
+  background: var(--gray-50);
+  color: var(--gray-800);
+}
+
+html.jf-tema-escuro .sidebar {
+  background: #030712;
+}
+
+html.jf-tema-escuro input,
+html.jf-tema-escuro select,
+html.jf-tema-escuro textarea {
+  color-scheme: dark;
+}
