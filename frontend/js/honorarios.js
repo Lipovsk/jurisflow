@@ -7,6 +7,9 @@
   let filtroOrigem = 'todos';
   let buscaAtual = '';
   let honorarioEditandoId = null;
+  let honorarioRecebimentoId = null;
+  let honorarioHistoricoId = null;
+  let saldoRecebimentoAtual = 0;
 
   const byId = id => document.getElementById(id);
 
@@ -33,6 +36,7 @@
   function normalizarStatus(status) {
     const valor = normalizarTexto(status).trim();
     if (valor === 'pago' || valor === 'em dia' || valor === 'quitado') return 'pago';
+    if (valor === 'parcial' || valor === 'parcialmente pago') return 'parcial';
     if (valor === 'inadimplente' || valor === 'inadimpl' || valor === 'atrasado') return 'inadimplente';
     return 'pendente';
   }
@@ -40,6 +44,7 @@
   function statusLabel(status) {
     const valor = normalizarStatus(status);
     if (valor === 'pago') return 'Pago';
+    if (valor === 'parcial') return 'Parcial';
     if (valor === 'inadimplente') return 'Inadimplente';
     return 'Pendente';
   }
@@ -102,9 +107,20 @@
 
   function dataLabel(valor) {
     if (!valor) return '--';
-    const data = new Date(valor);
+    const textoData = String(valor);
+    const data = /^\d{4}-\d{2}-\d{2}$/.test(textoData)
+      ? new Date(`${textoData}T00:00:00`)
+      : new Date(textoData);
     if (Number.isNaN(data.getTime())) return texto(valor, '--');
     return data.toLocaleDateString('pt-BR');
+  }
+
+  function hojeISO() {
+    const data = new Date();
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
   }
 
   function competenciaLabel(valor) {
@@ -205,6 +221,27 @@
     }
   }
 
+  async function carregarRecebimentosHonorario(honorarioId) {
+    const resposta = await fetch(`${API_BASE}/recebimentos/honorario/${honorarioId}`);
+    if (!resposta.ok) throw new Error(await lerMensagemErro(resposta));
+    const dados = await resposta.json();
+    return Array.isArray(dados) ? dados : [];
+  }
+
+  function isRecebimentoConfirmado(recebimento) {
+    return normalizarTexto(recebimento?.status).trim() === 'confirmado';
+  }
+
+  function isRecebimentoCancelado(recebimento) {
+    return normalizarTexto(recebimento?.status).trim() === 'cancelado';
+  }
+
+  function totalConfirmadoRecebimentos(recebimentos) {
+    return recebimentos
+      .filter(isRecebimentoConfirmado)
+      .reduce((soma, recebimento) => soma + Number(recebimento.valorRecebido || 0), 0);
+  }
+
   function honorariosFiltrados() {
     return honorarios.filter(honorario => {
       const status = normalizarStatus(honorario.status);
@@ -230,7 +267,7 @@
       .reduce((soma, h) => soma + Number(h.valorTotal || 0), 0);
 
     byId('cardRecebido').textContent = moeda(somarPorStatus('pago'));
-    byId('cardPendente').textContent = moeda(somarPorStatus('pendente'));
+    byId('cardPendente').textContent = moeda(somarPorStatus('pendente') + somarPorStatus('parcial'));
     byId('cardInadimplente').textContent = moeda(somarPorStatus('inadimplente'));
     byId('cardQuantidade').textContent = String(honorarios.length);
   }
@@ -293,6 +330,11 @@
     return botao;
   }
 
+  function adicionarAcoesRecebimento(wrap, honorario) {
+    wrap.appendChild(criarBotaoAcao('btn-pay', 'Registrar recebimento', () => abrirModalRecebimento(honorario.id)));
+    wrap.appendChild(criarBotaoAcao('btn-history', 'Historico', () => abrirModalHistorico(honorario.id)));
+  }
+
   function criarCelulaAcoes(honorario) {
     const td = document.createElement('td');
     const wrap = criarElemento('div', 'actions-cell');
@@ -300,10 +342,10 @@
     if (isHonorarioAutomatico(honorario)) {
       if (honorario.processo?.id) {
         wrap.appendChild(criarBotaoAcao('btn-open', 'Abrir processo', () => abrirProcesso(honorario.processo.id)));
-      } else {
-        wrap.appendChild(criarElemento('span', 'cell-sub', 'Sem acao disponivel'));
       }
+      adicionarAcoesRecebimento(wrap, honorario);
     } else {
+      adicionarAcoesRecebimento(wrap, honorario);
       wrap.appendChild(criarBotaoAcao('btn-edit', 'Editar', () => abrirModalEdicao(honorario.id)));
       wrap.appendChild(criarBotaoAcao('btn-delete', 'Excluir', () => excluirHonorario(honorario.id)));
     }
@@ -418,6 +460,256 @@
     window.location.href = `detalhes-processo.html?id=${encodeURIComponent(id)}`;
   }
 
+  async function abrirModalRecebimento(id) {
+    const honorario = honorarios.find(h => h.id === id);
+    if (!honorarioExisteSeguro(honorario)) {
+      toast('Honorario nao encontrado na lista atual.', 'error');
+      return;
+    }
+
+    honorarioRecebimentoId = id;
+    saldoRecebimentoAtual = 0;
+
+    byId('receiptModalSubtitle').textContent = `${clienteNome(honorario)} - ${processoNumero(honorario)}`;
+    byId('receiptCliente').value = clienteNome(honorario);
+    byId('receiptProcesso').value = processoNumero(honorario);
+    byId('receiptValor').value = '';
+    byId('receiptData').value = hojeISO();
+    byId('receiptForma').value = 'pix';
+    byId('receiptObservacao').value = '';
+    byId('receiptValorTotal').textContent = moeda(honorario.valorTotal);
+    byId('receiptTotalConfirmado').textContent = 'Carregando...';
+    byId('receiptSaldo').textContent = 'Carregando...';
+    byId('receiptSubmit').disabled = true;
+    byId('receiptModal').classList.add('open');
+
+    try {
+      const recebimentos = await carregarRecebimentosHonorario(id);
+      const totalConfirmado = totalConfirmadoRecebimentos(recebimentos);
+      const valorTotal = Number(honorario.valorTotal || 0);
+      saldoRecebimentoAtual = Math.max(0, Number((valorTotal - totalConfirmado).toFixed(2)));
+
+      byId('receiptTotalConfirmado').textContent = moeda(totalConfirmado);
+      byId('receiptSaldo').textContent = moeda(saldoRecebimentoAtual);
+      byId('receiptSubmit').disabled = saldoRecebimentoAtual <= 0;
+
+      if (saldoRecebimentoAtual <= 0) {
+        toast('Este honorario nao possui saldo restante.', 'warning');
+      }
+    } catch (erro) {
+      console.error('Erro ao carregar recebimentos do honorario:', erro);
+      byId('receiptTotalConfirmado').textContent = '--';
+      byId('receiptSaldo').textContent = '--';
+      toast(`Erro ao carregar saldo do honorario. ${erro.message || ''}`.trim(), 'error');
+    }
+  }
+
+  function honorarioExisteSeguro(honorario) {
+    return Boolean(honorario && honorario.id != null);
+  }
+
+  function fecharModalRecebimento() {
+    honorarioRecebimentoId = null;
+    saldoRecebimentoAtual = 0;
+    byId('receiptModal').classList.remove('open');
+  }
+
+  function validarPayloadRecebimento() {
+    const valorRecebido = parseMoeda(byId('receiptValor').value);
+    const dataRecebimento = byId('receiptData').value;
+    const formaPagamento = byId('receiptForma').value;
+
+    if (!valorRecebido || valorRecebido <= 0) {
+      throw new Error('Informe um valor recebido maior que zero.');
+    }
+
+    if (valorRecebido > saldoRecebimentoAtual) {
+      throw new Error('Valor recebido maior que o saldo restante.');
+    }
+
+    if (!dataRecebimento) {
+      throw new Error('Informe a data do recebimento.');
+    }
+
+    if (!formaPagamento) {
+      throw new Error('Informe a forma de pagamento.');
+    }
+
+    return {
+      valorRecebido: toPayloadMoney(valorRecebido),
+      dataRecebimento,
+      formaPagamento,
+      observacao: byId('receiptObservacao').value.trim()
+    };
+  }
+
+  async function salvarRecebimento(event) {
+    event.preventDefault();
+
+    if (honorarioRecebimentoId == null) return;
+
+    let payload;
+    try {
+      payload = validarPayloadRecebimento();
+    } catch (erro) {
+      toast(erro.message, 'warning');
+      return;
+    }
+
+    byId('receiptSubmit').disabled = true;
+
+    try {
+      const resposta = await fetch(`${API_BASE}/recebimentos/honorario/${honorarioRecebimentoId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resposta.ok) throw new Error(await lerMensagemErro(resposta));
+
+      toast('Recebimento registrado com sucesso.', 'success');
+      fecharModalRecebimento();
+      await carregarHonorarios();
+    } catch (erro) {
+      console.error('Erro ao registrar recebimento:', erro);
+      toast(`Erro ao registrar recebimento. ${erro.message || ''}`.trim(), 'error');
+      byId('receiptSubmit').disabled = false;
+    }
+  }
+
+  function setHistoricoEstado(tipo, titulo, mensagem) {
+    const body = byId('historyBody');
+    limparElemento(body);
+    const box = criarElemento('div', `${tipo}-state`);
+    box.appendChild(criarElemento('strong', null, titulo));
+    box.appendChild(criarElemento('span', null, mensagem));
+    body.appendChild(box);
+  }
+
+  async function abrirModalHistorico(id) {
+    const honorario = honorarios.find(h => h.id === id);
+    if (!honorarioExisteSeguro(honorario)) {
+      toast('Honorario nao encontrado na lista atual.', 'error');
+      return;
+    }
+
+    honorarioHistoricoId = id;
+    byId('historyModalSubtitle').textContent = `${clienteNome(honorario)} - ${processoNumero(honorario)}`;
+    byId('historyModal').classList.add('open');
+    await carregarHistoricoHonorario(id);
+  }
+
+  function fecharModalHistorico() {
+    honorarioHistoricoId = null;
+    byId('historyModal').classList.remove('open');
+  }
+
+  async function carregarHistoricoHonorario(id) {
+    setHistoricoEstado('loading', 'Carregando historico', 'Buscando recebimentos reais no backend.');
+
+    try {
+      const recebimentos = await carregarRecebimentosHonorario(id);
+      renderizarHistorico(recebimentos);
+    } catch (erro) {
+      console.error('Erro ao carregar historico:', erro);
+      setHistoricoEstado('error', 'Nao foi possivel carregar o historico', erro.message || 'Verifique a API de recebimentos.');
+      toast(`Erro ao carregar historico. ${erro.message || ''}`.trim(), 'error');
+    }
+  }
+
+  function renderizarHistorico(recebimentos) {
+    const body = byId('historyBody');
+    limparElemento(body);
+
+    if (!recebimentos.length) {
+      setHistoricoEstado('empty', 'Nenhum recebimento encontrado', 'Este honorario ainda nao possui recebimentos registrados.');
+      return;
+    }
+
+    const lista = criarElemento('div', 'history-list');
+    recebimentos.forEach(recebimento => lista.appendChild(criarItemHistorico(recebimento)));
+    body.appendChild(lista);
+  }
+
+  function criarLinhaHistorico(rotulo, valor, classe) {
+    const item = criarElemento('div', classe || null);
+    const forte = criarElemento('strong', null, `${rotulo}: `);
+    item.appendChild(forte);
+    item.appendChild(document.createTextNode(texto(valor, '--')));
+    return item;
+  }
+
+  function criarItemHistorico(recebimento) {
+    const cancelado = isRecebimentoCancelado(recebimento);
+    const item = criarElemento('div', `history-item${cancelado ? ' cancelado' : ''}`);
+
+    const topo = criarElemento('div', 'history-top');
+    const info = document.createElement('div');
+    info.appendChild(criarElemento('div', 'history-value', moeda(recebimento.valorRecebido)));
+    info.appendChild(criarElemento('div', 'cell-sub', dataLabel(recebimento.dataRecebimento)));
+    topo.appendChild(info);
+
+    const status = criarElemento(
+      'span',
+      `status-badge ${cancelado ? 'status-cancelado' : 'status-pago'}`,
+      cancelado ? 'Cancelado' : 'Confirmado'
+    );
+    topo.appendChild(status);
+    item.appendChild(topo);
+
+    const grade = criarElemento('div', 'history-grid');
+    grade.appendChild(criarLinhaHistorico('Forma', recebimento.formaPagamento));
+    grade.appendChild(criarLinhaHistorico('Cadastro', dataLabel(recebimento.dataCadastro)));
+    grade.appendChild(criarLinhaHistorico('Observacao', recebimento.observacao, 'history-note'));
+
+    if (cancelado) {
+      grade.appendChild(criarLinhaHistorico('Cancelamento', dataLabel(recebimento.dataCancelamento)));
+      grade.appendChild(criarLinhaHistorico('Motivo', recebimento.motivoCancelamento, 'history-note'));
+    }
+
+    item.appendChild(grade);
+
+    if (isRecebimentoConfirmado(recebimento)) {
+      const acoes = criarElemento('div', 'actions-cell');
+      acoes.style.marginTop = '12px';
+      acoes.appendChild(criarBotaoAcao('btn-delete', 'Cancelar recebimento', () => cancelarRecebimento(recebimento.id)));
+      item.appendChild(acoes);
+    }
+
+    return item;
+  }
+
+  async function cancelarRecebimento(id) {
+    if (!confirm('Deseja cancelar este recebimento?')) return;
+
+    const motivoCancelamento = window.prompt('Informe o motivo do cancelamento:');
+    if (!motivoCancelamento || !motivoCancelamento.trim()) {
+      toast('Motivo do cancelamento e obrigatorio.', 'warning');
+      return;
+    }
+
+    try {
+      const resposta = await fetch(`${API_BASE}/recebimentos/${id}/cancelar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivoCancelamento: motivoCancelamento.trim() })
+      });
+
+      if (!resposta.ok) throw new Error(await lerMensagemErro(resposta));
+
+      toast('Recebimento cancelado com sucesso.', 'success');
+
+      if (honorarioHistoricoId != null) {
+        await carregarHistoricoHonorario(honorarioHistoricoId);
+      }
+
+      await carregarHonorarios();
+    } catch (erro) {
+      console.error('Erro ao cancelar recebimento:', erro);
+      toast(`Erro ao cancelar recebimento. ${erro.message || ''}`.trim(), 'error');
+    }
+  }
+
   async function salvarEdicao(event) {
     event.preventDefault();
     const honorario = honorarios.find(h => h.id === honorarioEditandoId);
@@ -475,8 +767,15 @@
 
   function iniciarEventos() {
     byId('editForm')?.addEventListener('submit', salvarEdicao);
+    byId('receiptForm')?.addEventListener('submit', salvarRecebimento);
     byId('editModal')?.addEventListener('click', event => {
       if (event.target === byId('editModal')) fecharModalEdicao();
+    });
+    byId('receiptModal')?.addEventListener('click', event => {
+      if (event.target === byId('receiptModal')) fecharModalRecebimento();
+    });
+    byId('historyModal')?.addEventListener('click', event => {
+      if (event.target === byId('historyModal')) fecharModalHistorico();
     });
 
     ['editValorBruto', 'editDesconto', 'editAcrescimos'].forEach(id => {
@@ -504,12 +803,18 @@
     });
 
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') fecharModalEdicao();
+      if (event.key === 'Escape') {
+        fecharModalEdicao();
+        fecharModalRecebimento();
+        fecharModalHistorico();
+      }
     });
   }
 
   window.carregarHonorarios = carregarHonorarios;
   window.fecharModalEdicao = fecharModalEdicao;
+  window.fecharModalRecebimento = fecharModalRecebimento;
+  window.fecharModalHistorico = fecharModalHistorico;
 
   document.addEventListener('DOMContentLoaded', () => {
     iniciarEventos();

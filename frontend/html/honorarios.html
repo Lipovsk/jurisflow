@@ -357,6 +357,16 @@
       color: #DC2626;
     }
 
+    .status-parcial {
+      background: #EFF6FF;
+      color: #2563EB;
+    }
+
+    .status-cancelado {
+      background: #F3F4F6;
+      color: #6B7280;
+    }
+
     .origin-badge {
       display: inline-flex;
       align-items: center;
@@ -447,6 +457,15 @@
 
     .btn-open:hover {
       background: #F5F3FF;
+    }
+
+    .btn-history {
+      color: #4B5563;
+      border-color: #D1D5DB;
+    }
+
+    .btn-history:hover {
+      background: #F9FAFB;
     }
 
     .empty-state,
@@ -602,6 +621,85 @@
       border-color: var(--navy-light);
     }
 
+    .receive-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .receive-info {
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      background: var(--gray-50);
+      min-width: 0;
+    }
+
+    .receive-label {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .receive-value {
+      margin-top: 4px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      overflow-wrap: anywhere;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-item {
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background: var(--white);
+    }
+
+    .history-item.cancelado {
+      background: #F9FAFB;
+      opacity: .86;
+    }
+
+    .history-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .history-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 14px;
+      font-size: .78rem;
+      color: var(--gray-700);
+    }
+
+    .history-note {
+      grid-column: 1 / -1;
+      color: var(--gray-500);
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 1100px) {
       .hon-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -632,6 +730,11 @@
       }
 
       .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .receive-summary,
+      .history-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -760,6 +863,7 @@
       <div class="filter-tabs" id="filterTabs">
         <button class="filter-tab active" type="button" data-filter="todos">Todos</button>
         <button class="filter-tab" type="button" data-filter="pago">Pagos</button>
+        <button class="filter-tab" type="button" data-filter="parcial">Parciais</button>
         <button class="filter-tab" type="button" data-filter="pendente">Pendentes</button>
         <button class="filter-tab" type="button" data-filter="inadimplente">Inadimplentes</button>
       </div>
@@ -891,6 +995,97 @@
         <button class="btn-primary" type="submit">Salvar Alterações</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="receiptModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="receiptModalTitle">Registrar recebimento</div>
+        <div class="cell-sub" id="receiptModalSubtitle"></div>
+      </div>
+      <button class="modal-close" type="button" onclick="fecharModalRecebimento()">×</button>
+    </div>
+    <form id="receiptForm">
+      <div class="modal-body">
+        <div class="receive-summary" aria-label="Resumo do recebimento">
+          <div class="receive-info">
+            <div class="receive-label">Valor total</div>
+            <div class="receive-value" id="receiptValorTotal">R$ 0,00</div>
+          </div>
+          <div class="receive-info">
+            <div class="receive-label">Recebido confirmado</div>
+            <div class="receive-value" id="receiptTotalConfirmado">R$ 0,00</div>
+          </div>
+          <div class="receive-info">
+            <div class="receive-label">Saldo restante</div>
+            <div class="receive-value" id="receiptSaldo">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="receiptCliente">Cliente</label>
+            <input id="receiptCliente" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="receiptProcesso">Processo</label>
+            <input id="receiptProcesso" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="receiptValor">Valor recebido</label>
+            <input id="receiptValor" type="text" inputmode="decimal" required>
+          </div>
+          <div class="field">
+            <label for="receiptData">Data do recebimento</label>
+            <input id="receiptData" type="date" required>
+          </div>
+          <div class="field">
+            <label for="receiptForma">Forma de pagamento</label>
+            <select id="receiptForma" required>
+              <option value="pix">Pix</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="boleto">Boleto</option>
+              <option value="cartao">Cartao</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="receiptObservacao">Observacao</label>
+            <textarea id="receiptObservacao"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" type="button" onclick="fecharModalRecebimento()">Cancelar</button>
+        <button class="btn-primary" type="submit" id="receiptSubmit">Confirmar recebimento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="historyModalTitle">Historico de recebimentos</div>
+        <div class="cell-sub" id="historyModalSubtitle"></div>
+      </div>
+      <button class="modal-close" type="button" onclick="fecharModalHistorico()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="historyBody">
+        <div class="loading-state">
+          <strong>Carregando historico</strong>
+          <span>Buscando recebimentos reais no backend.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" type="button" onclick="fecharModalHistorico()">Fechar</button>
+    </div>
   </div>
 </div>
 
