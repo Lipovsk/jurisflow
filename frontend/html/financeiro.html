@@ -29,6 +29,69 @@
       background: var(--navy-light);
     }
 
+    .btn-secondary {
+      height: 40px;
+      padding: 0 14px;
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--navy);
+      color: var(--navy);
+    }
+
+    .finance-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .month-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .month-control label {
+      font-size: .72rem;
+      color: var(--gray-500);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .month-control input {
+      height: 40px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      color: var(--gray-800);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .84rem;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .month-control input:focus {
+      border-color: var(--navy-light);
+    }
+
     .fin-summary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -350,25 +413,6 @@
       font-weight: 700;
     }
 
-    .btn-cobrar {
-      padding: 5px 12px;
-      border: 1px solid var(--red);
-      border-radius: 20px;
-      background: var(--red-soft);
-      color: var(--red);
-      font-family: 'DM Sans', sans-serif;
-      font-size: .72rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .15s;
-    }
-
-    .btn-cobrar:hover {
-      background: var(--red);
-      color: var(--white);
-    }
-
     .pay-status {
       font-size: .72rem;
       font-weight: 600;
@@ -384,6 +428,63 @@
     .ps-pendente {
       background: var(--amber-soft);
       color: var(--amber);
+    }
+
+    .state-box {
+      padding: 24px;
+      text-align: center;
+      color: var(--gray-400);
+      font-size: .83rem;
+    }
+
+    .state-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--navy);
+      font-size: .92rem;
+    }
+
+    .state-box.error strong {
+      color: var(--red);
+    }
+
+    .area-row {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .area-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .area-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: .9rem;
+      color: var(--gray-800);
+    }
+
+    .area-bar {
+      height: 8px;
+      background: var(--gray-100);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .area-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #C6A15B, #E2C47A);
+    }
+
+    .area-value {
+      margin-top: 6px;
+      font-size: .78rem;
+      color: var(--gray-500);
     }
 
     @media (max-width:1100px) {
@@ -403,6 +504,21 @@
     @media (max-width:600px) {
       .fin-summary {
         grid-template-columns: 1fr 1fr;
+      }
+
+      .finance-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .month-control,
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+      }
+
+      .month-control input {
+        flex: 1;
       }
     }
   </style>
@@ -450,7 +566,7 @@
       <button class="sidebar-toggle" id="sidebarToggle">☰</button>
       <div class="topbar-left">
         <div class="page-title">Financeiro</div>
-        <div class="page-subtitle">Honorários, recebimentos e metas — <span id="labelMesTitulo"></span></div>
+        <div class="page-subtitle">Recebimentos reais de honorarios - <span id="labelMesTitulo"></span></div>
       </div>
       <div class="topbar-right">
         <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
@@ -465,11 +581,20 @@
 
     <main class="page-content">
 
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:4px;">
-        <button class="btn-primary" onclick="window.location.href='honorarios.html'">
+      <div class="finance-actions">
+        <div class="month-control">
+          <label for="mesFinanceiro">Mes de referencia</label>
+          <input type="month" id="mesFinanceiro" aria-label="Selecionar mes financeiro">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+        <button class="btn-secondary" type="button" id="btnAtualizarFinanceiro">
+          ↻ Atualizar
+        </button>
+        <button class="btn-primary" type="button" onclick="window.location.href='honorarios.html'">
           📋 Gerenciar Honorários
         </button>
-        <button class="btn-primary" onclick="window.location.href='lancar-honorario.html'">＋ Lançar Honorário</button>
+        <button class="btn-primary" type="button" onclick="window.location.href='lancar-honorario.html'">＋ Lançar Honorário</button>
+        </div>
       </div>
 
       <!-- Cards financeiros -->
@@ -491,7 +616,7 @@
             <span class="fc-trend down" id="trendAReceber">0 pendente(s)</span>
           </div>
           <div class="fc-value" id="fcAReceber">R$ 0,00</div>
-          <div class="fc-label">A Receber</div>
+          <div class="fc-label">Saldo a receber - Honorarios em aberto</div>
           <div class="fc-bar">
             <div class="fc-bar-fill" id="barAReceber" style="width:0%;background:var(--amber);"></div>
           </div>
@@ -502,7 +627,7 @@
             <span class="fc-trend down" id="trendInadimplente">0 cliente(s)</span>
           </div>
           <div class="fc-value" id="fcInadimplente">R$ 0,00</div>
-          <div class="fc-label">Inadimplente</div>
+          <div class="fc-label">Marcado como inadimplente</div>
           <div class="fc-bar">
             <div class="fc-bar-fill" id="barInadimplente" style="width:0%;background:var(--red);"></div>
           </div>
@@ -527,8 +652,8 @@
   <div class="chart-card">
     <div class="chart-header">
       <div>
-        <div class="ch-title">Evolução de Honorários</div>
-        <div class="ch-sub">Dados reais do backend</div>
+        <div class="ch-title">Evolução de recebimentos</div>
+        <div class="ch-sub">Recebimentos confirmados por data de recebimento</div>
       </div>
     </div>
 
@@ -539,7 +664,7 @@
       <div style="margin-top:20px;padding:16px;background:var(--gray-50);border-radius:var(--radius-sm);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <span style="font-size:.78rem;color:var(--gray-600);font-weight:500;">
-            <span id="labelMetaMensal">Recebido no mês — </span><span id="labelMetaMensalValor"></span>
+            <span id="labelMetaMensal">Resumo do mes - </span><span id="labelMetaMensalValor"></span>
           </span>
 
           <span
@@ -559,7 +684,7 @@
         <div
           style="display:flex;justify-content:space-between;margin-top:6px;font-size:.7rem;color:var(--gray-400);">
           <span id="valorRecebidoMeta">Recebido: R$ 0,00</span>
-          <span id="valorFaltandoMeta">A receber/inadimplente: R$ 0,00</span>
+          <span id="valorFaltandoMeta">Saldo a receber: R$ 0,00</span>
         </div>
       </div>
 
@@ -571,8 +696,8 @@
 
     <div class="chart-header">
       <div>
-        <div class="ch-title">Por Área Jurídica</div>
-        <div class="ch-sub">Dados reais do backend</div>
+        <div class="ch-title">Honorários lançados por área</div>
+        <div class="ch-sub">Valor total lancado por area juridica</div>
       </div>
     </div>
 
@@ -591,8 +716,8 @@
 
         <div class="list-card">
           <div class="lc-header">
-            <div class="lc-title">⚠️ Clientes Inadimplentes</div>
-            <a class="lc-action" href="#" id="linkCobrarTodos">Cobrar todos</a>
+            <div class="lc-title">⚠️ Marcado como inadimplente</div>
+            <span class="lc-action">Cobrancas automatizadas ainda nao configuradas.</span>
           </div>
           <div id="inadimplentesBody"></div>
         </div>
@@ -612,344 +737,7 @@
 
   <script src="../js/storage.js"></script>
   <script src="../js/dashboard.js"></script>
-  <script>
-    (function () {
-      'use strict';
-
-      const CORES = [
-        'linear-gradient(135deg,#2563EB,#1D4ED8)', 'linear-gradient(135deg,#10B981,#059669)',
-        'linear-gradient(135deg,#F59E0B,#D97706)', 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-        'linear-gradient(135deg,#F97316,#EA580C)', 'linear-gradient(135deg,#0D9488,#0F766E)',
-        'linear-gradient(135deg,#6B7280,#4B5563)', 'linear-gradient(135deg,#EC4899,#DB2777)',
-      ];
-      function getCor(id) {
-        const n = String(id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        return CORES[n % CORES.length];
-      }
-      function getIniciais(nome) {
-        if (!nome) return '?';
-        const p = nome.trim().split(/\s+/).filter(Boolean);
-        return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
-      }
-      function fmtMoeda(v) {
-        const n = parseValor(v);
-        return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      }
-      function escapeHtml(valor) {
-        return String(valor ?? '')
-          .replaceAll('&', '&amp;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
-          .replaceAll('"', '&quot;')
-          .replaceAll("'", '&#039;');
-      }
-      function parseValor(valor) {
-        if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
-        const texto = String(valor ?? '').trim();
-        if (!texto) return 0;
-        const normalizado = texto.includes(',')
-          ? texto.replace(/\./g, '').replace(',', '.')
-          : texto;
-        const numero = Number(normalizado);
-        return Number.isFinite(numero) ? numero : 0;
-      }
-      function fmtData(iso) {
-        if (!iso) return '—';
-        try { const d = new Date(iso); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); } catch (e) { return '—'; }
-      }
-      function fmtComp(c) {
-        if (!c) return '—';
-        const p = c.split('-'); if (p.length < 2) return c;
-        const m = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        return (m[parseInt(p[1], 10) - 1] || p[1]) + '/' + p[0];
-      }
-      function meioPag(m) { return { pix: 'PIX', ted: 'Transferência', doc: 'DOC', boleto: 'Boleto', dinheiro: 'Dinheiro', cartao: 'Cartão' }[m] || m || '—'; }
-
-      let honorarios = [];
-
-      async function carregarHonorarios() {
-        try {
-          const response = await fetch('http://localhost:8080/honorarios');
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          honorarios = Array.isArray(data) ? data : [];
-          renderFinanceiro();
-        } catch (erro) {
-          console.error('Erro ao carregar honorários:', erro);
-          honorarios = [];
-          renderFinanceiro();
-          window.JurisFlow?.showToast(
-            'Erro ao carregar financeiro.',
-            'error'
-          );
-        }
-      }
-      function normalizarTexto(valor) {
-        return String(valor ?? '')
-          .trim()
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '');
-      }
-
-      function normalizarStatus(status) {
-        const valor = normalizarTexto(status).replace(/[_-]+/g, ' ');
-        if (valor === 'pago' || valor === 'quitado' || valor === 'em dia') return 'pago';
-        if (valor === 'inadimplente' || valor === 'inadimpl' || valor === 'atrasado') return 'inadimplente';
-        return 'pendente';
-      }
-
-      function valorHonorario(h) {
-        return parseValor(h?.valorTotal);
-      }
-
-      function clienteId(h) {
-        return h?.cliente?.id ?? h?.clienteId ?? `sem-cliente-${h?.id || ''}`;
-      }
-
-      function clienteNome(h) {
-        return h?.cliente?.nome || h?.clienteNome || 'Cliente não vinculado';
-      }
-
-      function areaJuridica(h) {
-        return h?.processo?.areaJuridica || h?.areaJuridica || 'Sem área informada';
-      }
-
-      function competenciaValida(h) {
-        return /^\d{4}-\d{2}$/.test(String(h?.competencia || ''));
-      }
-
-      function mesAtual() {
-        const data = new Date();
-        return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-      }
-
-      function mesAtualLabel() {
-        return new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      }
-
-      function setTexto(id, valor) {
-        const node = document.getElementById(id);
-        if (node) node.textContent = valor;
-      }
-
-      function setBarra(id, percentual) {
-        const node = document.getElementById(id);
-        if (node) node.style.width = `${Math.max(0, Math.min(percentual, 100))}%`;
-      }
-
-      function somar(lista) {
-        return lista.reduce((soma, h) => soma + valorHonorario(h), 0);
-      }
-
-      function renderFinanceiro() {
-        const curMonth = mesAtual();
-        const mesLabel = mesAtualLabel();
-
-        const pagosMes = honorarios.filter(
-          h => normalizarStatus(h.status) === 'pago' && String(h.competencia || '').startsWith(curMonth)
-        );
-        const pendentes = honorarios.filter(h => normalizarStatus(h.status) === 'pendente');
-        const inadimplentes = honorarios.filter(h => normalizarStatus(h.status) === 'inadimplente');
-
-        const totalRecebidoMes = somar(pagosMes);
-        const totalPendente = somar(pendentes);
-        const totalInadimplente = somar(inadimplentes);
-        const totalLancado = somar(honorarios);
-        const totalStatus = totalRecebidoMes + totalPendente + totalInadimplente;
-        const clientesInadimplentes = new Set(inadimplentes.map(clienteId)).size;
-
-        setTexto('labelMesTitulo', mesLabel);
-        setTexto('labelRecebidoMes', `Recebido em ${mesLabel}`);
-        setTexto('fcRecebido', fmtMoeda(totalRecebidoMes));
-        setTexto('fcAReceber', fmtMoeda(totalPendente));
-        setTexto('fcInadimplente', fmtMoeda(totalInadimplente));
-        setTexto('fcTotalLancado', fmtMoeda(totalLancado));
-        setTexto('trendRecebidoMes', `${pagosMes.length} pago(s)`);
-        setTexto('trendAReceber', `${pendentes.length} pendente(s)`);
-        setTexto('trendInadimplente', `${clientesInadimplentes} cliente(s)`);
-        setTexto('trendTotalLancados', `${honorarios.length} lançamento(s)`);
-
-        setBarra('barRecebido', totalStatus ? (totalRecebidoMes / totalStatus) * 100 : 0);
-        setBarra('barAReceber', totalStatus ? (totalPendente / totalStatus) * 100 : 0);
-        setBarra('barInadimplente', totalStatus ? (totalInadimplente / totalStatus) * 100 : 0);
-        setBarra('barTotalLancado', totalLancado ? 100 : 0);
-
-        renderEvolucao();
-        renderComposicaoMes(curMonth, totalRecebidoMes);
-        renderAreas();
-        renderInadimplentes(inadimplentes);
-        renderRecebimentosRecentes();
-      }
-
-      function renderEvolucao() {
-        const grafico = document.getElementById('graficoEvolucao');
-        if (!grafico) return;
-
-        const mesesMap = {};
-        honorarios.forEach(h => {
-          if (!competenciaValida(h)) return;
-          mesesMap[h.competencia] = (mesesMap[h.competencia] || 0) + valorHonorario(h);
-        });
-
-        const mesesOrdenados = Object.keys(mesesMap).sort();
-        grafico.style.display = 'flex';
-        grafico.style.alignItems = 'flex-end';
-        grafico.style.gap = '18px';
-        grafico.style.height = '260px';
-        grafico.style.padding = '20px';
-
-        if (!mesesOrdenados.length) {
-          grafico.innerHTML = '<div style="width:100%;text-align:center;color:var(--gray-400);font-size:.83rem;">Nenhum honorário com competência cadastrada</div>';
-          return;
-        }
-
-        const maiorValor = Math.max(...Object.values(mesesMap));
-        grafico.innerHTML = mesesOrdenados.map(mes => {
-          const valor = mesesMap[mes];
-          const altura = maiorValor ? Math.max((valor / maiorValor) * 220, 8) : 8;
-
-          return `
-            <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;">
-              <div style="font-size:.72rem;color:#666;font-weight:600;">${fmtMoeda(valor)}</div>
-              <div style="width:48px;height:${altura}px;background:linear-gradient(180deg,#C6A15B,#E2C47A);border-radius:12px 12px 0 0;"></div>
-              <div style="font-size:.72rem;color:#999;">${fmtComp(mes)}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      function renderComposicaoMes(curMonth, totalRecebidoMes) {
-        const doMes = honorarios.filter(h => String(h.competencia || '').startsWith(curMonth));
-        const totalMes = somar(doMes);
-        const abertoMes = Math.max(totalMes - totalRecebidoMes, 0);
-        const percentual = totalMes ? (totalRecebidoMes / totalMes) * 100 : 0;
-
-        setTexto('labelMetaMensalValor', mesAtualLabel());
-        setTexto('percentualMeta', `${percentual.toFixed(0)}%`);
-        setTexto('valorRecebidoMeta', `Recebido: ${fmtMoeda(totalRecebidoMes)}`);
-        setTexto('valorFaltandoMeta', `A receber/inadimplente: ${fmtMoeda(abertoMes)}`);
-        setBarra('barraMeta', percentual);
-      }
-
-      function renderAreas() {
-        const areasMap = {};
-        honorarios.forEach(h => {
-          const area = areaJuridica(h);
-          areasMap[area] = (areasMap[area] || 0) + valorHonorario(h);
-        });
-
-        const areasLista = document.getElementById('areasJuridicasLista');
-        if (!areasLista) return;
-
-        const totalAreas = Object.values(areasMap).reduce((a, b) => a + b, 0);
-        const entradas = Object.entries(areasMap).sort((a, b) => b[1] - a[1]);
-
-        if (!entradas.length) {
-          areasLista.innerHTML = '<div style="padding:10px 0;text-align:center;color:var(--gray-400);font-size:.83rem;">Nenhuma área com honorário cadastrado</div>';
-          return;
-        }
-
-        areasLista.innerHTML = entradas.map(([area, valor]) => {
-          const pct = totalAreas ? ((valor / totalAreas) * 100).toFixed(0) : 0;
-
-          return `
-            <div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #eee;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-weight:600;font-size:.9rem;">
-                <span>${escapeHtml(area)}</span>
-                <span>${pct}%</span>
-              </div>
-              <div style="height:8px;background:#eee;border-radius:999px;overflow:hidden;">
-                <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#C6A15B,#E2C47A);"></div>
-              </div>
-              <div style="margin-top:6px;font-size:.78rem;color:#666;">${fmtMoeda(valor)}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      function renderInadimplentes(inadimplentes) {
-        const byCliente = {};
-        inadimplentes.forEach(h => {
-          const id = clienteId(h);
-          if (!byCliente[id]) byCliente[id] = { id, nome: clienteNome(h), total: 0, comps: [] };
-          byCliente[id].total += valorHonorario(h);
-          if (h.competencia) byCliente[id].comps.push(fmtComp(h.competencia));
-        });
-
-        const inadBody = document.getElementById('inadimplentesBody');
-        if (!inadBody) return;
-
-        const items = Object.values(byCliente).sort((a, b) => b.total - a.total);
-        inadBody.innerHTML = items.length ? items.map(c => `
-          <div class="pay-item">
-            <div class="pay-avatar" style="background:${getCor(c.id)};">${escapeHtml(getIniciais(c.nome))}</div>
-            <div class="pay-info">
-              <div class="pay-name">${escapeHtml(c.nome)}</div>
-              <div class="pay-desc">Honorários — ${c.comps.length ? c.comps.join(', ') : 'sem competência'}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-              <span class="pay-amount" style="color:var(--red);">${fmtMoeda(c.total)}</span>
-              <button class="btn-cobrar" data-nome="${escapeHtml(c.nome)}">Cobrar</button>
-            </div>
-          </div>
-        `).join('')
-          : '<div style="padding:24px;text-align:center;color:var(--gray-400);font-size:.83rem;">Nenhum cliente inadimplente</div>';
-      }
-
-      function renderRecebimentosRecentes() {
-        const recentes = honorarios
-          .filter(h => normalizarStatus(h.status) === 'pago')
-          .sort((a, b) => {
-            const comp = String(b.competencia || '').localeCompare(String(a.competencia || ''));
-            return comp || Number(b.id || 0) - Number(a.id || 0);
-          })
-          .slice(0, 5);
-
-        const recBody = document.getElementById('recebimentosBody');
-        if (!recBody) return;
-
-        recBody.innerHTML = recentes.length ? recentes.map(h => {
-          const desc = `${meioPag(h.formaPagamento || h.meioPagamento)} · ${h.competencia ? fmtComp(h.competencia) : 'sem competência'}`;
-          return `
-            <div class="pay-item">
-              <div class="pay-avatar" style="background:${getCor(clienteId(h))};">${escapeHtml(getIniciais(clienteNome(h)))}</div>
-              <div class="pay-info">
-                <div class="pay-name">${escapeHtml(clienteNome(h))}</div>
-                <div class="pay-desc">${escapeHtml(desc)}</div>
-              </div>
-              <div style="text-align:right;">
-                <div class="pay-amount" style="color:var(--green);">${fmtMoeda(h.valorTotal)}</div>
-                <span class="pay-status ps-recebido" style="margin-top:4px;display:inline-block;">Recebido</span>
-              </div>
-            </div>
-          `;
-        }).join('')
-          : '<div style="padding:24px;text-align:center;color:var(--gray-400);font-size:.83rem;">Nenhum recebimento registrado</div>';
-      }
-
-      document.getElementById('inadimplentesBody')?.addEventListener('click', e => {
-        const btn = e.target.closest('.btn-cobrar');
-        if (btn) {
-          window.JurisFlow?.showToast(
-            `Cobrança automática não configurada para ${btn.dataset.nome}.`,
-            'info'
-          );
-        }
-      });
-
-      document.getElementById('linkCobrarTodos')?.addEventListener('click', e => {
-        e.preventDefault();
-        const total = honorarios.filter(h => normalizarStatus(h.status) === 'inadimplente').length;
-        window.JurisFlow?.showToast(
-          total ? 'Cobrança automática ainda não está configurada.' : 'Nenhum cliente inadimplente.',
-          'info'
-        );
-      });
-
-      carregarHonorarios();
-    })();
-  </script>
+  <script src="../js/financeiro.js"></script>
 </body>
 
 </html>
