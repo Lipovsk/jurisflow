@@ -1,60 +1,53 @@
 package com.jurisflow.jurisflow.controller;
 
 import com.jurisflow.jurisflow.model.Cliente;
-import com.jurisflow.jurisflow.model.Compromisso;
-import com.jurisflow.jurisflow.model.Honorario;
 import com.jurisflow.jurisflow.model.Processo;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
-import com.jurisflow.jurisflow.repository.CompromissoRepository;
-import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
-import com.jurisflow.jurisflow.service.DocumentoService;
 import com.jurisflow.jurisflow.service.ProcessoSincronizacaoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
 @RequestMapping("/processos")
 public class ProcessoController {
 
-    private static final String PROCESSO_COM_VINCULOS_MANUAIS =
-            "Nao e possivel excluir este processo porque existem compromissos ou honorarios manuais ou legados vinculados a ele. Remova ou trate esses registros antes de excluir o processo.";
-
     private final ProcessoRepository processoRepository;
     private final ClienteRepository clienteRepository;
-    private final CompromissoRepository compromissoRepository;
-    private final HonorarioRepository honorarioRepository;
-    private final DocumentoService documentoService;
     private final ProcessoSincronizacaoService processoSincronizacaoService;
 
     public ProcessoController(
             ProcessoRepository processoRepository,
             ClienteRepository clienteRepository,
-            CompromissoRepository compromissoRepository,
-            HonorarioRepository honorarioRepository,
-            DocumentoService documentoService,
             ProcessoSincronizacaoService processoSincronizacaoService
     ) {
         this.processoRepository = processoRepository;
         this.clienteRepository = clienteRepository;
-        this.compromissoRepository = compromissoRepository;
-        this.honorarioRepository = honorarioRepository;
-        this.documentoService = documentoService;
         this.processoSincronizacaoService = processoSincronizacaoService;
     }
 
     @GetMapping
-    public List<Processo> listar() {
-        return processoRepository.findAll();
+    public List<Processo> listar(@RequestParam(required = false, defaultValue = "false") boolean incluirInativos) {
+        return incluirInativos ? processoRepository.findAll() : processoRepository.findAllAtivos();
     }
 
     @GetMapping("/{id}")
     public Processo buscarPorId(@PathVariable Long id) {
-        return processoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+        return processoRepository.findAtivoById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Processo nao encontrado."
         ));
@@ -62,7 +55,9 @@ public class ProcessoController {
 
     @GetMapping("/cliente/{clienteId}")
     public List<Processo> listarPorCliente(@PathVariable Long clienteId) {
-        return processoRepository.findByClienteId(clienteId);
+        clienteRepository.findAtivoById(clienteId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado."));
+        return processoRepository.findAtivosByClienteId(clienteId);
     }
 
     @PostMapping
@@ -71,9 +66,11 @@ public class ProcessoController {
         Cliente cliente = buscarClienteObrigatorio(request.getClienteId());
 
         Processo processo = new Processo();
-
         preencherProcesso(processo, request);
         processo.setCliente(cliente);
+        processo.setAtivo(true);
+        processo.setDataExclusao(null);
+        processo.setMotivoExclusao(null);
 
         Processo processoSalvo = processoRepository.save(processo);
         processoSincronizacaoService.sincronizar(processoSalvo);
@@ -84,7 +81,7 @@ public class ProcessoController {
     @PutMapping("/{id}")
     @Transactional
     public Processo atualizar(@PathVariable Long id, @RequestBody ProcessoRequest request) {
-        return processoRepository.findById(id).map(processo -> {
+        return processoRepository.findAtivoById(id).map(processo -> {
 
             if (request.getClienteId() != null) {
                 Cliente cliente = buscarClienteExistente(request.getClienteId());
@@ -102,6 +99,29 @@ public class ProcessoController {
                 HttpStatus.NOT_FOUND,
                 "Processo nao encontrado."
         ));
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletar(
+            @PathVariable Long id,
+            @RequestParam(required = false) String motivoExclusao
+    ) {
+        Processo processo = processoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Processo nao encontrado."
+                ));
+
+        if (Boolean.FALSE.equals(processo.getAtivo())) {
+            return;
+        }
+
+        processo.setAtivo(false);
+        processo.setDataExclusao(Instant.now());
+        processo.setMotivoExclusao(textoOuNull(motivoExclusao));
+        processoRepository.save(processo);
     }
 
     private void preencherProcesso(Processo processo, ProcessoRequest request) {
@@ -142,48 +162,16 @@ public class ProcessoController {
     }
 
     private Cliente buscarClienteExistente(Long clienteId) {
-        return clienteRepository.findById(clienteId)
+        return clienteRepository.findAtivoById(clienteId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "clienteId nao corresponde a cliente existente."
+                        "clienteId nao corresponde a cliente ativo existente."
                 ));
     }
 
-    @DeleteMapping("/{id}")
-    @Transactional
-    public void deletar(@PathVariable Long id) {
-        Processo processo = processoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Processo nao encontrado."
-                ));
-
-        if (documentoService.existeDocumentoPorProcesso(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Não é possível excluir este processo porque existem documentos vinculados ao histórico dele."
-            );
-        }
-
-        List<Compromisso> compromissos = compromissoRepository.findByProcessoId(id);
-        List<Honorario> honorarios = honorarioRepository.findByProcessoId(id);
-
-        boolean possuiVinculoNaoAutomatico = compromissos.stream()
-                .anyMatch(compromisso -> !processoSincronizacaoService
-                        .isCompromissoAutomaticoSeguroDoProcesso(processo, compromisso))
-                || honorarios.stream()
-                .anyMatch(honorario -> !processoSincronizacaoService
-                        .isHonorarioAutomaticoSeguroDoProcesso(processo, honorario));
-
-        if (possuiVinculoNaoAutomatico) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    PROCESSO_COM_VINCULOS_MANUAIS
-            );
-        }
-
-        processoSincronizacaoService.removerRegistrosAutomaticosDoProcesso(processo);
-        processoRepository.delete(processo);
+    private String textoOuNull(String valor) {
+        String texto = valor == null ? null : valor.trim();
+        return texto == null || texto.isBlank() ? null : texto;
     }
 
     public static class ProcessoRequest {

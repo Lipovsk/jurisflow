@@ -200,8 +200,8 @@ public class DocumentoService {
         }
 
         if (processoId != null) {
-            processo = processoRepository.findById(processoId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "processoId nao corresponde a processo existente."));
+            processo = processoRepository.findAtivoById(processoId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "processoId nao corresponde a processo ativo existente."));
 
             if (processo.getCliente() != null) {
                 cliente = processo.getCliente();
@@ -209,8 +209,8 @@ public class DocumentoService {
         }
 
         if (clienteId != null) {
-            Cliente clienteInformado = clienteRepository.findById(clienteId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteId nao corresponde a cliente existente."));
+            Cliente clienteInformado = clienteRepository.findAtivoById(clienteId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteId nao corresponde a cliente ativo existente."));
             if (cliente != null && !cliente.getId().equals(clienteInformado.getId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O processo informado nao pertence ao cliente informado.");
             }

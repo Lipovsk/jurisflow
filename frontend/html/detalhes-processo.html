@@ -767,7 +767,7 @@
         <div class="proc-actions">
           <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
           <button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>
-          <button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Excluir</button>
+          <button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Arquivar</button>
         </div>
       </div>
 
@@ -1135,7 +1135,7 @@
   }
 
   async function excluirProcesso() {
-    if (!confirm('Tem certeza que deseja excluir este processo?')) return;
+    if (!confirm('Este processo será arquivado e continuará preservado no histórico. Deseja continuar?')) return;
 
     try {
       const resposta = await fetch(`${API_BASE}/processos/${processoId}`, {
@@ -1143,14 +1143,14 @@
       });
 
       if (!resposta.ok) {
-        throw new Error(await lerMensagemErroApi(resposta, 'Erro ao excluir processo.'));
+        throw new Error(await lerMensagemErroApi(resposta, 'Erro ao arquivar processo.'));
       }
 
-      alert('Processo excluído com sucesso!');
+      alert('Processo arquivado com sucesso!');
       window.location.href = 'processos.html';
     } catch (erro) {
-      console.error('Erro ao excluir processo:', erro);
-      alert(erro.message || 'Erro ao excluir processo.');
+      console.error('Erro ao arquivar processo:', erro);
+      alert(erro.message || 'Erro ao arquivar processo.');
     }
   }
 

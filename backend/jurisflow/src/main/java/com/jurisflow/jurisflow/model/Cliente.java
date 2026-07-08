@@ -42,11 +42,17 @@ public class Cliente {
     private String observacoes;
 
     private String dataCadastro;
+    private Boolean ativo = true;
+    private Instant dataExclusao;
+    private String motivoExclusao;
 
     @PrePersist
     public void preencherDataCadastro() {
         if (dataCadastro == null || dataCadastro.isBlank()) {
             dataCadastro = Instant.now().toString();
+        }
+        if (ativo == null) {
+            ativo = true;
         }
     }
 }

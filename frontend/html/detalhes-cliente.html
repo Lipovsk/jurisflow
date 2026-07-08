@@ -837,7 +837,7 @@
 </button>
 
 <button class="btn-act btn-outline-act" id="btnExcluirCliente" style="border-color:#DC2626;color:#DC2626;">
-  🗑️ Excluir
+  🗑️ Arquivar
 </button>
           </div>
         </div>
@@ -946,7 +946,7 @@
 
           document.getElementById("btnExcluirCliente").addEventListener("click", async () => {
 
-            const confirmar = confirm("Tem certeza que deseja excluir este cliente?");
+            const confirmar = confirm("Este cliente será arquivado e continuará preservado no histórico. Deseja continuar?");
 
             if (!confirmar) return;
 
@@ -957,10 +957,10 @@
               });
 
               if (!resposta.ok) {
-                throw new Error(await lerMensagemErroApi(resposta, "Erro ao excluir cliente."));
+                throw new Error(await lerMensagemErroApi(resposta, "Erro ao arquivar cliente."));
               }
 
-              alert("Cliente excluído com sucesso!");
+              alert("Cliente arquivado com sucesso!");
 
               window.location.href = "clientes.html";
 
@@ -968,7 +968,7 @@
 
               console.error(erro);
 
-              alert(erro.message || "Erro ao excluir cliente.");
+              alert(erro.message || "Erro ao arquivar cliente.");
 
             }
 

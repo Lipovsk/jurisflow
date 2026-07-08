@@ -376,6 +376,15 @@
     return texto || fallback;
   }
 
+  async function lerMensagemErroApi(response, fallback) {
+    try {
+      const data = await response.json();
+      return data?.message || data?.erro || data?.error || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
   function nomeCliente(processo) {
     return processo.cliente?.nome || NAO_INFORMADO;
   }
@@ -534,8 +543,7 @@
         <td>
           <div style="display:flex;gap:6px;">
             <button type="button" class="btn-icon btn-encerrar" data-id="${processo.id}" title="Encerrar">✔️</button>
-            <button type="button" class="btn-icon btn-arquivar" data-id="${processo.id}" title="Arquivar">📦</button>
-            <button type="button" class="btn-icon btn-excluir" data-id="${processo.id}" title="Excluir">🗑️</button>
+            <button type="button" class="btn-icon btn-arquivar" data-id="${processo.id}" title="Arquivar processo">📦</button>
             <button type="button" class="btn-icon btn-det-proc" data-id="${processo.id}" title="Detalhes">👁</button>
           </div>
         </td>
@@ -633,18 +641,13 @@
     }
 
     if (btn.classList.contains('btn-arquivar')) {
-      alterarStatus(id, 'arquivado');
-      return;
-    }
-
-    if (btn.classList.contains('btn-excluir')) {
       excluirProcesso(id);
       return;
     }
   });
 
   async function excluirProcesso(id) {
-    if (!confirm('Deseja realmente excluir este processo?')) return;
+    if (!confirm('Este processo será arquivado e continuará preservado no histórico. Deseja continuar?')) return;
 
     try {
       const response = await fetch(`http://localhost:8080/processos/${id}`, {
@@ -652,15 +655,17 @@
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao excluir processo');
+        throw new Error(await lerMensagemErroApi(response, 'Erro ao arquivar processo.'));
       }
 
-      window.JurisFlow?.showToast('Processo excluído com sucesso.', 'success');
-      location.reload();
+      allProcessos = allProcessos.filter(processo => String(processo.id) !== String(id));
+      applyFilters();
+      updateCards(allProcessos);
+      window.JurisFlow?.showToast('Processo arquivado com sucesso.', 'success');
 
     } catch (erro) {
       console.error(erro);
-      window.JurisFlow?.showToast('Erro ao excluir processo.', 'error');
+      window.JurisFlow?.showToast(erro.message || 'Erro ao arquivar processo.', 'error');
     }
   }
 

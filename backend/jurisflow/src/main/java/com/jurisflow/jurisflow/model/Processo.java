@@ -29,6 +29,9 @@ public class Processo {
     private String statusFinanceiro;
     private String ultMovimentacao;
     private String dataCadastro;
+    private Boolean ativo = true;
+    private Instant dataExclusao;
+    private String motivoExclusao;
 
     private Double valorHonorario;
     private String formaPagamento;
@@ -47,6 +50,9 @@ public class Processo {
     public void preencherDataCadastro() {
         if (dataCadastro == null || dataCadastro.isBlank()) {
             dataCadastro = Instant.now().toString();
+        }
+        if (ativo == null) {
+            ativo = true;
         }
     }
 
@@ -219,5 +225,29 @@ public class Processo {
 
     public String getDataCadastro() {
         return dataCadastro;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public Instant getDataExclusao() {
+        return dataExclusao;
+    }
+
+    public void setDataExclusao(Instant dataExclusao) {
+        this.dataExclusao = dataExclusao;
+    }
+
+    public String getMotivoExclusao() {
+        return motivoExclusao;
+    }
+
+    public void setMotivoExclusao(String motivoExclusao) {
+        this.motivoExclusao = motivoExclusao;
     }
 }
