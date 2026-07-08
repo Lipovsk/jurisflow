@@ -13,10 +13,16 @@
       height:40px; padding:0 20px; background:var(--navy);
       color:var(--white); border:none; border-radius:var(--radius-sm);
       font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600;
-      cursor:pointer; display:flex; align-items:center; gap:8px;
+      cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
       transition:all .2s; white-space:nowrap;
     }
     .btn-primary:hover { background:var(--navy-light); }
+    .btn-primary:disabled { opacity:.65; cursor:not-allowed; }
+    .btn-secondary {
+      height:40px; padding:0 16px; border:1px solid var(--gray-200);
+      border-radius:var(--radius-sm); background:var(--white); color:var(--gray-700);
+      font-weight:600; cursor:pointer;
+    }
     .page-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .search-box { position:relative; flex:1; min-width:220px; }
     .search-box input {
@@ -32,8 +38,6 @@
       border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif;
       font-size:.83rem; color:var(--gray-800); background:var(--white); cursor:pointer; outline:none;
     }
-
-    /* Upload Zone */
     .upload-zone {
       border:2px dashed var(--gray-200); border-radius:var(--radius-lg);
       padding:32px; text-align:center; background:var(--white);
@@ -45,8 +49,6 @@
     .upload-sub { font-size:.78rem; color:var(--gray-400); }
     .upload-types { display:flex; gap:6px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
     .upload-type { font-size:.68rem; padding:3px 9px; border-radius:20px; background:var(--gray-100); color:var(--gray-600); font-weight:500; }
-
-    /* Categories */
     .cat-row { display:flex; gap:8px; flex-wrap:wrap; }
     .cat-btn {
       display:flex; align-items:center; gap:6px; padding:8px 14px;
@@ -59,19 +61,14 @@
     .cat-count { font-size:.7rem; padding:1px 7px; border-radius:20px; }
     .cat-btn.active .cat-count { background:rgba(255,255,255,.25); color:var(--white); }
     .cat-btn:not(.active) .cat-count { background:var(--gray-100); color:var(--gray-600); }
-
-    /* Docs Grid */
-    .docs-layout { display:grid; grid-template-columns:1fr; gap:0; }
     .docs-card { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; animation:fadeUp .4s .2s ease both; }
     .docs-card-header { padding:18px 24px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
     .dch-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--navy); }
     .dch-count { font-size:.73rem; color:var(--gray-400); margin-top:2px; }
     table { width:100%; border-collapse:collapse; }
     thead th {
-      padding:11px 20px; text-align:left;
-      font-size:.68rem; font-weight:600; color:var(--gray-400);
-      text-transform:uppercase; letter-spacing:.08em;
-      background:var(--gray-50); border-bottom:1px solid var(--gray-100);
+      padding:11px 20px; text-align:left; font-size:.68rem; font-weight:600; color:var(--gray-400);
+      text-transform:uppercase; letter-spacing:.08em; background:var(--gray-50); border-bottom:1px solid var(--gray-100);
     }
     tbody tr { border-bottom:1px solid var(--gray-100); transition:background .15s; }
     tbody tr:last-child { border-bottom:none; }
@@ -82,14 +79,13 @@
     .doc-name { font-weight:600; color:var(--navy); font-size:.84rem; }
     .doc-proc { font-size:.72rem; color:var(--gray-400); margin-top:2px; }
     .cat-badge { display:inline-block; font-size:.68rem; font-weight:600; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
-    .cb-peticao     { background:#EEF3FF; color:#2563EB; }
-    .cb-contrato    { background:#ECFDF5; color:#059669; }
-    .cb-laudo       { background:#FFFBEB; color:#D97706; }
-    .cb-procuracao  { background:#F5F3FF; color:#7C3AED; }
-    .cb-decisao     { background:#FEF2F2; color:#DC2626; }
-    .cb-outros      { background:#F1F5F9; color:#64748B; }
-    .doc-size { font-size:.78rem; color:var(--gray-400); }
-    .doc-date { font-size:.78rem; color:var(--gray-500); }
+    .cb-peticao { background:#EEF3FF; color:#2563EB; }
+    .cb-contrato { background:#ECFDF5; color:#059669; }
+    .cb-laudo { background:#FFFBEB; color:#D97706; }
+    .cb-procuracao { background:#F5F3FF; color:#7C3AED; }
+    .cb-decisao { background:#FEF2F2; color:#DC2626; }
+    .cb-outros { background:#F1F5F9; color:#64748B; }
+    .doc-size, .doc-date { font-size:.78rem; color:var(--gray-500); }
     .doc-actions { display:flex; gap:6px; }
     .btn-doc {
       width:30px; height:30px; border:1px solid var(--gray-200);
@@ -100,15 +96,37 @@
     .btn-doc:hover { background:var(--gray-100); border-color:var(--navy); }
     .docs-empty { padding:44px 20px; text-align:center; color:var(--gray-400); font-size:.84rem; }
     .docs-empty strong { display:block; color:var(--navy); margin-bottom:6px; font-size:.95rem; }
-
+    .docs-error { padding:16px 20px; background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA; border-radius:var(--radius-sm); font-size:.84rem; }
+    .upload-modal {
+      position:fixed; inset:0; z-index:500; display:none; align-items:center; justify-content:center;
+      padding:20px; background:rgba(13,27,42,.45); backdrop-filter:blur(4px);
+    }
+    .upload-modal.open { display:flex; }
+    .upload-dialog {
+      width:min(760px,100%); max-height:92vh; overflow:hidden; display:flex; flex-direction:column;
+      background:var(--white); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg);
+    }
+    .upload-head { padding:18px 22px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .upload-title { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--navy); }
+    .upload-close { width:34px; height:34px; border:none; border-radius:8px; background:var(--gray-100); color:var(--gray-600); cursor:pointer; }
+    .upload-form { padding:20px 22px; overflow:auto; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .upload-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .upload-field.full { grid-column:1 / -1; }
+    .upload-field label { font-size:.68rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+    .upload-field input, .upload-field select, .upload-field textarea {
+      width:100%; min-height:40px; border:1px solid var(--gray-200); border-radius:var(--radius-sm);
+      padding:0 11px; background:var(--white); color:var(--gray-800); font-family:'DM Sans',sans-serif; font-size:.84rem; outline:none;
+    }
+    .upload-field textarea { min-height:86px; padding-top:10px; resize:vertical; line-height:1.5; }
+    .file-meta { font-size:.76rem; color:var(--gray-400); line-height:1.45; }
+    .upload-actions { grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px; padding-top:4px; }
     @media (max-width:700px) {
-      td:nth-child(3),th:nth-child(3),
-      td:nth-child(4),th:nth-child(4) { display:none; }
+      td:nth-child(3),th:nth-child(3), td:nth-child(4),th:nth-child(4) { display:none; }
+      .upload-form { grid-template-columns:1fr; }
     }
   </style>
 </head>
 <body>
-
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
@@ -129,8 +147,8 @@
   </nav>
   <div class="sidebar-bottom">
     <div class="user-card" data-action="logout">
-      <div class="user-avatar">CM</div>
-      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <div class="user-avatar">JF</div>
+      <div class="user-info"><div class="user-name">JurisFlow</div><div class="user-role">Sessão autenticada</div></div>
       <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
     </div>
   </div>
@@ -141,36 +159,33 @@
     <button class="sidebar-toggle" id="sidebarToggle">☰</button>
     <div class="topbar-left">
       <div class="page-title">Documentos</div>
-      <div class="page-subtitle">Gestão de arquivos, petições e contratos</div>
+      <div class="page-subtitle">Arquivos reais vinculados a clientes e processos</div>
     </div>
     <div class="topbar-right">
       <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
       <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
       <div class="topbar-divider"></div>
-      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+      <div class="topbar-user"><div class="topbar-avatar">JF</div><div class="topbar-user-name">JurisFlow</div></div>
     </div>
   </header>
 
   <main class="page-content">
-
-    <!-- Upload + toolbar -->
     <div class="upload-zone" id="uploadZone">
       <div class="upload-icon">📤</div>
       <div class="upload-text">Arraste arquivos aqui ou clique para fazer upload</div>
-      <div class="upload-sub">Suporte para múltiplos arquivos simultâneos</div>
+      <div class="upload-sub">Envie arquivos vinculados a cliente e/ou processo</div>
       <div class="upload-types">
         <span class="upload-type">📄 PDF</span>
-        <span class="upload-type">📝 DOCX</span>
-        <span class="upload-type">📊 XLSX</span>
-        <span class="upload-type">🖼 JPEG/PNG</span>
+        <span class="upload-type">📝 DOC/DOCX</span>
+        <span class="upload-type">📊 XLS/XLSX</span>
+        <span class="upload-type">🖼 JPG/PNG</span>
       </div>
-      <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="display:none;" />
     </div>
 
     <div class="page-toolbar">
       <div class="search-box">
         <span class="s-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Buscar por nome, processo ou categoria..." />
+        <input type="text" id="searchInput" placeholder="Buscar por título, descrição, cliente ou processo...">
       </div>
       <select class="filter-select" id="filterCat">
         <option value="">Todas as categorias</option>
@@ -181,10 +196,9 @@
         <option value="decisao">Decisão Judicial</option>
         <option value="outros">Outros</option>
       </select>
-      <button class="btn-primary" onclick="document.getElementById('fileInput').click()">＋ Upload</button>
+      <button class="btn-primary" id="openUploadBtn" type="button">＋ Upload</button>
     </div>
 
-    <!-- Categorias -->
     <div class="cat-row" id="catRow">
       <button class="cat-btn active" data-cat="">Todos <span class="cat-count">0</span></button>
       <button class="cat-btn" data-cat="peticao">📄 Petições <span class="cat-count">0</span></button>
@@ -195,12 +209,11 @@
       <button class="cat-btn" data-cat="outros">📎 Outros <span class="cat-count">0</span></button>
     </div>
 
-    <!-- Tabela -->
     <div class="docs-card">
       <div class="docs-card-header">
         <div>
           <div class="dch-title">Repositório de Documentos</div>
-          <div class="dch-count" id="docCount">0 documentos</div>
+          <div class="dch-count" id="docCount">Carregando...</div>
         </div>
       </div>
       <div style="overflow-x:auto;">
@@ -218,213 +231,57 @@
         </table>
       </div>
     </div>
-
   </main>
 </div>
 
+<div class="upload-modal" id="uploadModal">
+  <div class="upload-dialog" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+    <div class="upload-head">
+      <div class="upload-title" id="uploadTitle">Enviar documento</div>
+      <button class="upload-close" type="button" id="closeUploadBtn">×</button>
+    </div>
+    <form class="upload-form" id="uploadForm">
+      <div class="upload-field full">
+        <label for="arquivoInput">Arquivo</label>
+        <input type="file" id="arquivoInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" required>
+        <div class="file-meta" id="fileMeta">PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG ou PNG. Limite de 10 MB.</div>
+      </div>
+      <div class="upload-field">
+        <label for="tituloInput">Título</label>
+        <input type="text" id="tituloInput" maxlength="180" placeholder="Opcional">
+      </div>
+      <div class="upload-field">
+        <label for="categoriaInput">Categoria</label>
+        <select id="categoriaInput">
+          <option value="outros">Outros</option>
+          <option value="peticao">Petição</option>
+          <option value="contrato">Contrato</option>
+          <option value="laudo">Laudo</option>
+          <option value="procuracao">Procuração</option>
+          <option value="decisao">Decisão Judicial</option>
+        </select>
+      </div>
+      <div class="upload-field">
+        <label for="clienteInput">Cliente</label>
+        <select id="clienteInput"><option value="">Selecione um cliente</option></select>
+      </div>
+      <div class="upload-field">
+        <label for="processoInput">Processo</label>
+        <select id="processoInput"><option value="">Sem processo vinculado</option></select>
+      </div>
+      <div class="upload-field full">
+        <label for="descricaoInput">Descrição</label>
+        <textarea id="descricaoInput" maxlength="2000" placeholder="Opcional"></textarea>
+      </div>
+      <div class="upload-actions">
+        <button class="btn-secondary" type="button" id="cancelUploadBtn">Cancelar</button>
+        <button class="btn-primary" type="submit" id="submitUploadBtn">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="../js/dashboard.js"></script>
-<script>
-(function(){
-  const STORE_KEY = 'jf_documentos';
-  const CATEGORIAS = ['', 'peticao', 'contrato', 'laudo', 'procuracao', 'decisao', 'outros'];
-  const catLabel = {
-    peticao:'Petição',
-    contrato:'Contrato',
-    laudo:'Laudo',
-    procuracao:'Procuração',
-    decisao:'Decisão Judicial',
-    outros:'Outros'
-  };
-  const catClass = {
-    peticao:'cb-peticao',
-    contrato:'cb-contrato',
-    laudo:'cb-laudo',
-    procuracao:'cb-procuracao',
-    decisao:'cb-decisao',
-    outros:'cb-outros'
-  };
-
-  let docs = carregarDocs();
-  let activeCat = '';
-
-  function carregarDocs() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function salvarDocs() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(docs));
-  }
-
-  function escapeHtml(valor) {
-    return String(valor ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  function normalizar(valor) {
-    return String(valor ?? '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  }
-
-  function uid() {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  }
-
-  function formatBytes(bytes) {
-    const n = Number(bytes || 0);
-    if (n < 1024) return `${n} B`;
-    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
-    return `${(n / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  function formatDate(timestamp) {
-    const data = timestamp ? new Date(timestamp) : new Date();
-    return data.toLocaleDateString('pt-BR');
-  }
-
-  function iconByName(nome) {
-    const ext = String(nome || '').split('.').pop().toLowerCase();
-    if (ext === 'pdf') return { icon:'📄', cor:'#EEF3FF' };
-    if (['doc', 'docx'].includes(ext)) return { icon:'📝', cor:'#ECFDF5' };
-    if (['xls', 'xlsx'].includes(ext)) return { icon:'📊', cor:'#FFFBEB' };
-    if (['jpg', 'jpeg', 'png'].includes(ext)) return { icon:'🖼', cor:'#F5F3FF' };
-    return { icon:'📎', cor:'#F1F5F9' };
-  }
-
-  function docFromFile(file) {
-    const visual = iconByName(file.name);
-    return {
-      id: uid(),
-      nome: file.name,
-      cat: 'outros',
-      icon: visual.icon,
-      cor: visual.cor,
-      tam: formatBytes(file.size),
-      data: formatDate(Date.now()),
-      origem: 'Upload local',
-      tipoArquivo: file.type || '',
-      lastModified: file.lastModified || null,
-      registradoEm: new Date().toISOString()
-    };
-  }
-
-  function atualizarContadores() {
-    CATEGORIAS.forEach(cat => {
-      const btn = document.querySelector(`.cat-btn[data-cat="${cat}"]`);
-      const count = cat ? docs.filter(d => d.cat === cat).length : docs.length;
-      const span = btn?.querySelector('.cat-count');
-      if (span) span.textContent = count;
-    });
-  }
-
-  function render(list){
-    document.getElementById('docCount').textContent = `${list.length} documento(s)`;
-    atualizarContadores();
-
-    if (!list.length) {
-      document.getElementById('docsBody').innerHTML = `
-        <tr>
-          <td colspan="5">
-            <div class="docs-empty">
-              <strong>Nenhum documento real cadastrado</strong>
-              <span>Os documentos aparecerão aqui somente depois de você selecionar arquivos.</span>
-            </div>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    document.getElementById('docsBody').innerHTML = list.map(d => `<tr>
-      <td>
-        <div class="doc-cell">
-          <div class="doc-icon" style="background:${escapeHtml(d.cor)};">${escapeHtml(d.icon)}</div>
-          <div>
-            <div class="doc-name">${escapeHtml(d.nome)}</div>
-            <div class="doc-proc">${escapeHtml(d.origem || 'Upload local')}</div>
-          </div>
-        </div>
-      </td>
-      <td><span class="cat-badge ${catClass[d.cat] || 'cb-outros'}">${escapeHtml(catLabel[d.cat] || 'Outros')}</span></td>
-      <td class="doc-size">${escapeHtml(d.tam)}</td>
-      <td class="doc-date">${escapeHtml(d.data)}</td>
-      <td>
-        <div class="doc-actions">
-          <button class="btn-doc" title="Remover registro" data-action="delete" data-id="${escapeHtml(d.id)}">✕</button>
-        </div>
-      </td>
-    </tr>`).join('');
-  }
-
-  function applyFilters(){
-    const q = normalizar(document.getElementById('searchInput').value);
-    const cat = document.getElementById('filterCat').value || activeCat;
-    render(docs.filter(d => {
-      const texto = normalizar(`${d.nome} ${d.origem || ''} ${catLabel[d.cat] || ''}`);
-      return (!q || texto.includes(q)) && (!cat || d.cat === cat);
-    }));
-  }
-
-  function registrarArquivos(files) {
-    const validos = files.filter(file => file && file.name);
-    if (!validos.length) return;
-
-    const novos = validos.map(docFromFile);
-    docs = [...novos, ...docs];
-    salvarDocs();
-    applyFilters();
-    window.JurisFlow?.showToast(`${novos.length} documento(s) registrado(s).`, 'success');
-  }
-
-  document.getElementById('searchInput').addEventListener('input', applyFilters);
-  document.getElementById('filterCat').addEventListener('change', applyFilters);
-
-  document.getElementById('catRow').addEventListener('click', e => {
-    const btn = e.target.closest('.cat-btn');
-    if(!btn) return;
-    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    activeCat = btn.dataset.cat;
-    document.getElementById('filterCat').value = '';
-    applyFilters();
-  });
-
-  document.getElementById('docsBody').addEventListener('click', e => {
-    const btn = e.target.closest('[data-action="delete"]');
-    if (!btn) return;
-    docs = docs.filter(doc => doc.id !== btn.dataset.id);
-    salvarDocs();
-    applyFilters();
-    window.JurisFlow?.showToast('Registro de documento removido.', 'success');
-  });
-
-  const zone = document.getElementById('uploadZone');
-  const fileInput = document.getElementById('fileInput');
-  zone.addEventListener('click', () => fileInput.click());
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('drag');
-    registrarArquivos([...e.dataTransfer.files]);
-  });
-  fileInput.addEventListener('change', e => {
-    registrarArquivos([...e.target.files]);
-    fileInput.value = '';
-  });
-
-  render(docs);
-})();
-</script>
+<script src="../js/documentos.js"></script>
 </body>
 </html>

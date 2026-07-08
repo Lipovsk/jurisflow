@@ -2,7 +2,10 @@ package com.jurisflow.jurisflow.controller;
 
 import com.jurisflow.jurisflow.model.Cliente;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
+import com.jurisflow.jurisflow.service.DocumentoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -11,9 +14,11 @@ import java.util.List;
 public class ClienteController {
 
     private final ClienteRepository clienteRepository;
+    private final DocumentoService documentoService;
 
-    public ClienteController(ClienteRepository clienteRepository) {
+    public ClienteController(ClienteRepository clienteRepository, DocumentoService documentoService) {
         this.clienteRepository = clienteRepository;
+        this.documentoService = documentoService;
     }
 
     @GetMapping
@@ -30,7 +35,8 @@ public class ClienteController {
 
     @GetMapping("/{id}")
     public Cliente buscarPorId(@PathVariable Long id) {
-        return clienteRepository.findById(id).orElse(null);
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado."));
     }
 
     @PutMapping("/{id}")
@@ -59,11 +65,20 @@ public class ClienteController {
             cliente.setObsRapida(clienteAtualizado.getObsRapida());
             cliente.setObservacoes(clienteAtualizado.getObservacoes());
             return clienteRepository.save(cliente);
-        }).orElse(null);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado."));
     }
 
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
+        if (!clienteRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado.");
+        }
+        if (documentoService.existeDocumentoPorCliente(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Não é possível excluir este cliente porque existem documentos vinculados ao histórico dele."
+            );
+        }
         clienteRepository.deleteById(id);
     }
 }

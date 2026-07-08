@@ -306,6 +306,15 @@
       .replaceAll("'", '&#039;');
   }
 
+  async function lerMensagemErroApi(resposta, fallback) {
+    try {
+      const dados = await resposta.json();
+      return dados?.message || dados?.erro || dados?.error || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
   function normalizarTexto(value) {
     return String(value ?? '')
       .trim()
@@ -512,6 +521,13 @@
     return data.toLocaleDateString('pt-BR', { month:'short', year:'numeric' });
   }
 
+  function fmtBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  }
+
   function setSecaoErro(bodyId, countId, mensagem) {
     const body = document.getElementById(bodyId);
     const count = document.getElementById(countId);
@@ -607,6 +623,37 @@
     `;
   }
 
+  function renderizarDocumentosProcesso(documentos) {
+    const body = document.getElementById('documentosProcessoBody');
+    const count = document.getElementById('documentosProcessoCount');
+    if (!body || !count) return;
+
+    const lista = Array.isArray(documentos) ? documentos : [];
+    count.textContent = `${lista.length}`;
+
+    if (!lista.length) {
+      body.innerHTML = '<div class="empty-state">Nenhum documento vinculado a este processo.</div>';
+      return;
+    }
+
+    body.innerHTML = `
+      <div class="linked-list">
+        ${lista.map(documento => `
+          <div class="linked-item">
+            <div class="linked-top">
+              <div>
+                <div class="linked-title">${escapeHtml(texto(documento.titulo || documento.nomeOriginal))}</div>
+                <div class="linked-meta">${escapeHtml(texto(documento.categoria, 'Documento'))} · ${escapeHtml(fmtBytes(documento.tamanhoBytes))} · ${escapeHtml(fmtData(documento.dataUpload))}</div>
+              </div>
+              <button class="btn-act btn-outline-act" type="button" data-download-documento="${escapeHtml(documento.id)}">Baixar</button>
+            </div>
+            ${documento.descricao ? `<div class="linked-desc">${escapeHtml(documento.descricao)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
   async function buscarLista(url) {
     const resposta = await fetch(url);
     if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
@@ -615,9 +662,10 @@
   }
 
   async function carregarVinculosProcesso() {
-    const [compromissos, honorarios] = await Promise.allSettled([
+    const [compromissos, honorarios, documentos] = await Promise.allSettled([
       buscarLista(`${API_BASE}/compromissos/processo/${processoId}`),
-      buscarLista(`${API_BASE}/honorarios/processo/${processoId}`)
+      buscarLista(`${API_BASE}/honorarios/processo/${processoId}`),
+      buscarLista(`${API_BASE}/documentos?processoId=${processoId}`)
     ]);
 
     if (compromissos.status === 'fulfilled') {
@@ -639,6 +687,17 @@
         'honorariosProcessoBody',
         'honorariosProcessoCount',
         'Não foi possível carregar os honorários vinculados a este processo.'
+      );
+    }
+
+    if (documentos.status === 'fulfilled') {
+      renderizarDocumentosProcesso(documentos.value);
+    } else {
+      console.error('Erro ao carregar documentos do processo:', documentos.reason);
+      setSecaoErro(
+        'documentosProcessoBody',
+        'documentosProcessoCount',
+        'Não foi possível carregar os documentos vinculados a este processo.'
       );
     }
   }
@@ -708,6 +767,7 @@
         <div class="proc-actions">
           <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
           <button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>
+          <button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Excluir</button>
         </div>
       </div>
 
@@ -819,9 +879,12 @@
 
       <div class="section-card">
         <div class="sc-head">
-          <span class="sc-title">📋 Histórico e documentos</span>
+          <span class="sc-title">📄 Documentos vinculados</span>
+          <span class="sc-count" id="documentosProcessoCount">Carregando</span>
         </div>
-        <div class="empty-state">Histórico do processo, anexos e documentos ainda não estão disponíveis nesta etapa.</div>
+        <div id="documentosProcessoBody">
+          <div class="empty-state">Carregando documentos vinculados...</div>
+        </div>
       </div>
     `;
   }
@@ -1044,6 +1107,53 @@
     }
   }
 
+  async function baixarDocumento(idDocumento) {
+    try {
+      const resposta = await fetch(`${API_BASE}/documentos/${idDocumento}/download`);
+      if (!resposta.ok) {
+        let mensagem = 'Erro ao baixar documento.';
+        try {
+          const erro = await resposta.json();
+          mensagem = erro.message || mensagem;
+        } catch {}
+        throw new Error(mensagem);
+      }
+
+      const blob = await resposta.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `documento-${idDocumento}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (erro) {
+      console.error('Erro ao baixar documento:', erro);
+      toast(erro.message || 'Erro ao baixar documento.', 'error');
+    }
+  }
+
+  async function excluirProcesso() {
+    if (!confirm('Tem certeza que deseja excluir este processo?')) return;
+
+    try {
+      const resposta = await fetch(`${API_BASE}/processos/${processoId}`, {
+        method: 'DELETE'
+      });
+
+      if (!resposta.ok) {
+        throw new Error(await lerMensagemErroApi(resposta, 'Erro ao excluir processo.'));
+      }
+
+      alert('Processo excluído com sucesso!');
+      window.location.href = 'processos.html';
+    } catch (erro) {
+      console.error('Erro ao excluir processo:', erro);
+      alert(erro.message || 'Erro ao excluir processo.');
+    }
+  }
+
   async function carregarProcesso() {
     try {
       const resposta = await fetch(`${API_BASE}/processos/${processoId}`);
@@ -1082,6 +1192,9 @@
   });
   document.addEventListener('click', event => {
     if (event.target.closest('#btnEditarProcesso')) abrirModalEdicao();
+    if (event.target.closest('#btnExcluirProcesso')) excluirProcesso();
+    const botaoDownload = event.target.closest('[data-download-documento]');
+    if (botaoDownload) baixarDocumento(botaoDownload.dataset.downloadDocumento);
   });
 
   carregarProcesso();

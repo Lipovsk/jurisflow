@@ -8,6 +8,7 @@ import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.CompromissoRepository;
 import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
+import com.jurisflow.jurisflow.service.DocumentoService;
 import com.jurisflow.jurisflow.service.ProcessoSincronizacaoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class ProcessoController {
     private final ClienteRepository clienteRepository;
     private final CompromissoRepository compromissoRepository;
     private final HonorarioRepository honorarioRepository;
+    private final DocumentoService documentoService;
     private final ProcessoSincronizacaoService processoSincronizacaoService;
 
     public ProcessoController(
@@ -34,12 +36,14 @@ public class ProcessoController {
             ClienteRepository clienteRepository,
             CompromissoRepository compromissoRepository,
             HonorarioRepository honorarioRepository,
+            DocumentoService documentoService,
             ProcessoSincronizacaoService processoSincronizacaoService
     ) {
         this.processoRepository = processoRepository;
         this.clienteRepository = clienteRepository;
         this.compromissoRepository = compromissoRepository;
         this.honorarioRepository = honorarioRepository;
+        this.documentoService = documentoService;
         this.processoSincronizacaoService = processoSincronizacaoService;
     }
 
@@ -153,6 +157,13 @@ public class ProcessoController {
                         HttpStatus.NOT_FOUND,
                         "Processo nao encontrado."
                 ));
+
+        if (documentoService.existeDocumentoPorProcesso(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Não é possível excluir este processo porque existem documentos vinculados ao histórico dele."
+            );
+        }
 
         List<Compromisso> compromissos = compromissoRepository.findByProcessoId(id);
         List<Honorario> honorarios = honorarioRepository.findByProcessoId(id);

@@ -602,6 +602,15 @@
           .replaceAll("'", '&#039;');
       }
 
+      async function lerMensagemErroApi(resposta, fallback) {
+        try {
+          const dados = await resposta.json();
+          return dados?.message || dados?.erro || dados?.error || fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
       function campo(obj, ...nomes) {
         for (const nome of nomes) {
           const texto = String(obj?.[nome] ?? '').trim();
@@ -642,6 +651,13 @@
       function clienteDesde(dataCadastro) {
         const data = fmtData(dataCadastro);
         return data === NAO_INFORMADO ? NAO_INFORMADO : 'Cliente desde ' + data;
+      }
+
+      function fmtBytes(bytes) {
+        const n = Number(bytes || 0);
+        if (n < 1024) return `${n} B`;
+        if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+        return `${(n / 1024 / 1024).toFixed(1)} MB`;
       }
 
       function campoInfo(label, value, extraStyle = '') {
@@ -710,6 +726,16 @@
 
           const honorarios = [];
 
+          let documentos = [];
+          try {
+            const documentosResposta = await fetch(`http://localhost:8080/documentos?clienteId=${id}`);
+            if (documentosResposta.ok) {
+              documentos = await documentosResposta.json();
+            }
+          } catch (erroDocumentos) {
+            console.error('Erro ao carregar documentos do cliente:', erroDocumentos);
+          }
+
           const nomeCliente = valor(cliente.nome);
 
           document.getElementById('pageTitle').textContent = nomeCliente;
@@ -760,6 +786,23 @@
 
           function honRows() {
             return '<div class="empty-state">Nenhum honorário registrado</div>';
+          }
+
+          function docRows() {
+            if (!documentos.length) {
+              return '<div class="empty-state">Nenhum documento vinculado</div>';
+            }
+
+            return documentos.map(d => `
+              <div class="hon-row">
+                <div class="proc-icon">📄</div>
+                <div class="hon-info">
+                  <div class="hon-tipo">${escapeHtml(valor(d.titulo || d.nomeOriginal))}</div>
+                  <div class="hon-sub">${escapeHtml(valor(d.categoria))} · ${escapeHtml(fmtBytes(d.tamanhoBytes))} · ${escapeHtml(fmtData(d.dataUpload))}</div>
+                </div>
+                <button class="btn-act btn-outline-act" type="button" data-download-documento="${escapeHtml(d.id)}">Baixar</button>
+              </div>
+            `).join('');
           }
 
           main.innerHTML = `
@@ -887,6 +930,14 @@
           </div>
           ${honRows()}
         </div>
+
+        <div class="section-card">
+          <div class="sc-head">
+            <span class="sc-title">📄 Documentos vinculados</span>
+            <span class="sc-count">${documentos.length}</span>
+          </div>
+          ${docRows()}
+        </div>
       `;
 
           document.getElementById("btnEditarCliente").addEventListener("click", () => {
@@ -906,7 +957,7 @@
               });
 
               if (!resposta.ok) {
-                throw new Error("Erro ao excluir");
+                throw new Error(await lerMensagemErroApi(resposta, "Erro ao excluir cliente."));
               }
 
               alert("Cliente excluído com sucesso!");
@@ -917,7 +968,7 @@
 
               console.error(erro);
 
-              alert("Erro ao excluir cliente.");
+              alert(erro.message || "Erro ao excluir cliente.");
 
             }
 
@@ -1157,6 +1208,39 @@
           carregarCliente();
         });
       }
+
+      async function baixarDocumento(idDocumento) {
+        try {
+          const resposta = await fetch(`http://localhost:8080/documentos/${idDocumento}/download`);
+          if (!resposta.ok) {
+            let mensagem = 'Erro ao baixar documento.';
+            try {
+              const erro = await resposta.json();
+              mensagem = erro.message || mensagem;
+            } catch {}
+            throw new Error(mensagem);
+          }
+
+          const blob = await resposta.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `documento-${idDocumento}`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+        } catch (erro) {
+          console.error(erro);
+          alert(erro.message || 'Erro ao baixar documento.');
+        }
+      }
+
+      document.addEventListener('click', event => {
+        const botao = event.target.closest('[data-download-documento]');
+        if (!botao) return;
+        baixarDocumento(botao.dataset.downloadDocumento);
+      });
 
       carregarCliente();
     })();
