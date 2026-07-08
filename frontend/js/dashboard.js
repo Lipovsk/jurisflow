@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLogout();
   animateCounters();
   initGlobalSearch();
-  initFAB();
+  // Atalho flutuante desativado para evitar a bolinha móvel nas telas.
   initRippleEffects();
   initQuickActions();
   initStatProgressBars();
