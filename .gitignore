@@ -6,3 +6,6 @@
 # Arquivos locais e segredos
 .env
 application-local.properties
+
+# Backups locais (podem conter dados reais e sigilosos)
+backups/
