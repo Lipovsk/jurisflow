@@ -127,6 +127,11 @@
     .ab-editor { background:#EEF3FF; color:#2563EB; }
     .ab-viewer { background:#F1F5F9; color:#64748B; }
     .add-user-panel { display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:18px; margin-top:16px; }
+    .user-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+    .status-active { font-size:.78rem; font-weight:600; color:var(--green); }
+    .status-inactive { font-size:.78rem; font-weight:600; color:var(--red); }
+    .admin-only.hidden { display:none !important; }
+    .permission-note { padding:18px; border:1px solid #FDE68A; background:#FFFBEB; color:#92400E; border-radius:var(--radius-md); font-size:.84rem; }
 
     /* Integrações */
     .int-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
@@ -226,7 +231,7 @@
           <button class="snav-item" data-target="aparencia"><span class="si">🎨</span> Aparência</button>
           <div class="snav-div"></div>
           <button class="snav-item" data-target="seguranca"><span class="si">🔒</span> Segurança</button>
-          <button class="snav-item" data-target="usuarios"><span class="si">👥</span> Usuários</button>
+          <button class="snav-item admin-only" data-target="usuarios"><span class="si">👥</span> Usuários</button>
           <div class="snav-div"></div>
           <button class="snav-item" data-target="personalizacao"><span class="si">🏷️</span> Personalização</button>
           <button class="snav-item" data-target="doc-cfg"><span class="si">📄</span> Documentos</button>
@@ -666,7 +671,10 @@
                 <div class="cfg-card-title">Equipe do Escritório</div>
                 <div class="cfg-card-sub">Gerencie quem tem acesso ao sistema</div>
               </div>
-              <button class="btn-primary btn-sm" id="btnAddUser">＋ Adicionar Usuário</button>
+              <button class="btn-primary btn-sm admin-only" id="btnAddUser">＋ Novo Usuário</button>
+            </div>
+            <div id="usuariosSemPermissao" class="permission-note" style="display:none;margin:16px 24px 0;">
+              Você não tem permissão para acessar esta área.
             </div>
             <div style="overflow-x:auto;">
               <table class="user-table">
@@ -679,50 +687,17 @@
                     <th></th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="usuariosTabelaBody">
                   <tr>
-                    <td>
-                      <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0D1B2A,#1a2f52);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--gold);">CM</div>
-                        <div><div style="font-weight:600;font-size:.84rem;">Dr. Carlos Mendes</div><div style="font-size:.72rem;color:var(--gray-400);">Proprietário</div></div>
-                      </div>
-                    </td>
-                    <td style="font-size:.82rem;color:var(--gray-600);">carlos.mendes@mendesadvogados.com.br</td>
-                    <td><span class="access-badge ab-admin">Administrador</span></td>
-                    <td><span style="font-size:.78rem;font-weight:600;color:var(--green);">● Ativo</span></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;">PS</div>
-                        <div><div style="font-weight:600;font-size:.84rem;">Paula Santos</div><div style="font-size:.72rem;color:var(--gray-400);">Assistente Jurídica</div></div>
-                      </div>
-                    </td>
-                    <td style="font-size:.82rem;color:var(--gray-600);">paula.santos@mendesadvogados.com.br</td>
-                    <td><span class="access-badge ab-editor">Editor</span></td>
-                    <td><span style="font-size:.78rem;font-weight:600;color:var(--green);">● Ativo</span></td>
-                    <td><button class="btn-outline btn-sm btn-danger">Remover</button></td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6B7280,#4B5563);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;">LO</div>
-                        <div><div style="font-weight:600;font-size:.84rem;">Lucas Oliveira</div><div style="font-size:.72rem;color:var(--gray-400);">Estagiário</div></div>
-                      </div>
-                    </td>
-                    <td style="font-size:.82rem;color:var(--gray-600);">lucas.oliveira@mendesadvogados.com.br</td>
-                    <td><span class="access-badge ab-viewer">Visualizador</span></td>
-                    <td><span style="font-size:.78rem;font-weight:600;color:var(--amber);">● Pendente</span></td>
-                    <td><button class="btn-outline btn-sm btn-danger">Remover</button></td>
+                    <td colspan="5" style="text-align:center;color:var(--gray-400);padding:24px;">Carregando usuários...</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <!-- Form Add User -->
+            <!-- Form usuário -->
             <div class="add-user-panel" id="addUserPanel">
-              <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--navy);margin-bottom:14px;">Novo Usuário</div>
+              <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--navy);margin-bottom:14px;" id="userFormTitle">Novo Usuário</div>
               <div class="fgrid">
                 <div class="field">
                   <label>Nome Completo *</label>
@@ -733,21 +708,43 @@
                   <input type="email" id="newUserEmail" placeholder="email@escritorio.com.br">
                 </div>
                 <div class="field">
-                  <label>Tipo de Acesso</label>
+                  <label>Perfil *</label>
                   <select id="newUserTipo">
-                    <option value="admin">Administrador</option>
-                    <option value="editor" selected>Editor</option>
-                    <option value="viewer">Visualizador</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="ADVOGADO" selected>ADVOGADO</option>
+                    <option value="ASSISTENTE">ASSISTENTE</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label>Cargo</label>
-                  <input type="text" id="newUserCargo" placeholder="Ex.: Estagiário, Advogado…">
+                  <label>Senha inicial *</label>
+                  <input type="password" id="newUserSenha" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                  <span class="field-hint" id="newUserSenhaHint">Obrigatória apenas no cadastro.</span>
+                </div>
+                <div class="field">
+                  <label>Status</label>
+                  <select id="newUserAtivo">
+                    <option value="true" selected>Ativo</option>
+                    <option value="false">Inativo</option>
+                  </select>
                 </div>
               </div>
               <div style="display:flex;gap:10px;margin-top:16px;">
-                <button class="btn-primary btn-sm" id="btnSaveUser">✅ Adicionar</button>
+                <button class="btn-primary btn-sm" id="btnSaveUser">Salvar usuário</button>
                 <button class="btn-outline btn-sm" id="btnCancelAddUser">Cancelar</button>
+              </div>
+            </div>
+
+            <div class="add-user-panel" id="resetSenhaPanel">
+              <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--navy);margin-bottom:14px;" id="resetSenhaTitle">Resetar senha</div>
+              <div class="fgrid">
+                <div class="field fcol">
+                  <label>Nova senha *</label>
+                  <input type="password" id="resetUserSenha" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <button class="btn-primary btn-sm" id="btnConfirmResetSenha">Resetar senha</button>
+                <button class="btn-outline btn-sm" id="btnCancelResetSenha">Cancelar</button>
               </div>
             </div>
           </div>

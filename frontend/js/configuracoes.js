@@ -2,6 +2,7 @@
   'use strict';
 
   const Preferencias = window.JurisFlowPreferencias;
+  const API_BASE = 'http://localhost:8080';
   const ESCALA_LABEL = {
     pequeno: '90%',
     padrao: '100%',
@@ -16,6 +17,9 @@
     formatoData: 'ddmmyyyy',
     paginaInicial: 'dashboard.html'
   };
+  let usuarios = [];
+  let usuarioEditandoId = null;
+  let usuarioResetSenhaId = null;
 
   function byId(id) {
     return document.getElementById(id);
@@ -27,6 +31,48 @@
       return;
     }
     console[tipo === 'error' ? 'error' : 'log'](mensagem);
+  }
+
+  async function lerMensagemErroApi(response, fallback) {
+    try {
+      const data = await response.json();
+      return data?.message || data?.erro || data?.error || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function usuarioLogado() {
+    return window.JurisFlowAuth?.getUsuarioLogado?.() || window.JurisFlowAuth?.getUsuario?.() || null;
+  }
+
+  function isAdmin() {
+    return window.JurisFlowAuth?.isAdmin?.() === true;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
+  function iniciais(nome) {
+    return String(nome || '?')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(parte => parte[0] || '')
+      .join('')
+      .toUpperCase() || '?';
+  }
+
+  function badgePerfil(perfil) {
+    const cls = perfil === 'ADMIN' ? 'ab-admin' : perfil === 'ADVOGADO' ? 'ab-editor' : 'ab-viewer';
+    return `<span class="access-badge ${cls}">${escapeHtml(perfil)}</span>`;
   }
 
   function setPreviewImage(preview, src, alt) {
@@ -154,7 +200,7 @@
       text.style.color = colors[index];
     });
 
-    byId('btnAlterarSenha')?.addEventListener('click', () => {
+    byId('btnAlterarSenha')?.addEventListener('click', async () => {
       const atual = byId('senhaAtual')?.value;
       const nova = byId('novaSenha')?.value;
       const conf = byId('confirmaSenha')?.value;
@@ -172,7 +218,29 @@
         return;
       }
 
-      recursoNaoConectado('Alteração de senha não está conectada a um endpoint real nesta tela.');
+      try {
+        const response = await fetch(`${API_BASE}/usuarios/me/senha`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ senhaAtual: atual, novaSenha: nova })
+        });
+
+        if (!response.ok) {
+          throw new Error(await lerMensagemErroApi(response, 'Erro ao alterar senha.'));
+        }
+
+        ['senhaAtual', 'novaSenha', 'confirmaSenha'].forEach(id => {
+          const input = byId(id);
+          if (input) input.value = '';
+        });
+        const fill = byId('strengthFill');
+        const text = byId('strengthText');
+        if (fill) fill.style.width = '0';
+        if (text) text.textContent = '';
+        toast('Senha alterada com sucesso.', 'success');
+      } catch (erro) {
+        toast(erro.message || 'Erro ao alterar senha.', 'error');
+      }
     });
   }
 
@@ -224,19 +292,245 @@
   }
 
   function initUsuarios() {
+    const navUsuarios = document.querySelector('.snav-item[data-target="usuarios"]');
+    const semPermissao = byId('usuariosSemPermissao');
+    const tabela = document.querySelector('#sec-usuarios .user-table')?.closest('div');
+
+    if (!isAdmin()) {
+      navUsuarios?.classList.add('hidden');
+      byId('btnAddUser')?.classList.add('hidden');
+      if (semPermissao) semPermissao.style.display = 'block';
+      if (tabela) tabela.style.display = 'none';
+      return;
+    }
+
+    carregarUsuarios();
+
     byId('btnAddUser')?.addEventListener('click', () => {
-      const panel = byId('addUserPanel');
-      if (panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+      abrirFormularioUsuario();
     });
 
     byId('btnCancelAddUser')?.addEventListener('click', () => {
-      const panel = byId('addUserPanel');
-      if (panel) panel.style.display = 'none';
+      fecharFormularioUsuario();
     });
 
-    byId('btnSaveUser')?.addEventListener('click', () => {
-      recursoNaoConectado('Cadastro de usuário não está conectado a um endpoint real nesta tela.');
+    byId('btnSaveUser')?.addEventListener('click', salvarUsuario);
+
+    byId('btnCancelResetSenha')?.addEventListener('click', fecharResetSenha);
+    byId('btnConfirmResetSenha')?.addEventListener('click', resetarSenhaUsuario);
+
+    byId('usuariosTabelaBody')?.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const usuario = usuarios.find(item => item.id === id);
+      if (!usuario) return;
+
+      if (button.dataset.action === 'editar') abrirFormularioUsuario(usuario);
+      if (button.dataset.action === 'toggle') alternarStatusUsuario(usuario);
+      if (button.dataset.action === 'reset') abrirResetSenha(usuario);
     });
+  }
+
+  async function carregarUsuarios() {
+    const tbody = byId('usuariosTabelaBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:24px;">Carregando usuários...</td></tr>';
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/usuarios?incluirInativos=true`);
+      if (response.status === 403) {
+        throw new Error('Você não tem permissão para acessar esta área.');
+      }
+      if (!response.ok) {
+        throw new Error(await lerMensagemErroApi(response, 'Erro ao carregar usuários.'));
+      }
+      usuarios = await response.json();
+      renderUsuarios();
+    } catch (erro) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--red);padding:24px;">${escapeHtml(erro.message || 'Erro ao carregar usuários.')}</td></tr>`;
+      }
+      toast(erro.message || 'Erro ao carregar usuários.', 'error');
+    }
+  }
+
+  function renderUsuarios() {
+    const tbody = byId('usuariosTabelaBody');
+    if (!tbody) return;
+
+    if (!usuarios.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:24px;">Nenhum usuário cadastrado.</td></tr>';
+      return;
+    }
+
+    const logado = usuarioLogado();
+    tbody.innerHTML = usuarios.map(usuario => {
+      const ativo = usuario.ativo === true;
+      const isSelf = logado && Number(logado.id) === Number(usuario.id);
+      const toggleLabel = ativo ? 'Desativar' : 'Ativar';
+      const toggleClass = ativo ? 'btn-danger' : '';
+      const toggleDisabled = isSelf ? ' disabled title="Você não pode desativar seu próprio usuário por aqui."' : '';
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0D1B2A,#1a2f52);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--gold);">${escapeHtml(iniciais(usuario.nome))}</div>
+              <div>
+                <div style="font-weight:600;font-size:.84rem;">${escapeHtml(usuario.nome)}</div>
+                <div style="font-size:.72rem;color:var(--gray-400);">${isSelf ? 'Você' : 'Usuário'}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:.82rem;color:var(--gray-600);">${escapeHtml(usuario.email)}</td>
+          <td>${badgePerfil(usuario.perfil)}</td>
+          <td><span class="${ativo ? 'status-active' : 'status-inactive'}">● ${ativo ? 'Ativo' : 'Inativo'}</span></td>
+          <td>
+            <div class="user-actions">
+              <button class="btn-outline btn-sm" data-action="editar" data-id="${usuario.id}">Editar</button>
+              <button class="btn-outline btn-sm" data-action="reset" data-id="${usuario.id}"${isSelf ? ' disabled title="Use Minha senha para alterar sua senha."' : ''}>Resetar senha</button>
+              <button class="btn-outline btn-sm ${toggleClass}" data-action="toggle" data-id="${usuario.id}"${toggleDisabled}>${toggleLabel}</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function abrirFormularioUsuario(usuario = null) {
+    usuarioEditandoId = usuario?.id ?? null;
+    byId('userFormTitle').textContent = usuario ? 'Editar Usuário' : 'Novo Usuário';
+    byId('newUserNome').value = usuario?.nome || '';
+    byId('newUserEmail').value = usuario?.email || '';
+    byId('newUserTipo').value = usuario?.perfil || 'ADVOGADO';
+    byId('newUserAtivo').value = String(usuario?.ativo ?? true);
+    byId('newUserSenha').value = '';
+    byId('newUserSenha').closest('.field').style.display = usuario ? 'none' : 'flex';
+    byId('newUserSenhaHint').textContent = usuario ? '' : 'Obrigatória no cadastro.';
+    byId('addUserPanel').style.display = 'block';
+    byId('resetSenhaPanel').style.display = 'none';
+  }
+
+  function fecharFormularioUsuario() {
+    usuarioEditandoId = null;
+    byId('addUserPanel').style.display = 'none';
+  }
+
+  async function salvarUsuario() {
+    const nome = byId('newUserNome')?.value.trim();
+    const email = byId('newUserEmail')?.value.trim();
+    const perfil = byId('newUserTipo')?.value;
+    const ativo = byId('newUserAtivo')?.value === 'true';
+    const senha = byId('newUserSenha')?.value;
+
+    if (!nome || !email || !perfil) {
+      toast('Preencha nome, e-mail e perfil.', 'warning');
+      return;
+    }
+    if (!usuarioEditandoId && !senha) {
+      toast('Informe a senha inicial do usuário.', 'warning');
+      return;
+    }
+    if (!usuarioEditandoId && senha.length < 8) {
+      toast('A senha deve ter pelo menos 8 caracteres.', 'error');
+      return;
+    }
+
+    const editando = Boolean(usuarioEditandoId);
+    const body = editando
+      ? { nome, email, perfil, ativo }
+      : { nome, email, perfil, senha };
+
+    try {
+      const response = await fetch(`${API_BASE}/usuarios${editando ? `/${usuarioEditandoId}` : ''}`, {
+        method: editando ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error(await lerMensagemErroApi(response, 'Erro ao salvar usuário.'));
+      }
+
+      toast(editando ? 'Usuário atualizado com sucesso.' : 'Usuário criado com sucesso.', 'success');
+      fecharFormularioUsuario();
+      await carregarUsuarios();
+    } catch (erro) {
+      toast(erro.message || 'Erro ao salvar usuário.', 'error');
+    }
+  }
+
+  async function alternarStatusUsuario(usuario) {
+    const proximoAtivo = usuario.ativo !== true;
+    const acao = proximoAtivo ? 'ativar' : 'desativar';
+    if (!confirm(`Deseja ${acao} este usuário?`)) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/usuarios/${usuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: usuario.nome,
+          email: usuario.email,
+          perfil: usuario.perfil,
+          ativo: proximoAtivo
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(await lerMensagemErroApi(response, `Erro ao ${acao} usuário.`));
+      }
+
+      toast(`Usuário ${proximoAtivo ? 'ativado' : 'desativado'} com sucesso.`, 'success');
+      await carregarUsuarios();
+    } catch (erro) {
+      toast(erro.message || `Erro ao ${acao} usuário.`, 'error');
+    }
+  }
+
+  function abrirResetSenha(usuario) {
+    usuarioResetSenhaId = usuario.id;
+    byId('resetSenhaTitle').textContent = `Resetar senha de ${usuario.nome}`;
+    byId('resetUserSenha').value = '';
+    byId('resetSenhaPanel').style.display = 'block';
+    byId('addUserPanel').style.display = 'none';
+  }
+
+  function fecharResetSenha() {
+    usuarioResetSenhaId = null;
+    byId('resetSenhaPanel').style.display = 'none';
+  }
+
+  async function resetarSenhaUsuario() {
+    const novaSenha = byId('resetUserSenha')?.value;
+    if (!usuarioResetSenhaId) return;
+    if (!novaSenha) {
+      toast('Informe a nova senha.', 'warning');
+      return;
+    }
+    if (novaSenha.length < 8) {
+      toast('A senha deve ter pelo menos 8 caracteres.', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/usuarios/${usuarioResetSenhaId}/senha`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ novaSenha })
+      });
+
+      if (!response.ok) {
+        throw new Error(await lerMensagemErroApi(response, 'Erro ao resetar senha.'));
+      }
+
+      toast('Senha resetada com sucesso.', 'success');
+      fecharResetSenha();
+    } catch (erro) {
+      toast(erro.message || 'Erro ao resetar senha.', 'error');
+    }
   }
 
   function initFooter() {

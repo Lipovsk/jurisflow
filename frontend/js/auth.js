@@ -67,6 +67,19 @@
     window.location.href = LOGIN_PAGE;
   }
 
+  function getUsuarioLogado() {
+    return getUsuario();
+  }
+
+  function isAdmin() {
+    return getUsuario()?.perfil === 'ADMIN';
+  }
+
+  function exigirAdmin() {
+    if (isAdmin()) return true;
+    throw new Error('Você não tem permissão para acessar esta área.');
+  }
+
   function redirecionarLogin() {
     limparSessao();
     if (!isLoginPage()) {
@@ -89,7 +102,7 @@
 
     const response = await originalFetch(input, requestInit);
 
-    if (shouldAuthenticate && !isAuthLoginCall(input) && (response.status === 401 || response.status === 403)) {
+    if (shouldAuthenticate && !isAuthLoginCall(input) && response.status === 401) {
       redirecionarLogin();
     }
 
@@ -114,6 +127,9 @@
     salvarSessao,
     getToken,
     getUsuario,
+    getUsuarioLogado,
+    isAdmin,
+    exigirAdmin,
     limparSessao,
     temSessao,
     logout

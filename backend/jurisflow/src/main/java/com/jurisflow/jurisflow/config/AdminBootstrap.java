@@ -28,7 +28,7 @@ public class AdminBootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (usuarioRepository.existsByPerfil(PerfilUsuario.ADMIN)) {
+        if (usuarioRepository.existsByPerfilAndAtivoTrue(PerfilUsuario.ADMIN)) {
             return;
         }
 
