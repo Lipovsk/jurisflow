@@ -7,6 +7,7 @@ import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.HonorarioRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,6 +18,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/honorarios")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
 public class HonorarioController {
 
     private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =

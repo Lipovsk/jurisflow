@@ -89,6 +89,12 @@ function setActiveNavItem(page) {
 }
 
 function navigateTo(page) {
+  if (page === 'novo-processo'
+      && window.JurisFlowAuth?.podeEditarProcessos?.() !== true) {
+    showToast('Você não tem permissão para realizar esta ação.', 'error');
+    return;
+  }
+
   const routes = {
     dashboard: 'dashboard.html',
     clientes: 'clientes.html',
@@ -203,8 +209,8 @@ function initGreeting() {
   if (hour < 12) greeting = 'Bom dia';
   else if (hour < 18) greeting = 'Boa tarde';
 
-  const name = AppState.user?.name || '';
-  el.textContent = name ? `${greeting}, ${name} 👋` : `${greeting} 👋`;
+  const name = window.JurisFlowAuth?.getIdentidadeUsuario?.().nome || 'Usuário';
+  el.textContent = `${greeting}, ${name} 👋`;
 }
 
 // ─── Confirmação de logout ────────────────────────────────────────────────────
@@ -233,98 +239,6 @@ function initTopbarDate() {
   });
 }
 
-// ─── Global Search ────────────────────────────────────────────────────────────
-const SEARCH_DATA = [];
-
-function initGlobalSearch() {
-  const input = $('#searchGlobalInput');
-  const dropdown = $('#searchDropdown');
-  const overlay = $('#searchOverlay');
-  if (!input) return;
-
-  function highlight(text, query) {
-    if (!query) return text;
-    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(re, '<mark>$1</mark>');
-  }
-
-  function renderResults(query) {
-    if (!query.trim()) {
-      closeSearch();
-      return;
-    }
-    const q = query.toLowerCase();
-    const matches = SEARCH_DATA.filter(d =>
-      d.name.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q)
-    ).slice(0, 7);
-
-    if (!matches.length) {
-      dropdown.innerHTML = `<div class="sd-footer">Nenhum resultado para "<strong>${query}</strong>"</div>`;
-      openSearch();
-      return;
-    }
-
-    const groups = { cliente: [], processo: [], pagina: [] };
-    matches.forEach(m => groups[m.type]?.push(m));
-    const labels = { cliente: 'Clientes', processo: 'Processos', pagina: 'Páginas' };
-    const typeLabel = { cliente: 'Cliente', processo: 'Processo', pagina: 'Página' };
-
-    let html = '';
-    ['cliente', 'processo', 'pagina'].forEach(type => {
-      if (!groups[type].length) return;
-      html += `<div class="sd-section-label">${labels[type]}</div>`;
-      groups[type].forEach(item => {
-        html += `
-          <div class="sd-item" data-page="${item.page || type + 's'}">
-            <div class="sd-item-icon ${type}">${item.icon}</div>
-            <div class="sd-item-info">
-              <div class="sd-item-name">${highlight(item.name, query)}</div>
-              <div class="sd-item-sub">${item.sub}</div>
-            </div>
-            <span class="sd-item-type ${type}">${typeLabel[type]}</span>
-          </div>`;
-      });
-    });
-    html += `<div class="sd-footer"><span>${matches.length} resultado(s)</span><span><kbd>↵</kbd> para abrir</span></div>`;
-    dropdown.innerHTML = html;
-
-    $$('.sd-item', dropdown).forEach(item => {
-      item.addEventListener('click', () => {
-        const page = item.dataset.page;
-        if (page && navigateTo) navigateTo(page);
-        closeSearch();
-      });
-    });
-    openSearch();
-  }
-
-  function openSearch() {
-    dropdown.classList.add('active');
-    overlay.classList.add('active');
-  }
-  function closeSearch() {
-    dropdown.classList.remove('active');
-    overlay.classList.remove('active');
-  }
-
-  input.addEventListener('input', e => renderResults(e.target.value));
-  overlay.addEventListener('click', () => { closeSearch(); input.value = ''; });
-
-  // Focus on Ctrl+K
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      input.focus();
-      input.select();
-    }
-    if (e.key === 'Escape') {
-      closeSearch();
-      input.value = '';
-      input.blur();
-    }
-  });
-}
-
 // ─── FAB (draggable) ─────────────────────────────────────────────────────────
 function initFAB() {
   const items = [
@@ -333,7 +247,8 @@ function initFAB() {
     { icon: '📅', label: 'Nova Audiência', page: 'agenda' },
     { icon: '⏰', label: 'Novo Prazo', page: 'agenda' },
     { icon: '📄', label: 'Novo Documento', page: 'documentos' },
-  ];
+  ].filter(item => item.page !== 'novo-processo'
+    || window.JurisFlowAuth?.podeEditarProcessos?.() === true);
 
   const backdrop = document.createElement('div');
   backdrop.className = 'fab-backdrop';
@@ -534,7 +449,13 @@ function initRippleEffects() {
 // ─── Quick Actions (botões no topbar) ────────────────────────────────────────
 function initQuickActions() {
   $('#btnNovoClienteTopbar')?.addEventListener('click', () => navigateTo('novo-cliente'));
-  $('#btnNovoProcessoTopbar')?.addEventListener('click', () => navigateTo('novo-processo'));
+  const btnNovoProcesso = $('#btnNovoProcessoTopbar');
+  if (btnNovoProcesso && window.JurisFlowAuth?.podeEditarProcessos?.() !== true) {
+    btnNovoProcesso.hidden = true;
+    btnNovoProcesso.style.display = 'none';
+    return;
+  }
+  btnNovoProcesso?.addEventListener('click', () => navigateTo('novo-processo'));
 }
 
 // ─── Stat Progress Bars ───────────────────────────────────────────────────────
@@ -568,7 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTopbarDate();
   initLogout();
   animateCounters();
-  initGlobalSearch();
   // Atalho flutuante desativado para evitar a bolinha móvel nas telas.
   initRippleEffects();
   initQuickActions();
@@ -667,6 +587,8 @@ async function carregarDashboardReal() {
 
   try {
 
+    const podeAcessarFinanceiro = window.JurisFlowAuth?.podeAcessarFinanceiro?.() === true;
+
     const [
       clientesRes,
       processosRes,
@@ -677,18 +599,18 @@ async function carregarDashboardReal() {
       fetch('http://localhost:8080/clientes'),
       fetch('http://localhost:8080/processos'),
       fetch('http://localhost:8080/compromissos'),
-      fetch('http://localhost:8080/honorarios')
+      podeAcessarFinanceiro ? fetch('http://localhost:8080/honorarios') : Promise.resolve(null)
 
     ]);
 
-    [clientesRes, processosRes, compromissosRes, honorariosRes].forEach(res => {
+    [clientesRes, processosRes, compromissosRes, honorariosRes].filter(Boolean).forEach(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     });
 
     const clientes = await clientesRes.json();
     const processos = await processosRes.json();
     const compromissos = await compromissosRes.json();
-    const honorarios = await honorariosRes.json();
+    const honorarios = honorariosRes ? await honorariosRes.json() : [];
 
     atualizarCardsDashboard({
       clientes,

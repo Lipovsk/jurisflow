@@ -27,6 +27,7 @@
     categoriaAtiva: '',
     carregando: false
   };
+  const podeExcluirDocumentos = window.JurisFlowAuth?.podeExcluirDocumentos?.() === true;
 
   const el = {
     docsBody: document.getElementById('docsBody'),
@@ -237,13 +238,16 @@
       baixar.title = 'Baixar';
       baixar.textContent = '?';
       baixar.addEventListener('click', () => baixarDocumento(doc));
-      const excluir = document.createElement('button');
-      excluir.className = 'btn-doc';
-      excluir.type = 'button';
-      excluir.title = 'Excluir';
-      excluir.textContent = '×';
-      excluir.addEventListener('click', () => excluirDocumento(doc));
-      actions.append(baixar, excluir);
+      actions.appendChild(baixar);
+      if (podeExcluirDocumentos) {
+        const excluir = document.createElement('button');
+        excluir.className = 'btn-doc';
+        excluir.type = 'button';
+        excluir.title = 'Excluir';
+        excluir.textContent = '×';
+        excluir.addEventListener('click', () => excluirDocumento(doc));
+        actions.appendChild(excluir);
+      }
       tdAcoes.appendChild(actions);
 
       tr.append(tdDocumento, tdCategoria, tdTamanho, tdData, tdAcoes);

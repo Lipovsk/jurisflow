@@ -238,8 +238,8 @@
   </nav>
   <div class="sidebar-bottom">
     <div class="user-card" data-action="logout">
-      <div class="user-avatar">CM</div>
-      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <div class="user-avatar">U</div>
+      <div class="user-info"><div class="user-name">Usuário</div><div class="user-role">Perfil</div></div>
       <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
     </div>
   </div>
@@ -256,7 +256,7 @@
       <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
       <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
       <div class="topbar-divider"></div>
-      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+      <div class="topbar-user"><div class="topbar-avatar">U</div><div class="topbar-user-name">Usuário</div></div>
     </div>
   </header>
 
@@ -273,11 +273,20 @@
 
   const API_BASE = 'http://localhost:8080';
   const NAO_INFORMADO = 'Não informado';
+  const MENSAGEM_SEM_PERMISSAO = 'Você não tem permissão para realizar esta ação.';
   const main = document.getElementById('mainContent');
   const idParam = new URLSearchParams(window.location.search).get('id');
   const processoId = Number(idParam);
   let processoAtual = null;
   let clientes = [];
+
+  function podeEditarProcessos() {
+    return window.JurisFlowAuth?.podeEditarProcessos?.() === true;
+  }
+
+  function podeArquivarProcessos() {
+    return window.JurisFlowAuth?.podeArquivarProcessos?.() === true;
+  }
 
   function getCor(id) {
     const CORES = [
@@ -766,8 +775,8 @@
         </div>
         <div class="proc-actions">
           <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
-          <button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>
-          <button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Arquivar</button>
+          ${podeEditarProcessos() ? '<button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>' : ''}
+          ${podeArquivarProcessos() ? '<button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Arquivar</button>' : ''}
         </div>
       </div>
 
@@ -1003,6 +1012,10 @@
   }
 
   function abrirModalEdicao() {
+    if (!podeEditarProcessos()) {
+      toast(MENSAGEM_SEM_PERMISSAO, 'error');
+      return;
+    }
     if (!processoAtual) return;
 
     preencherClientesComAtual();
@@ -1066,6 +1079,10 @@
 
   async function salvarEdicao(event) {
     event.preventDefault();
+    if (!podeEditarProcessos()) {
+      toast(MENSAGEM_SEM_PERMISSAO, 'error');
+      return;
+    }
     const statusField = document.getElementById('editStatus').closest('.edit-field');
     const clienteField = document.getElementById('editClienteField');
     const payload = payloadEdicao();
@@ -1093,14 +1110,17 @@
         body: JSON.stringify(payload)
       });
 
-      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      if (resposta.status === 403) throw new Error(MENSAGEM_SEM_PERMISSAO);
+      if (!resposta.ok) {
+        throw new Error(await lerMensagemErroApi(resposta, 'Erro ao atualizar processo.'));
+      }
 
       fecharModalEdicao();
       await carregarProcesso();
       toast('Processo atualizado com sucesso.', 'success');
     } catch (erro) {
       console.error('Erro ao atualizar processo:', erro);
-      toast('Erro ao atualizar processo.', 'error');
+      toast(erro.message || 'Erro ao atualizar processo.', 'error');
     } finally {
       submit.disabled = false;
       submit.textContent = 'Salvar alterações';
@@ -1135,6 +1155,10 @@
   }
 
   async function excluirProcesso() {
+    if (!podeArquivarProcessos()) {
+      toast(MENSAGEM_SEM_PERMISSAO, 'error');
+      return;
+    }
     if (!confirm('Este processo será arquivado e continuará preservado no histórico. Deseja continuar?')) return;
 
     try {
@@ -1142,6 +1166,7 @@
         method: 'DELETE'
       });
 
+      if (resposta.status === 403) throw new Error(MENSAGEM_SEM_PERMISSAO);
       if (!resposta.ok) {
         throw new Error(await lerMensagemErroApi(resposta, 'Erro ao arquivar processo.'));
       }
@@ -1175,21 +1200,23 @@
     return;
   }
 
-  inserirModal();
-  document.getElementById('editClose').addEventListener('click', fecharModalEdicao);
-  document.getElementById('editCancel').addEventListener('click', fecharModalEdicao);
-  document.getElementById('editOverlay').addEventListener('click', event => {
-    if (event.target.id === 'editOverlay') fecharModalEdicao();
-  });
-  document.getElementById('editForm').addEventListener('submit', salvarEdicao);
-  document.getElementById('editClienteBusca').addEventListener('input', event => {
-    document.getElementById('editClienteId').value = '';
-    document.getElementById('editClienteField').classList.remove('has-error');
-    renderClientesDropdown(event.target.value);
-  });
-  document.getElementById('editClienteBusca').addEventListener('blur', () => {
-    setTimeout(() => document.getElementById('editClienteDropdown').classList.remove('open'), 160);
-  });
+  if (podeEditarProcessos()) {
+    inserirModal();
+    document.getElementById('editClose').addEventListener('click', fecharModalEdicao);
+    document.getElementById('editCancel').addEventListener('click', fecharModalEdicao);
+    document.getElementById('editOverlay').addEventListener('click', event => {
+      if (event.target.id === 'editOverlay') fecharModalEdicao();
+    });
+    document.getElementById('editForm').addEventListener('submit', salvarEdicao);
+    document.getElementById('editClienteBusca').addEventListener('input', event => {
+      document.getElementById('editClienteId').value = '';
+      document.getElementById('editClienteField').classList.remove('has-error');
+      renderClientesDropdown(event.target.value);
+    });
+    document.getElementById('editClienteBusca').addEventListener('blur', () => {
+      setTimeout(() => document.getElementById('editClienteDropdown').classList.remove('open'), 160);
+    });
+  }
   document.addEventListener('click', event => {
     if (event.target.closest('#btnEditarProcesso')) abrirModalEdicao();
     if (event.target.closest('#btnExcluirProcesso')) excluirProcesso();

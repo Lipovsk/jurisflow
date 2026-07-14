@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) ->
                                 escreverErro(response, jsonMapper, HttpServletResponse.SC_UNAUTHORIZED, "Autenticacao obrigatoria."))
                         .accessDeniedHandler((request, response, accessDeniedException) ->
-                                escreverErro(response, jsonMapper, HttpServletResponse.SC_FORBIDDEN, "Acesso negado."))
+                                escreverErro(response, jsonMapper, HttpServletResponse.SC_FORBIDDEN, "Você não tem permissão para realizar esta ação."))
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -5,12 +5,14 @@ import com.jurisflow.jurisflow.service.RecebimentoHonorarioService.CancelamentoR
 import com.jurisflow.jurisflow.service.RecebimentoHonorarioService.RecebimentoHonorarioRequest;
 import com.jurisflow.jurisflow.service.RecebimentoHonorarioService.RecebimentoHonorarioResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/recebimentos")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
 public class RecebimentoHonorarioController {
 
     private final RecebimentoHonorarioService recebimentoHonorarioService;

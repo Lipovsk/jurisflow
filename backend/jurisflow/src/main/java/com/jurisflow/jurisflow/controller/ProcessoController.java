@@ -9,6 +9,7 @@ import com.jurisflow.jurisflow.service.AuditoriaService;
 import com.jurisflow.jurisflow.service.ProcessoSincronizacaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +29,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/processos")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO','ASSISTENTE')")
 public class ProcessoController {
 
     private final ProcessoRepository processoRepository;
@@ -68,6 +70,7 @@ public class ProcessoController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     @Transactional
     public Processo criar(
             @RequestBody ProcessoRequest request,
@@ -94,6 +97,7 @@ public class ProcessoController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     @Transactional
     public Processo atualizar(
             @PathVariable Long id,
@@ -130,6 +134,7 @@ public class ProcessoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletar(

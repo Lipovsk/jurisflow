@@ -9,9 +9,18 @@ function getIniciais(nome) {
 }
 
 let clientesBackend = [];
+const MENSAGEM_SEM_PERMISSAO = 'Você não tem permissão para realizar esta ação.';
 
 const processoEditId =
   new URLSearchParams(window.location.search).get('id');
+
+function podeEditarProcessos() {
+  return window.JurisFlowAuth?.podeEditarProcessos?.() === true;
+}
+
+function nomeUsuarioLogado() {
+  return window.JurisFlowAuth?.getIdentidadeUsuario?.().nome || 'Usuário';
+}
 
 async function carregarClientesBackend() {
   try {
@@ -329,7 +338,7 @@ function initTimeline() {
   const firstMeta = tl.querySelector('.tl-meta');
   if (firstMeta) {
     const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    firstMeta.textContent = `${today} · Dr. Carlos Mendes`;
+    firstMeta.textContent = `${today} · ${nomeUsuarioLogado()}`;
   }
 
   btnAdd?.addEventListener('click', () => {
@@ -359,7 +368,7 @@ function initTimeline() {
       <div class="tl-dot green"></div>
       <div class="tl-content">
         <div class="tl-title">${desc}</div>
-        <div class="tl-meta">${dataFmt} · Dr. Carlos Mendes</div>
+        <div class="tl-meta">${dataFmt} · ${nomeUsuarioLogado()}</div>
       </div>
       <div class="tl-badge">Manual</div>
       <button class="tl-item-del" title="Remover">✕</button>
@@ -412,7 +421,7 @@ function initFileUpload() {
           <div class="tl-dot amber"></div>
           <div class="tl-content">
             <div class="tl-title">Documento selecionado: ${file.name}</div>
-            <div class="tl-meta">${today} · Dr. Carlos Mendes</div>
+            <div class="tl-meta">${today} · ${nomeUsuarioLogado()}</div>
           </div>
           <div class="tl-badge">Local</div>
           <button class="tl-item-del" title="Remover">✕</button>
@@ -463,6 +472,7 @@ function initCharCounter() {
 }
 async function carregarProcessoParaEdicao() {
 
+  if (!podeEditarProcessos()) return;
   if (!processoEditId) return;
 
   try {
@@ -567,6 +577,10 @@ function initFormSubmit() {
 
   function doSave(e) {
     if (e?.type === 'submit') e.preventDefault();
+    if (!podeEditarProcessos()) {
+      window.JurisFlow?.showToast(MENSAGEM_SEM_PERMISSAO, 'error');
+      return;
+    }
     if (!validateForm()) {
       window.JurisFlow?.showToast('Corrija os campos em vermelho antes de salvar.', 'warning');
       document.querySelector('.fg.has-error .finput')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -647,6 +661,9 @@ function initFormSubmit() {
       body: JSON.stringify(payload)
     })
       .then(res => {
+        if (res.status === 403) {
+          throw new Error(MENSAGEM_SEM_PERMISSAO);
+        }
         if (!res.ok) {
           throw new Error('Erro ao salvar processo');
         }
@@ -682,7 +699,7 @@ function initFormSubmit() {
           }
         });
 
-        window.JurisFlow?.showToast('Erro ao salvar processo no backend.', 'error');
+        window.JurisFlow?.showToast(erro.message || 'Erro ao salvar processo no backend.', 'error');
       });
   }
 
@@ -730,6 +747,8 @@ function initProgressTracker() {
 
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!podeEditarProcessos()) return;
+
   await carregarClientesBackend();
   await carregarProcessoParaEdicao();
 

@@ -201,8 +201,8 @@
   </nav>
   <div class="sidebar-bottom">
     <div class="user-card" data-action="logout">
-      <div class="user-avatar">CM</div>
-      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <div class="user-avatar">U</div>
+      <div class="user-info"><div class="user-name">Usuário</div><div class="user-role">Perfil</div></div>
       <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
     </div>
   </div>
@@ -220,8 +220,8 @@
       <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
       <div class="topbar-divider"></div>
       <div class="topbar-user">
-        <div class="topbar-avatar">CM</div>
-        <div class="topbar-user-name">Dr. Mendes</div>
+        <div class="topbar-avatar">U</div>
+        <div class="topbar-user-name">Usuário</div>
       </div>
     </div>
   </header>
@@ -284,7 +284,7 @@
         <option value="tributario">Tributário</option>
         <option value="imobiliario">Imobiliário</option>
       </select>
-      <button class="btn-primary" onclick="window.location.href='novo-processo.html'">＋ Novo Processo</button>
+      <button class="btn-primary" id="btnNovoProcesso">＋ Novo Processo</button>
     </div>
 
     <!-- Tabela -->
@@ -326,6 +326,8 @@
   'use strict';
 
   const NAO_INFORMADO = 'Não informado';
+  const podeEditarProcessos = window.JurisFlowAuth?.podeEditarProcessos?.() === true;
+  const podeArquivarProcessos = window.JurisFlowAuth?.podeArquivarProcessos?.() === true;
 
   const areaMap = {
     civel: 'area-civel',
@@ -542,8 +544,8 @@
         <td class="date-muted">${escapeHtml(formatDate(processo.dataCadastro))}</td>
         <td>
           <div style="display:flex;gap:6px;">
-            <button type="button" class="btn-icon btn-encerrar" data-id="${processo.id}" title="Encerrar">✔️</button>
-            <button type="button" class="btn-icon btn-arquivar" data-id="${processo.id}" title="Arquivar processo">📦</button>
+            ${podeEditarProcessos ? `<button type="button" class="btn-icon btn-encerrar" data-id="${processo.id}" title="Encerrar">✔️</button>` : ''}
+            ${podeArquivarProcessos ? `<button type="button" class="btn-icon btn-arquivar" data-id="${processo.id}" title="Arquivar processo">📦</button>` : ''}
             <button type="button" class="btn-icon btn-det-proc" data-id="${processo.id}" title="Detalhes">👁</button>
           </div>
         </td>
@@ -620,6 +622,14 @@
   document.getElementById('filterPrioridade').addEventListener('change', applyFilters);
   document.getElementById('filterArea').addEventListener('change', applyFilters);
 
+  document.getElementById('btnNovoProcesso').addEventListener('click', () => {
+    if (!podeEditarProcessos) {
+      window.JurisFlow?.showToast?.('Você não tem permissão para realizar esta ação.', 'error');
+      return;
+    }
+    window.location.href = 'novo-processo.html';
+  });
+
   document.getElementById('procBody').addEventListener('click', function(e) {
     e.stopPropagation();
 
@@ -647,6 +657,10 @@
   });
 
   async function excluirProcesso(id) {
+    if (!podeArquivarProcessos) {
+      window.JurisFlow?.showToast?.('Você não tem permissão para realizar esta ação.', 'error');
+      return;
+    }
     if (!confirm('Este processo será arquivado e continuará preservado no histórico. Deseja continuar?')) return;
 
     try {
@@ -655,6 +669,9 @@
       });
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Você não tem permissão para realizar esta ação.');
+        }
         throw new Error(await lerMensagemErroApi(response, 'Erro ao arquivar processo.'));
       }
 
@@ -670,6 +687,10 @@
   }
 
   async function alterarStatus(id, novoStatus) {
+    if (!podeEditarProcessos) {
+      window.JurisFlow?.showToast?.('Você não tem permissão para realizar esta ação.', 'error');
+      return;
+    }
     try {
       const responseGet = await fetch(`http://localhost:8080/processos/${id}`);
 
@@ -690,6 +711,9 @@
       });
 
       if (!responsePut.ok) {
+        if (responsePut.status === 403) {
+          throw new Error('Você não tem permissão para realizar esta ação.');
+        }
         throw new Error('Erro ao atualizar processo');
       }
 
@@ -698,7 +722,7 @@
 
     } catch (erro) {
       console.error(erro);
-      window.JurisFlow?.showToast('Erro ao atualizar processo.', 'error');
+      window.JurisFlow?.showToast(erro.message || 'Erro ao atualizar processo.', 'error');
     }
   }
 

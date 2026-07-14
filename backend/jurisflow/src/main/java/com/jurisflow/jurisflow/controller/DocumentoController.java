@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/documentos")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO','ASSISTENTE')")
 public class DocumentoController {
 
     private final DocumentoService documentoService;
@@ -118,6 +120,7 @@ public class DocumentoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     public ResponseEntity<Void> excluir(
             @PathVariable Long id,
             Authentication authentication,

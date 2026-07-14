@@ -475,10 +475,10 @@
     </nav>
     <div class="sidebar-bottom">
       <div class="user-card" data-action="logout">
-        <div class="user-avatar">CM</div>
+        <div class="user-avatar">U</div>
         <div class="user-info">
-          <div class="user-name">Dr. Carlos Mendes</div>
-          <div class="user-role">OAB 12.345/SP</div>
+          <div class="user-name">Usuário</div>
+          <div class="user-role">Perfil</div>
         </div>
         <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
       </div>
@@ -497,8 +497,8 @@
         <button class="topbar-btn" id="notifBtn" title="Notificações">🔔<span class="notif-dot"></span></button>
         <div class="topbar-divider"></div>
         <div class="topbar-user">
-          <div class="topbar-avatar">CM</div>
-          <div class="topbar-user-name">Dr. Mendes</div>
+          <div class="topbar-avatar">U</div>
+          <div class="topbar-user-name">Usuário</div>
         </div>
       </div>
     </header>
@@ -873,7 +873,13 @@
           if (btn) window.location.href = 'detalhes-cliente.html?id=' + btn.dataset.id;
         });
 
-        document.getElementById('btnNovoCliente').addEventListener('click', () => window.location.href = 'novo-cliente.html');
+        document.getElementById('btnNovoCliente').addEventListener('click', () => {
+          if (window.JurisFlowAuth?.podeEditarClientes?.() !== true) {
+            window.JurisFlow?.showToast?.('Você não tem permissão para realizar esta ação.', 'error');
+            return;
+          }
+          window.location.href = 'novo-cliente.html';
+        });
 
         const modal = document.getElementById('clienteModal');
         function closeModal() {
@@ -920,7 +926,15 @@
             })
 
           })
-            .then(res => res.json())
+            .then(async res => {
+              if (res.status === 403) {
+                throw new Error('Você não tem permissão para realizar esta ação.');
+              }
+              if (!res.ok) {
+                throw new Error('Erro ao salvar cliente.');
+              }
+              return res.json();
+            })
             .then(() => {
 
               carregarClientes();
@@ -939,8 +953,8 @@
 
               console.error(err);
 
-              window.JurisFlow.showToast(
-                'Erro ao salvar cliente.',
+              window.JurisFlow?.showToast?.(
+                err.message || 'Erro ao salvar cliente.',
                 'error'
               );
 

@@ -6,6 +6,7 @@ import com.jurisflow.jurisflow.security.UsuarioAutenticado;
 import com.jurisflow.jurisflow.service.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/clientes")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO','ASSISTENTE')")
 public class ClienteController {
 
     private final ClienteRepository clienteRepository;
@@ -40,6 +42,7 @@ public class ClienteController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     public Cliente criar(
             @RequestBody Cliente cliente,
             Authentication authentication,
@@ -68,6 +71,7 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     public Cliente atualizar(
             @PathVariable Long id,
             @RequestBody Cliente clienteAtualizado,
@@ -110,6 +114,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletar(
             @PathVariable Long id,

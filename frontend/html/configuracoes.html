@@ -197,8 +197,8 @@
   </nav>
   <div class="sidebar-bottom">
     <div class="user-card" data-action="logout">
-      <div class="user-avatar">CM</div>
-      <div class="user-info"><div class="user-name">Dr. Carlos Mendes</div><div class="user-role">OAB 12.345/SP</div></div>
+      <div class="user-avatar">U</div>
+      <div class="user-info"><div class="user-name">Usuário</div><div class="user-role">Perfil</div></div>
       <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
     </div>
   </div>
@@ -215,7 +215,7 @@
       <span id="topbarClock" style="font-size:.82rem;color:var(--gray-400);font-weight:500;margin-right:4px;"></span>
       <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
       <div class="topbar-divider"></div>
-      <div class="topbar-user"><div class="topbar-avatar">CM</div><div class="topbar-user-name">Dr. Mendes</div></div>
+      <div class="topbar-user"><div class="topbar-avatar">U</div><div class="topbar-user-name">Usuário</div></div>
     </div>
   </header>
 
@@ -261,10 +261,10 @@
             <div class="cfg-card-body">
               <!-- Avatar -->
               <div class="upload-row">
-                <div class="avatar-circle" id="avatarPreview">CM</div>
+                <div class="avatar-circle" id="avatarPreview" data-auth-user-initials>U</div>
                 <div class="upload-info">
-                  <strong>Dr. Carlos Mendes</strong>
-                  <span>OAB 12.345/SP · Advogado Sênior</span>
+                  <strong data-auth-user-name>Usuário</strong>
+                  <span data-auth-user-profile>Perfil</span>
                   <div class="upload-btns">
                     <button class="btn-primary btn-sm" onclick="document.getElementById('avatarInput').click()">📷 Alterar foto</button>
                     <button class="btn-outline btn-sm">Remover</button>
@@ -278,15 +278,16 @@
               <div class="fgrid">
                 <div class="field fcol">
                   <label>Nome Completo *</label>
-                  <input type="text" value="Dr. Carlos Eduardo Mendes" id="pNome">
+                  <input type="text" value="Usuário" id="pNome" data-auth-user-name-input>
                 </div>
                 <div class="field">
                   <label>Número da OAB *</label>
-                  <input type="text" value="12.345" id="pOAB" placeholder="Ex.: 12.345">
+                  <input type="text" value="" id="pOAB" placeholder="Não informado">
                 </div>
                 <div class="field">
                   <label>Estado da OAB *</label>
                   <select id="pEstadoOAB">
+                    <option value="" selected>Não informado</option>
                     <option>SP</option><option>RJ</option><option>MG</option><option>RS</option>
                     <option>PR</option><option>SC</option><option>BA</option><option>GO</option>
                     <option>DF</option><option>PE</option><option>CE</option><option>PA</option>
@@ -294,15 +295,15 @@
                 </div>
                 <div class="field fcol">
                   <label>E-mail Profissional *</label>
-                  <input type="email" value="carlos.mendes@mendesadvogados.com.br" id="pEmail">
+                  <input type="email" value="" id="pEmail" data-auth-user-email-input>
                 </div>
                 <div class="field">
                   <label>Telefone / WhatsApp</label>
-                  <input type="text" value="(11) 9 8765-4321" id="pTel" placeholder="(11) 9 0000-0000">
+                  <input type="text" value="" id="pTel" placeholder="(11) 9 0000-0000">
                 </div>
                 <div class="field">
                   <label>Cargo ou Especialidade</label>
-                  <input type="text" value="Advogado Sênior — Direito Empresarial" id="pCargo">
+                  <input type="text" value="" id="pCargo" placeholder="Não informado">
                 </div>
               </div>
             </div>

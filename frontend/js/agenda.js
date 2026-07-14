@@ -3,6 +3,8 @@
 
   const API_BASE = 'http://localhost:8080';
   const MESES = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const podeExcluirCompromissos = window.JurisFlowAuth?.isAdmin?.() === true
+    || window.JurisFlowAuth?.isAdvogado?.() === true;
 
   let compromissos = [];
   let clientes = [];
@@ -350,7 +352,9 @@
       if (normalizar(c.status) !== 'concluido') {
         actions.appendChild(criarBotao('btn-concluir-compromisso', 'Concluir', () => concluirCompromisso(c.id)));
       }
-      actions.appendChild(criarBotao('btn-excluir-compromisso', 'Excluir', () => excluirCompromisso(c.id)));
+      if (podeExcluirCompromissos) {
+        actions.appendChild(criarBotao('btn-excluir-compromisso', 'Excluir', () => excluirCompromisso(c.id)));
+      }
     }
 
     if (actions.childNodes.length) content.appendChild(actions);

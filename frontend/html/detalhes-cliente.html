@@ -503,10 +503,10 @@
     </nav>
     <div class="sidebar-bottom">
       <div class="user-card" data-action="logout">
-        <div class="user-avatar">CM</div>
+        <div class="user-avatar">U</div>
         <div class="user-info">
-          <div class="user-name">Dr. Carlos Mendes</div>
-          <div class="user-role">OAB 12.345/SP</div>
+          <div class="user-name">Usuário</div>
+          <div class="user-role">Perfil</div>
         </div>
         <span style="font-size:.8rem;color:rgba(255,255,255,.3);">↩</span>
       </div>
@@ -525,8 +525,8 @@
         <button class="topbar-btn" id="notifBtn">🔔<span class="notif-dot"></span></button>
         <div class="topbar-divider"></div>
         <div class="topbar-user">
-          <div class="topbar-avatar">CM</div>
-          <div class="topbar-user-name">Dr. Mendes</div>
+          <div class="topbar-avatar">U</div>
+          <div class="topbar-user-name">Usuário</div>
         </div>
       </div>
     </header>
@@ -540,6 +540,8 @@
   <script>
     (function () {
       'use strict';
+
+      const podeEditarClientes = window.JurisFlowAuth?.podeEditarClientes?.() === true;
 
       const CORES = [
         'linear-gradient(135deg,#2563EB,#1D4ED8)',
@@ -832,13 +834,13 @@
   ← Voltar
 </button>
 
-<button class="btn-act btn-navy-act" id="btnEditarCliente">
+${podeEditarClientes ? `<button class="btn-act btn-navy-act" id="btnEditarCliente">
   ✏️ Editar
-</button>
+</button>` : ''}
 
-<button class="btn-act btn-outline-act" id="btnExcluirCliente" style="border-color:#DC2626;color:#DC2626;">
+${podeEditarClientes ? `<button class="btn-act btn-outline-act" id="btnExcluirCliente" style="border-color:#DC2626;color:#DC2626;">
   🗑️ Arquivar
-</button>
+</button>` : ''}
           </div>
         </div>
 
@@ -940,11 +942,11 @@
         </div>
       `;
 
-          document.getElementById("btnEditarCliente").addEventListener("click", () => {
+          document.getElementById("btnEditarCliente")?.addEventListener("click", () => {
             abrirModalEdicao(cliente);
           });
 
-          document.getElementById("btnExcluirCliente").addEventListener("click", async () => {
+          document.getElementById("btnExcluirCliente")?.addEventListener("click", async () => {
 
             const confirmar = confirm("Este cliente será arquivado e continuará preservado no histórico. Deseja continuar?");
 
@@ -1199,7 +1201,9 @@
           });
 
           if (!resposta.ok) {
-            alert("Erro ao editar cliente.");
+            alert(resposta.status === 403
+              ? "Você não tem permissão para realizar esta ação."
+              : "Erro ao editar cliente.");
             return;
           }
 

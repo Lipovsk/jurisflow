@@ -7,6 +7,7 @@ import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.CompromissoRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/compromissos")
+@PreAuthorize("hasAnyRole('ADMIN','ADVOGADO','ASSISTENTE')")
 public class CompromissoController {
 
     private static final String REGISTRO_GERENCIADO_PELO_PROCESSO =
@@ -111,6 +113,7 @@ public class CompromissoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','ADVOGADO')")
     public void deletar(@PathVariable Long id) {
         compromissoRepository.findById(id).ifPresent(compromisso -> {
             bloquearSeGerenciadoPeloProcesso(compromisso);
