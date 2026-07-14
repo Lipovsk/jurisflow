@@ -33,7 +33,7 @@ A ideia principal é permitir que o advogado consiga gerenciar seus clientes e i
 - Spring Boot
 - Spring Web
 - Spring Data JPA
-- H2 Database
+- PostgreSQL
 
 ## 🔗 Endpoints principais
 
@@ -45,3 +45,12 @@ POST /clientes
 GET /clientes/{id}
 PUT /clientes/{id}
 DELETE /clientes/{id}
+```
+
+## 📚 Documentação do projeto
+
+- [Estado atual](JURISFLOW_STATUS.md)
+- [Roadmap](ROADMAP.md)
+- [Plano de testes](TEST_PLAN.md)
+- [Permissões por perfil](docs/PERMISSOES.md)
+- [Backup e restauração](docs/BACKUP_RESTORE.md)
