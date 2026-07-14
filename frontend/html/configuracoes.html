@@ -132,6 +132,8 @@
     .status-inactive { font-size:.78rem; font-weight:600; color:var(--red); }
     .admin-only.hidden { display:none !important; }
     .permission-note { padding:18px; border:1px solid #FDE68A; background:#FFFBEB; color:#92400E; border-radius:var(--radius-md); font-size:.84rem; }
+    .audit-success { color:var(--green); font-weight:600; }
+    .audit-failure { color:var(--red); font-weight:600; }
 
     /* Integrações */
     .int-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
@@ -232,6 +234,7 @@
           <div class="snav-div"></div>
           <button class="snav-item" data-target="seguranca"><span class="si">🔒</span> Segurança</button>
           <button class="snav-item admin-only" data-target="usuarios"><span class="si">👥</span> Usuários</button>
+          <button class="snav-item admin-only" data-target="auditoria"><span class="si">🧾</span> Auditoria</button>
           <div class="snav-div"></div>
           <button class="snav-item" data-target="personalizacao"><span class="si">🏷️</span> Personalização</button>
           <button class="snav-item" data-target="doc-cfg"><span class="si">📄</span> Documentos</button>
@@ -750,6 +753,39 @@
           </div>
 
         </div><!-- /sec-usuarios -->
+
+        <!-- ════════════════════════════════════════
+             AUDITORIA
+        ════════════════════════════════════════ -->
+        <div class="cfg-section admin-only" id="sec-auditoria">
+          <div class="cfg-card">
+            <div class="cfg-card-header">
+              <div class="cfg-card-title">Auditoria</div>
+              <div class="cfg-card-sub">Últimos 100 eventos sensíveis registrados pelo sistema</div>
+            </div>
+            <div id="auditoriaSemPermissao" class="permission-note" style="display:none;margin:16px 24px 0;">
+              Você não tem permissão para acessar a auditoria.
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="user-table" id="auditoriaTabela">
+                <thead>
+                  <tr>
+                    <th>Data/hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Entidade</th>
+                    <th>ID</th>
+                    <th>Resultado</th>
+                    <th>Descrição</th>
+                  </tr>
+                </thead>
+                <tbody id="auditoriaTabelaBody">
+                  <tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">Carregando auditoria...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div><!-- /sec-auditoria -->
 
         <!-- ════════════════════════════════════════
              PERSONALIZAÇÃO

@@ -6,7 +6,9 @@ import com.jurisflow.jurisflow.dto.usuario.CriarUsuarioRequest;
 import com.jurisflow.jurisflow.dto.usuario.ResetarSenhaRequest;
 import com.jurisflow.jurisflow.dto.usuario.UsuarioResponse;
 import com.jurisflow.jurisflow.security.UsuarioAutenticado;
+import com.jurisflow.jurisflow.service.AuditoriaService;
 import com.jurisflow.jurisflow.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,9 +31,11 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final AuditoriaService auditoriaService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, AuditoriaService auditoriaService) {
         this.usuarioService = usuarioService;
+        this.auditoriaService = auditoriaService;
     }
 
     @GetMapping
@@ -49,8 +53,20 @@ public class UsuarioController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public UsuarioResponse criar(@Valid @RequestBody CriarUsuarioRequest request) {
-        return usuarioService.criar(request);
+    public UsuarioResponse criar(
+            @Valid @RequestBody CriarUsuarioRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        UsuarioAutenticado principal = principal(authentication);
+        try {
+            UsuarioResponse criado = usuarioService.criar(request);
+            auditoriaService.registrarSucesso(principal, "CRIAR_USUARIO", "USUARIO", criado.id(), "Usuario criado.", httpRequest);
+            return criado;
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(principal, "CRIAR_USUARIO", "USUARIO", null, "Falha ao criar usuario.", httpRequest);
+            throw ex;
+        }
     }
 
     @PutMapping("/{id}")
@@ -58,9 +74,22 @@ public class UsuarioController {
     public UsuarioResponse atualizar(
             @PathVariable Long id,
             @Valid @RequestBody AtualizarUsuarioRequest request,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
-        return usuarioService.atualizar(id, request, principal(authentication));
+        UsuarioAutenticado principal = principal(authentication);
+        String acao = "EDITAR_USUARIO";
+        try {
+            UsuarioResponse antes = usuarioService.buscar(id);
+            if (!Boolean.TRUE.equals(antes.ativo()) && Boolean.TRUE.equals(request.ativo())) acao = "ATIVAR_USUARIO";
+            if (Boolean.TRUE.equals(antes.ativo()) && !Boolean.TRUE.equals(request.ativo())) acao = "DESATIVAR_USUARIO";
+            UsuarioResponse atualizado = usuarioService.atualizar(id, request, principal);
+            auditoriaService.registrarSucesso(principal, acao, "USUARIO", id, "Usuario atualizado.", httpRequest);
+            return atualizado;
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(principal, acao, "USUARIO", id, "Falha ao atualizar usuario.", httpRequest);
+            throw ex;
+        }
     }
 
     @PatchMapping("/{id}/senha")
@@ -69,9 +98,17 @@ public class UsuarioController {
     public void resetarSenha(
             @PathVariable Long id,
             @Valid @RequestBody ResetarSenhaRequest request,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
-        usuarioService.resetarSenha(id, request, principal(authentication));
+        UsuarioAutenticado principal = principal(authentication);
+        try {
+            usuarioService.resetarSenha(id, request, principal);
+            auditoriaService.registrarSucesso(principal, "RESETAR_SENHA", "USUARIO", id, "Senha de usuario resetada.", httpRequest);
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(principal, "RESETAR_SENHA", "USUARIO", id, "Falha ao resetar senha de usuario.", httpRequest);
+            throw ex;
+        }
     }
 
     @GetMapping("/me")
@@ -83,9 +120,17 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void alterarMinhaSenha(
             @Valid @RequestBody AlterarMinhaSenhaRequest request,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
-        usuarioService.alterarMinhaSenha(principal(authentication), request);
+        UsuarioAutenticado principal = principal(authentication);
+        try {
+            usuarioService.alterarMinhaSenha(principal, request);
+            auditoriaService.registrarSucesso(principal, "ALTERAR_MINHA_SENHA", "USUARIO", principal.id(), "Senha propria alterada.", httpRequest);
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(principal, "ALTERAR_MINHA_SENHA", "USUARIO", principal.id(), "Falha ao alterar senha propria.", httpRequest);
+            throw ex;
+        }
     }
 
     private UsuarioAutenticado principal(Authentication authentication) {

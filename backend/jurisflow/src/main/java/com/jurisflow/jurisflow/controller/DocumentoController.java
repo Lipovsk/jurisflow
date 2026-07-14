@@ -2,7 +2,9 @@ package com.jurisflow.jurisflow.controller;
 
 import com.jurisflow.jurisflow.model.Documento;
 import com.jurisflow.jurisflow.security.UsuarioAutenticado;
+import com.jurisflow.jurisflow.service.AuditoriaService;
 import com.jurisflow.jurisflow.service.DocumentoService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -28,9 +30,11 @@ import java.util.List;
 public class DocumentoController {
 
     private final DocumentoService documentoService;
+    private final AuditoriaService auditoriaService;
 
-    public DocumentoController(DocumentoService documentoService) {
+    public DocumentoController(DocumentoService documentoService, AuditoriaService auditoriaService) {
         this.documentoService = documentoService;
+        this.auditoriaService = auditoriaService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -41,18 +45,29 @@ public class DocumentoController {
             @RequestParam(required = false) String descricao,
             @RequestParam(required = false) Long clienteId,
             @RequestParam(required = false) Long processoId,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
-        Documento documento = documentoService.criar(
-                arquivo,
-                titulo,
-                categoria,
-                descricao,
-                clienteId,
-                processoId,
-                usuarioAutenticado(authentication)
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(DocumentoResponse.from(documento));
+        UsuarioAutenticado usuario = usuarioAutenticado(authentication);
+        try {
+            Documento documento = documentoService.criar(
+                    arquivo,
+                    titulo,
+                    categoria,
+                    descricao,
+                    clienteId,
+                    processoId,
+                    usuario
+            );
+            auditoriaService.registrarSucesso(
+                    usuario, "UPLOAD_DOCUMENTO", "DOCUMENTO", documento.getId(),
+                    "Documento enviado: " + documento.getTitulo() + ".", httpRequest
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(DocumentoResponse.from(documento));
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "UPLOAD_DOCUMENTO", "DOCUMENTO", null, "Falha ao enviar documento.", httpRequest);
+            throw ex;
+        }
     }
 
     @GetMapping
@@ -74,26 +89,53 @@ public class DocumentoController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id) {
-        DocumentoService.DownloadDocumento download = documentoService.prepararDownload(id);
-        Documento documento = download.documento();
-
-        FileSystemResource resource = new FileSystemResource(download.caminho());
-        ContentDisposition disposition = ContentDisposition.attachment()
-                .filename(documento.getNomeOriginal(), StandardCharsets.UTF_8)
-                .build();
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(documento.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
-                .contentLength(documento.getTamanhoBytes())
-                .body(resource);
+    public ResponseEntity<Resource> download(
+            @PathVariable Long id,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        UsuarioAutenticado usuario = usuarioAutenticado(authentication);
+        try {
+            DocumentoService.DownloadDocumento download = documentoService.prepararDownload(id);
+            Documento documento = download.documento();
+            FileSystemResource resource = new FileSystemResource(download.caminho());
+            ContentDisposition disposition = ContentDisposition.attachment()
+                    .filename(documento.getNomeOriginal(), StandardCharsets.UTF_8)
+                    .build();
+            auditoriaService.registrarSucesso(
+                    usuario, "DOWNLOAD_DOCUMENTO", "DOCUMENTO", id,
+                    "Documento baixado: " + documento.getTitulo() + ".", httpRequest
+            );
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(documento.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                    .contentLength(documento.getTamanhoBytes())
+                    .body(resource);
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "DOWNLOAD_DOCUMENTO", "DOCUMENTO", id, "Falha ao baixar documento.", httpRequest);
+            throw ex;
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id, Authentication authentication) {
-        documentoService.excluir(id, usuarioAutenticado(authentication));
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> excluir(
+            @PathVariable Long id,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        UsuarioAutenticado usuario = usuarioAutenticado(authentication);
+        try {
+            Documento documento = documentoService.buscarAtivo(id);
+            documentoService.excluir(id, usuario);
+            auditoriaService.registrarSucesso(
+                    usuario, "EXCLUIR_DOCUMENTO", "DOCUMENTO", id,
+                    "Documento excluido: " + documento.getTitulo() + ".", httpRequest
+            );
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "EXCLUIR_DOCUMENTO", "DOCUMENTO", id, "Falha ao excluir documento.", httpRequest);
+            throw ex;
+        }
     }
 
     private UsuarioAutenticado usuarioAutenticado(Authentication authentication) {

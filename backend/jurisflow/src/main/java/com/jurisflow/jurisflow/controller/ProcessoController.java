@@ -4,8 +4,12 @@ import com.jurisflow.jurisflow.model.Cliente;
 import com.jurisflow.jurisflow.model.Processo;
 import com.jurisflow.jurisflow.repository.ClienteRepository;
 import com.jurisflow.jurisflow.repository.ProcessoRepository;
+import com.jurisflow.jurisflow.security.UsuarioAutenticado;
+import com.jurisflow.jurisflow.service.AuditoriaService;
 import com.jurisflow.jurisflow.service.ProcessoSincronizacaoService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,15 +33,18 @@ public class ProcessoController {
     private final ProcessoRepository processoRepository;
     private final ClienteRepository clienteRepository;
     private final ProcessoSincronizacaoService processoSincronizacaoService;
+    private final AuditoriaService auditoriaService;
 
     public ProcessoController(
             ProcessoRepository processoRepository,
             ClienteRepository clienteRepository,
-            ProcessoSincronizacaoService processoSincronizacaoService
+            ProcessoSincronizacaoService processoSincronizacaoService,
+            AuditoriaService auditoriaService
     ) {
         this.processoRepository = processoRepository;
         this.clienteRepository = clienteRepository;
         this.processoSincronizacaoService = processoSincronizacaoService;
+        this.auditoriaService = auditoriaService;
     }
 
     @GetMapping
@@ -62,26 +69,41 @@ public class ProcessoController {
 
     @PostMapping
     @Transactional
-    public Processo criar(@RequestBody ProcessoRequest request) {
-        Cliente cliente = buscarClienteObrigatorio(request.getClienteId());
-
-        Processo processo = new Processo();
-        preencherProcesso(processo, request);
-        processo.setCliente(cliente);
-        processo.setAtivo(true);
-        processo.setDataExclusao(null);
-        processo.setMotivoExclusao(null);
-
-        Processo processoSalvo = processoRepository.save(processo);
-        processoSincronizacaoService.sincronizar(processoSalvo);
-
-        return processoSalvo;
+    public Processo criar(
+            @RequestBody ProcessoRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        UsuarioAutenticado usuario = principal(authentication);
+        try {
+            Cliente cliente = buscarClienteObrigatorio(request.getClienteId());
+            Processo processo = new Processo();
+            preencherProcesso(processo, request);
+            processo.setCliente(cliente);
+            processo.setAtivo(true);
+            processo.setDataExclusao(null);
+            processo.setMotivoExclusao(null);
+            Processo processoSalvo = processoRepository.save(processo);
+            processoSincronizacaoService.sincronizar(processoSalvo);
+            auditoriaService.registrarSucesso(usuario, "CRIAR_PROCESSO", "PROCESSO", processoSalvo.getId(), "Processo criado.", httpRequest);
+            return processoSalvo;
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "CRIAR_PROCESSO", "PROCESSO", null, "Falha ao criar processo.", httpRequest);
+            throw ex;
+        }
     }
 
     @PutMapping("/{id}")
     @Transactional
-    public Processo atualizar(@PathVariable Long id, @RequestBody ProcessoRequest request) {
-        return processoRepository.findAtivoById(id).map(processo -> {
+    public Processo atualizar(
+            @PathVariable Long id,
+            @RequestBody ProcessoRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        UsuarioAutenticado usuario = principal(authentication);
+        try {
+            Processo salvo = processoRepository.findAtivoById(id).map(processo -> {
 
             if (request.getClienteId() != null) {
                 Cliente cliente = buscarClienteExistente(request.getClienteId());
@@ -95,10 +117,16 @@ public class ProcessoController {
 
             return processoSalvo;
 
-        }).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Processo nao encontrado."
-        ));
+            }).orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Processo nao encontrado."
+            ));
+            auditoriaService.registrarSucesso(usuario, "EDITAR_PROCESSO", "PROCESSO", id, "Processo atualizado.", httpRequest);
+            return salvo;
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "EDITAR_PROCESSO", "PROCESSO", id, "Falha ao atualizar processo.", httpRequest);
+            throw ex;
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -106,22 +134,32 @@ public class ProcessoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletar(
             @PathVariable Long id,
-            @RequestParam(required = false) String motivoExclusao
+            @RequestParam(required = false) String motivoExclusao,
+            Authentication authentication,
+            HttpServletRequest httpRequest
     ) {
-        Processo processo = processoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Processo nao encontrado."
-                ));
-
-        if (Boolean.FALSE.equals(processo.getAtivo())) {
-            return;
+        UsuarioAutenticado usuario = principal(authentication);
+        try {
+            Processo processo = processoRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Processo nao encontrado."
+                    ));
+            if (!Boolean.FALSE.equals(processo.getAtivo())) {
+                processo.setAtivo(false);
+                processo.setDataExclusao(Instant.now());
+                processo.setMotivoExclusao(textoOuNull(motivoExclusao));
+                processoRepository.save(processo);
+            }
+            auditoriaService.registrarSucesso(usuario, "ARQUIVAR_PROCESSO", "PROCESSO", id, "Processo arquivado.", httpRequest);
+        } catch (RuntimeException ex) {
+            auditoriaService.registrarFalha(usuario, "ARQUIVAR_PROCESSO", "PROCESSO", id, "Falha ao arquivar processo.", httpRequest);
+            throw ex;
         }
+    }
 
-        processo.setAtivo(false);
-        processo.setDataExclusao(Instant.now());
-        processo.setMotivoExclusao(textoOuNull(motivoExclusao));
-        processoRepository.save(processo);
+    private UsuarioAutenticado principal(Authentication authentication) {
+        return authentication != null && authentication.getPrincipal() instanceof UsuarioAutenticado usuario ? usuario : null;
     }
 
     private void preencherProcesso(Processo processo, ProcessoRequest request) {

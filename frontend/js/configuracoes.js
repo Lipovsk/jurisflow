@@ -533,6 +533,71 @@
     }
   }
 
+  function initAuditoria() {
+    const navAuditoria = document.querySelector('.snav-item[data-target="auditoria"]');
+    const secAuditoria = byId('sec-auditoria');
+
+    if (!isAdmin()) {
+      navAuditoria?.classList.add('hidden');
+      secAuditoria?.classList.add('hidden');
+      return;
+    }
+
+    carregarAuditoria();
+  }
+
+  async function carregarAuditoria() {
+    const tbody = byId('auditoriaTabelaBody');
+    const semPermissao = byId('auditoriaSemPermissao');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">Carregando auditoria...</td></tr>';
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auditoria?limite=100`);
+      if (response.status === 403) {
+        if (semPermissao) semPermissao.style.display = 'block';
+        throw new Error('Você não tem permissão para acessar a auditoria.');
+      }
+      if (!response.ok) {
+        throw new Error(await lerMensagemErroApi(response, 'Erro ao carregar auditoria.'));
+      }
+      const eventos = await response.json();
+      renderAuditoria(eventos);
+    } catch (erro) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:24px;">${escapeHtml(erro.message || 'Erro ao carregar auditoria.')}</td></tr>`;
+      }
+      toast(erro.message || 'Erro ao carregar auditoria.', 'error');
+    }
+  }
+
+  function renderAuditoria(eventos) {
+    const tbody = byId('auditoriaTabelaBody');
+    if (!tbody) return;
+    if (!Array.isArray(eventos) || !eventos.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">Nenhum evento de auditoria registrado.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = eventos.map(evento => {
+      const dataHora = evento.dataHora ? new Date(evento.dataHora).toLocaleString('pt-BR') : '—';
+      const usuario = evento.usuarioNome || evento.usuarioEmail || 'Não identificado';
+      const sucesso = evento.sucesso === true;
+      return `
+        <tr>
+          <td>${escapeHtml(dataHora)}</td>
+          <td>${escapeHtml(usuario)}</td>
+          <td>${escapeHtml(evento.acao || '—')}</td>
+          <td>${escapeHtml(evento.entidade || '—')}</td>
+          <td>${escapeHtml(evento.entidadeId ?? '—')}</td>
+          <td><span class="${sucesso ? 'audit-success' : 'audit-failure'}">${sucesso ? 'Sucesso' : 'Falha'}</span></td>
+          <td>${escapeHtml(evento.descricao || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
   function initFooter() {
     byId('btnSalvar')?.addEventListener('click', () => {
       if (!Preferencias?.salvar || !Preferencias?.aplicar) {
@@ -585,6 +650,7 @@
     initAparencia();
     initTags();
     initUsuarios();
+    initAuditoria();
     initFooter();
     initAcoesNaoConectadas();
   });
