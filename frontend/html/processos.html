@@ -363,6 +363,11 @@
       .replaceAll("'", '&#039;');
   }
 
+  function normalizarIdNumerico(value) {
+    const id = Number(value);
+    return Number.isSafeInteger(id) && id > 0 ? String(id) : '';
+  }
+
   function normalizarTexto(value) {
     return String(value ?? '')
       .trim()
@@ -522,6 +527,7 @@
       const tribunal = valorTexto(processo.tribunal);
       const comarca = valorTexto(processo.comarca);
       const vara = valorTexto(processo.vara);
+      const processoId = normalizarIdNumerico(processo.id);
       const statusTitle = status.padronizado ? '' : ` title="${escapeHtml(processo.status || '')}"`;
 
       return `<tr>
@@ -544,9 +550,9 @@
         <td class="date-muted">${escapeHtml(formatDate(processo.dataCadastro))}</td>
         <td>
           <div style="display:flex;gap:6px;">
-            ${podeEditarProcessos ? `<button type="button" class="btn-icon btn-encerrar" data-id="${processo.id}" title="Encerrar">✔️</button>` : ''}
-            ${podeArquivarProcessos ? `<button type="button" class="btn-icon btn-arquivar" data-id="${processo.id}" title="Arquivar processo">📦</button>` : ''}
-            <button type="button" class="btn-icon btn-det-proc" data-id="${processo.id}" title="Detalhes">👁</button>
+            ${processoId && podeEditarProcessos ? `<button type="button" class="btn-icon btn-encerrar" data-id="${processoId}" title="Encerrar">✔️</button>` : ''}
+            ${processoId && podeArquivarProcessos ? `<button type="button" class="btn-icon btn-arquivar" data-id="${processoId}" title="Arquivar processo">📦</button>` : ''}
+            ${processoId ? `<button type="button" class="btn-icon btn-det-proc" data-id="${processoId}" title="Detalhes">👁</button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -638,7 +644,8 @@
 
     e.preventDefault();
 
-    const id = btn.dataset.id;
+    const id = normalizarIdNumerico(btn.dataset.id);
+    if (!id) return;
 
     if (btn.classList.contains('btn-det-proc')) {
       window.location.href = 'detalhes-processo.html?id=' + id;

@@ -315,6 +315,11 @@
       .replaceAll("'", '&#039;');
   }
 
+  function normalizarIdNumerico(value) {
+    const id = Number(value);
+    return Number.isSafeInteger(id) && id > 0 ? String(id) : '';
+  }
+
   async function lerMensagemErroApi(resposta, fallback) {
     try {
       const dados = await resposta.json();
@@ -471,13 +476,13 @@
     `;
   }
 
-  function campo(label, value, extraClass = '') {
+  function campo(label, value) {
     const raw = value === null || value === undefined || value === '' ? NAO_INFORMADO : value;
     const nd = raw === NAO_INFORMADO ? ' nd' : '';
     return `
       <div class="ic-field">
         <div class="ic-label">${escapeHtml(label)}</div>
-        <div class="ic-value${nd} ${extraClass}">${escapeHtml(raw)}</div>
+        <div class="ic-value${nd}">${escapeHtml(raw)}</div>
       </div>
     `;
   }
@@ -647,18 +652,21 @@
 
     body.innerHTML = `
       <div class="linked-list">
-        ${lista.map(documento => `
-          <div class="linked-item">
-            <div class="linked-top">
-              <div>
-                <div class="linked-title">${escapeHtml(texto(documento.titulo || documento.nomeOriginal))}</div>
-                <div class="linked-meta">${escapeHtml(texto(documento.categoria, 'Documento'))} · ${escapeHtml(fmtBytes(documento.tamanhoBytes))} · ${escapeHtml(fmtData(documento.dataUpload))}</div>
+        ${lista.map(documento => {
+          const documentoId = normalizarIdNumerico(documento.id);
+          return `
+            <div class="linked-item">
+              <div class="linked-top">
+                <div>
+                  <div class="linked-title">${escapeHtml(texto(documento.titulo || documento.nomeOriginal))}</div>
+                  <div class="linked-meta">${escapeHtml(texto(documento.categoria, 'Documento'))} · ${escapeHtml(fmtBytes(documento.tamanhoBytes))} · ${escapeHtml(fmtData(documento.dataUpload))}</div>
+                </div>
+                ${documentoId ? `<button class="btn-act btn-outline-act" type="button" data-download-documento="${documentoId}">Baixar</button>` : ''}
               </div>
-              <button class="btn-act btn-outline-act" type="button" data-download-documento="${escapeHtml(documento.id)}">Baixar</button>
+              ${documento.descricao ? `<div class="linked-desc">${escapeHtml(documento.descricao)}</div>` : ''}
             </div>
-            ${documento.descricao ? `<div class="linked-desc">${escapeHtml(documento.descricao)}</div>` : ''}
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `;
   }
@@ -737,6 +745,7 @@
 
   function renderizarPerfil(processo) {
     const cliente = processo.cliente || null;
+    const clienteId = normalizarIdNumerico(cliente?.id);
     const area = normArea(processo.areaJuridica);
     const areaClasse = areaMap[area] || '';
     const areaTexto = areaLabel[area] || texto(processo.areaJuridica);
@@ -774,14 +783,14 @@
           </div>
         </div>
         <div class="proc-actions">
-          <button class="btn-act btn-outline-act" onclick="window.location.href='processos.html'">← Voltar</button>
+          <button id="btnVoltarProcessos" class="btn-act btn-outline-act" type="button">← Voltar</button>
           ${podeEditarProcessos() ? '<button id="btnEditarProcesso" class="btn-act btn-navy-act" type="button">✏️ Editar Processo</button>' : ''}
           ${podeArquivarProcessos() ? '<button id="btnExcluirProcesso" class="btn-act btn-outline-act" type="button" style="border-color:#DC2626;color:#DC2626;">Arquivar</button>' : ''}
         </div>
       </div>
 
       ${cliente ? `
-      <div class="client-link-card" onclick="window.location.href='detalhes-cliente.html?id=${cliente.id}'">
+      <div class="client-link-card"${clienteId ? ` data-cliente-id="${clienteId}"` : ''}>
         <div class="client-avatar" style="background:${getCor(cliente.id)};">${escapeHtml(getIniciais(cliente.nome))}</div>
         <div class="client-info">
           <div class="client-name">${escapeHtml(texto(cliente.nome))}</div>
@@ -973,7 +982,7 @@
 
   function setClienteEdicao(cliente) {
     document.getElementById('editClienteBusca').value = cliente?.nome || '';
-    document.getElementById('editClienteId').value = cliente?.id || '';
+    document.getElementById('editClienteId').value = normalizarIdNumerico(cliente?.id);
     document.getElementById('editClienteField').classList.remove('has-error');
     document.getElementById('editClienteDropdown').classList.remove('open');
   }
@@ -991,13 +1000,19 @@
       return;
     }
 
-    dropdown.innerHTML = lista.length
-      ? lista.map(cliente => `
-          <div class="cliente-option" data-id="${cliente.id}">
-            <strong>${escapeHtml(texto(cliente.nome))}</strong>
-            <span>Cliente #${escapeHtml(cliente.id)}</span>
-          </div>
-        `).join('')
+    const opcoes = lista.map(cliente => {
+      const clienteId = normalizarIdNumerico(cliente.id);
+      if (!clienteId) return '';
+      return `
+        <div class="cliente-option" data-id="${clienteId}">
+          <strong>${escapeHtml(texto(cliente.nome))}</strong>
+          <span>Cliente #${clienteId}</span>
+        </div>
+      `;
+    }).filter(Boolean);
+
+    dropdown.innerHTML = opcoes.length
+      ? opcoes.join('')
       : '<div class="cliente-option"><strong>Nenhum cliente encontrado</strong><span>Selecione um cliente já cadastrado.</span></div>';
 
     dropdown.querySelectorAll('.cliente-option[data-id]').forEach(item => {
@@ -1128,8 +1143,14 @@
   }
 
   async function baixarDocumento(idDocumento) {
+    const documentoId = normalizarIdNumerico(idDocumento);
+    if (!documentoId) {
+      toast('Documento inválido.', 'error');
+      return;
+    }
+
     try {
-      const resposta = await fetch(`${API_BASE}/documentos/${idDocumento}/download`);
+      const resposta = await fetch(`${API_BASE}/documentos/${documentoId}/download`);
       if (!resposta.ok) {
         let mensagem = 'Erro ao baixar documento.';
         try {
@@ -1143,7 +1164,7 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `documento-${idDocumento}`;
+      link.download = `documento-${documentoId}`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1218,6 +1239,16 @@
     });
   }
   document.addEventListener('click', event => {
+    const clienteCard = event.target.closest('[data-cliente-id]');
+    if (clienteCard) {
+      const clienteId = normalizarIdNumerico(clienteCard.dataset.clienteId);
+      if (clienteId) window.location.href = `detalhes-cliente.html?id=${clienteId}`;
+      return;
+    }
+    if (event.target.closest('#btnVoltarProcessos')) {
+      window.location.href = 'processos.html';
+      return;
+    }
     if (event.target.closest('#btnEditarProcesso')) abrirModalEdicao();
     if (event.target.closest('#btnExcluirProcesso')) excluirProcesso();
     const botaoDownload = event.target.closest('[data-download-documento]');

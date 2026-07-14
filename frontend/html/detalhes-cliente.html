@@ -816,7 +816,7 @@
 
         <div class="profile-header">
           <div class="profile-avatar-big" style="background:${getCor(cliente.id)};">
-            ${getIniciais(cliente.nome)}
+            ${escapeHtml(getIniciais(cliente.nome))}
           </div>
 
           <div style="flex:1;min-width:0;">

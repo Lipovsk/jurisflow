@@ -369,6 +369,7 @@
     tbody.innerHTML = usuarios.map(usuario => {
       const ativo = usuario.ativo === true;
       const isSelf = logado && Number(logado.id) === Number(usuario.id);
+      const usuarioId = escapeHtml(String(usuario.id ?? ''));
       const toggleLabel = ativo ? 'Desativar' : 'Ativar';
       const toggleClass = ativo ? 'btn-danger' : '';
       const toggleDisabled = isSelf ? ' disabled title="Você não pode desativar seu próprio usuário por aqui."' : '';
@@ -389,9 +390,9 @@
           <td><span class="${ativo ? 'status-active' : 'status-inactive'}">● ${ativo ? 'Ativo' : 'Inativo'}</span></td>
           <td>
             <div class="user-actions">
-              <button class="btn-outline btn-sm" data-action="editar" data-id="${usuario.id}">Editar</button>
-              <button class="btn-outline btn-sm" data-action="reset" data-id="${usuario.id}"${isSelf ? ' disabled title="Use Minha senha para alterar sua senha."' : ''}>Resetar senha</button>
-              <button class="btn-outline btn-sm ${toggleClass}" data-action="toggle" data-id="${usuario.id}"${toggleDisabled}>${toggleLabel}</button>
+              <button class="btn-outline btn-sm" data-action="editar" data-id="${usuarioId}">Editar</button>
+              <button class="btn-outline btn-sm" data-action="reset" data-id="${usuarioId}"${isSelf ? ' disabled title="Use Minha senha para alterar sua senha."' : ''}>Resetar senha</button>
+              <button class="btn-outline btn-sm ${toggleClass}" data-action="toggle" data-id="${usuarioId}"${toggleDisabled}>${toggleLabel}</button>
             </div>
           </td>
         </tr>

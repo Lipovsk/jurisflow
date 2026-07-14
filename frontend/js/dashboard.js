@@ -21,6 +21,20 @@ const AppState = {
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
+function escapeHtmlDashboard(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function normalizarIdDashboard(value) {
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? String(id) : '';
+}
+
 function formatDate(date) {
   if (typeof window.JurisFlowFormatarData === 'function') {
     return window.JurisFlowFormatarData(date);
@@ -89,6 +103,12 @@ function setActiveNavItem(page) {
 }
 
 function navigateTo(page) {
+  if (page === 'novo-cliente'
+      && window.JurisFlowAuth?.podeEditarClientes?.() !== true) {
+    showToast('Você não tem permissão para realizar esta ação.', 'error');
+    return;
+  }
+
   if (page === 'novo-processo'
       && window.JurisFlowAuth?.podeEditarProcessos?.() !== true) {
     showToast('Você não tem permissão para realizar esta ação.', 'error');
@@ -156,17 +176,22 @@ function showToast(message, type = 'info', duration = 3500) {
     error: '#EF4444',
   };
 
+  const safeType = Object.hasOwn(colors, type) ? type : 'info';
   const toast = document.createElement('div');
   toast.style.cssText = `
     background:#fff; border-radius:10px; padding:14px 18px;
     box-shadow:0 8px 32px rgba(13,27,42,.14);
-    border-left:4px solid ${colors[type]};
+    border-left:4px solid ${colors[safeType]};
     font-family:'DM Sans',sans-serif; font-size:.85rem;
     color:#2E3647; max-width:320px; display:flex; gap:10px;
     align-items:flex-start;
     animation: toastIn .3s cubic-bezier(.4,0,.2,1) both;
   `;
-  toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+  const icon = document.createElement('span');
+  icon.textContent = icons[safeType];
+  const text = document.createElement('span');
+  text.textContent = String(message ?? '');
+  toast.append(icon, text);
 
   if (!$('#toastStyle')) {
     const style = document.createElement('style');
@@ -448,14 +473,29 @@ function initRippleEffects() {
 
 // ─── Quick Actions (botões no topbar) ────────────────────────────────────────
 function initQuickActions() {
-  $('#btnNovoClienteTopbar')?.addEventListener('click', () => navigateTo('novo-cliente'));
+  const btnNovoCliente = $('#btnNovoClienteTopbar');
+  if (btnNovoCliente && window.JurisFlowAuth?.podeEditarClientes?.() !== true) {
+    btnNovoCliente.hidden = true;
+    btnNovoCliente.disabled = true;
+    btnNovoCliente.style.display = 'none';
+  } else {
+    btnNovoCliente?.addEventListener('click', () => navigateTo('novo-cliente'));
+  }
+
   const btnNovoProcesso = $('#btnNovoProcessoTopbar');
   if (btnNovoProcesso && window.JurisFlowAuth?.podeEditarProcessos?.() !== true) {
     btnNovoProcesso.hidden = true;
+    btnNovoProcesso.disabled = true;
     btnNovoProcesso.style.display = 'none';
-    return;
+  } else {
+    btnNovoProcesso?.addEventListener('click', () => navigateTo('novo-processo'));
   }
-  btnNovoProcesso?.addEventListener('click', () => navigateTo('novo-processo'));
+
+  const quickActions = $('#topbarQuickActions');
+  if (quickActions && btnNovoCliente?.hidden && btnNovoProcesso?.hidden) {
+    quickActions.hidden = true;
+    quickActions.style.display = 'none';
+  }
 }
 
 // ─── Stat Progress Bars ───────────────────────────────────────────────────────
@@ -686,12 +726,12 @@ function atualizarCardsDashboard(dados) {
       ? prazosCriticos.map(c => `
         <div class="prazo-item">
           <div class="prazo-date urgent">
-            <div class="day">${new Date(`${c.data}T00:00:00`).getDate()}</div>
-            <div class="mon">${new Date(`${c.data}T00:00:00`).toLocaleDateString('pt-BR', { month: 'short' })}</div>
+            <div class="day">${escapeHtmlDashboard(new Date(`${c.data}T00:00:00`).getDate())}</div>
+            <div class="mon">${escapeHtmlDashboard(new Date(`${c.data}T00:00:00`).toLocaleDateString('pt-BR', { month: 'short' }))}</div>
           </div>
           <div class="prazo-info">
-            <div class="prazo-title">${c.titulo || 'Prazo sem título'}</div>
-            <div class="prazo-client">👤 ${c.cliente?.nome || 'Cliente não informado'}</div>
+            <div class="prazo-title">${escapeHtmlDashboard(c.titulo || 'Prazo sem título')}</div>
+            <div class="prazo-client">👤 ${escapeHtmlDashboard(c.cliente?.nome || 'Cliente não informado')}</div>
           </div>
           <span class="prazo-tag urgente">Prazo</span>
         </div>
@@ -709,10 +749,10 @@ function atualizarCardsDashboard(dados) {
     audBox.innerHTML = audiencias.length
       ? audiencias.map(c => `
         <div class="audiencia-item prazo-border">
-          <div class="audiencia-time">${c.hora || '--:--'}</div>
+          <div class="audiencia-time">${escapeHtmlDashboard(c.hora || '--:--')}</div>
           <div class="audiencia-info">
-            <div class="audiencia-title">${c.titulo || 'Audiência'}</div>
-            <div class="audiencia-local">📍 ${c.descricao || 'Sem descrição'} · ${c.data || ''}</div>
+            <div class="audiencia-title">${escapeHtmlDashboard(c.titulo || 'Audiência')}</div>
+            <div class="audiencia-local">📍 ${escapeHtmlDashboard(c.descricao || 'Sem descrição')} · ${escapeHtmlDashboard(c.data || '')}</div>
           </div>
         </div>
       `).join('')
@@ -732,17 +772,28 @@ function atualizarCardsDashboard(dados) {
 
   if (cliBox) {
     cliBox.innerHTML = clientesRecentes.length
-      ? clientesRecentes.map(c => `
-        <div class="client-row" onclick="location.href='detalhes-cliente.html?id=${c.id}'">
-          <div class="client-avatar">${getIniciaisLocal(c.nome)}</div>
+      ? clientesRecentes.map(c => {
+        const clienteId = normalizarIdDashboard(c.id);
+        const atributoId = clienteId ? ` data-cliente-id="${clienteId}"` : '';
+        return `
+        <div class="client-row"${atributoId}>
+          <div class="client-avatar">${escapeHtmlDashboard(getIniciaisLocal(c.nome))}</div>
           <div class="client-info">
-            <div class="client-name">${c.nome || 'Sem nome'}</div>
-            <div class="client-meta">${c.email || 'Sem e-mail'}</div>
+            <div class="client-name">${escapeHtmlDashboard(c.nome || 'Sem nome')}</div>
+            <div class="client-meta">${escapeHtmlDashboard(c.email || 'Sem e-mail')}</div>
           </div>
-          <span class="client-status status-ativo">${c.status || 'ativo'}</span>
+          <span class="client-status status-ativo">${escapeHtmlDashboard(c.status || 'ativo')}</span>
         </div>
-      `).join('')
+      `;
+      }).join('')
       : '<div style="padding:16px;color:#999;">Nenhum cliente cadastrado</div>';
+
+    cliBox.querySelectorAll('[data-cliente-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        const clienteId = normalizarIdDashboard(row.dataset.clienteId);
+        if (clienteId) window.location.href = `detalhes-cliente.html?id=${clienteId}`;
+      });
+    });
   }
 
   const alertas = [];
@@ -770,8 +821,8 @@ function atualizarCardsDashboard(dados) {
         <div class="alert-item">
           <div class="alert-dot ${a.tipo}"></div>
           <div>
-            <div class="alert-text">${a.texto}</div>
-            <div class="alert-time">${a.tempo}</div>
+            <div class="alert-text">${escapeHtmlDashboard(a.texto)}</div>
+            <div class="alert-time">${escapeHtmlDashboard(a.tempo)}</div>
           </div>
         </div>
       `).join('')
@@ -784,21 +835,24 @@ function atualizarCardsDashboard(dados) {
     const totalMes = honorarios
       .filter(h => String(h.competencia || '').startsWith(competenciaAtual))
       .reduce((soma, h) => soma + valorHonorarioDashboard(h), 0);
-    const percentualRecebido = totalMes ? Math.min((recebidoMes / totalMes) * 100, 100) : 0;
+    const percentualCalculado = totalMes ? (recebidoMes / totalMes) * 100 : 0;
+    const percentualRecebido = Number.isFinite(percentualCalculado)
+      ? Math.max(0, Math.min(percentualCalculado, 100))
+      : 0;
 
     financeiroBox.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
         <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
           <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">Recebido no mês</div>
           <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green);">
-            ${formatarMoedaDashboard(recebidoMes)}
+            ${escapeHtmlDashboard(formatarMoedaDashboard(recebidoMes))}
           </div>
         </div>
 
         <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;">
           <div style="font-size:.7rem;color:var(--gray-400);margin-bottom:4px;">A receber/inadimplente</div>
           <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--amber);">
-            ${formatarMoedaDashboard(totalAberto)}
+            ${escapeHtmlDashboard(formatarMoedaDashboard(totalAberto))}
           </div>
         </div>
       </div>
@@ -806,7 +860,7 @@ function atualizarCardsDashboard(dados) {
       <div style="margin-top:16px;">
         <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray-400);margin-bottom:6px;">
           <span>Recebido sobre o lançado no mês</span>
-          <span style="color:var(--navy);font-weight:600;">${percentualRecebido.toFixed(0)}%</span>
+          <span style="color:var(--navy);font-weight:600;">${escapeHtmlDashboard(percentualRecebido.toFixed(0))}%</span>
         </div>
         <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
           <div style="
@@ -817,7 +871,7 @@ function atualizarCardsDashboard(dados) {
           "></div>
         </div>
         <div style="margin-top:8px;font-size:.72rem;color:var(--gray-400);">
-          Total lançado: ${formatarMoedaDashboard(lancadoTotal)}
+          Total lançado: ${escapeHtmlDashboard(formatarMoedaDashboard(lancadoTotal))}
         </div>
       </div>
     `;

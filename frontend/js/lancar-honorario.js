@@ -40,8 +40,8 @@ async function carregarProcessosBackend() {
 function getClientesDisponiveis() {
   return clientesBackend.map(c => ({
     id: String(c.id),
-    nome: c.nome,
-    cpf: c.cpfCnpj || '',
+    nome: String(c.nome ?? ''),
+    cpf: String(c.cpfCnpj ?? ''),
     iniciais: getIniciais(c.nome)
   }));
 }
@@ -49,8 +49,8 @@ function getClientesDisponiveis() {
 function getProcessosDisponiveis() {
   return processosBackend.map(p => ({
     id: String(p.id),
-    num: p.numero || '',
-    area: p.areaJuridica || '',
+    num: String(p.numero ?? ''),
+    area: String(p.areaJuridica ?? ''),
     clienteId: String(p.cliente?.id || p.clienteId || '')
   }));
 }
@@ -249,10 +249,25 @@ function initRealtimeValidation() {
 }
 
 // ── Autocomplete helper ───────────────────────────────────
-function highlight(text, q) {
-  if (!q) return text;
-  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  return text.replace(re, '<mark>$1</mark>');
+function appendHighlightedText(container, text, q) {
+  const value = String(text ?? '');
+  const query = String(q ?? '');
+  if (!query) {
+    container.textContent = value;
+    return;
+  }
+
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  value.split(re).forEach((part, index) => {
+    if (!part) return;
+    if (index % 2 === 0) {
+      container.appendChild(document.createTextNode(part));
+      return;
+    }
+    const mark = document.createElement('mark');
+    mark.textContent = part;
+    container.appendChild(mark);
+  });
 }
 
 // ── Cliente Autocomplete ──────────────────────────────────
@@ -264,23 +279,43 @@ function initClienteAutocomplete() {
 
   function openDropdown(results, q) {
     if (!results.length) {
-      dropdown.innerHTML = `<div class="ac-empty">Nenhum cliente encontrado para "${q}"</div>`;
+      const empty = document.createElement('div');
+      empty.className = 'ac-empty';
+      empty.textContent = `Nenhum cliente encontrado para "${q}"`;
+      dropdown.replaceChildren(empty);
     } else {
-      dropdown.innerHTML = results.map(c => `
-        <div class="ac-item" data-id="${c.id}">
-          <div class="ac-item-avatar">${c.iniciais}</div>
-          <div class="ac-item-info">
-            <div class="ac-item-name">${highlight(c.nome, q)}</div>
-            <div class="ac-item-cpf">${c.cpf}</div>
-          </div>
-        </div>`).join('');
-      dropdown.querySelectorAll('.ac-item').forEach(item => {
+      const fragment = document.createDocumentFragment();
+      results.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'ac-item';
+        item.dataset.id = c.id;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'ac-item-avatar';
+        avatar.textContent = c.iniciais;
+        item.appendChild(avatar);
+
+        const info = document.createElement('div');
+        info.className = 'ac-item-info';
+        const name = document.createElement('div');
+        name.className = 'ac-item-name';
+        appendHighlightedText(name, c.nome, q);
+        info.appendChild(name);
+
+        const cpf = document.createElement('div');
+        cpf.className = 'ac-item-cpf';
+        cpf.textContent = c.cpf;
+        info.appendChild(cpf);
+        item.appendChild(info);
+
         item.addEventListener('mousedown', e => {
           e.preventDefault();
           const c = getClientesDisponiveis().find(x => x.id === item.dataset.id);
           if (c) selectCliente(c);
         });
+        fragment.appendChild(item);
       });
+      dropdown.replaceChildren(fragment);
     }
     dropdown.classList.add('active');
   }
@@ -336,22 +371,42 @@ function initProcessoAutocomplete() {
   function openDropdown(results, q) {
     const clienteId = document.getElementById('clienteId')?.value;
     if (!clienteId) {
-      dropdown.innerHTML = '<div class="ac-empty">Selecione um cliente antes de vincular um processo</div>';
+      const empty = document.createElement('div');
+      empty.className = 'ac-empty';
+      empty.textContent = 'Selecione um cliente antes de vincular um processo';
+      dropdown.replaceChildren(empty);
       dropdown.classList.add('active');
       return;
     }
     if (!results.length) {
-      dropdown.innerHTML = '<div class="ac-empty">Nenhum processo encontrado para este cliente</div>';
+      const empty = document.createElement('div');
+      empty.className = 'ac-empty';
+      empty.textContent = 'Nenhum processo encontrado para este cliente';
+      dropdown.replaceChildren(empty);
     } else {
-      dropdown.innerHTML = results.map(p => `
-        <div class="ac-item" data-id="${p.id}">
-          <div class="ac-item-avatar" style="background:var(--blue-soft);color:var(--blue-accent);font-size:.7rem;">📁</div>
-          <div class="ac-item-info">
-            <div class="ac-item-name">${highlight(p.num, q)}</div>
-            <div class="ac-item-cpf">${p.area}</div>
-          </div>
-        </div>`).join('');
-      dropdown.querySelectorAll('.ac-item').forEach(item => {
+      const fragment = document.createDocumentFragment();
+      results.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'ac-item';
+        item.dataset.id = p.id;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'ac-item-avatar';
+        avatar.style.cssText = 'background:var(--blue-soft);color:var(--blue-accent);font-size:.7rem;';
+        avatar.textContent = '📁';
+        item.appendChild(avatar);
+
+        const info = document.createElement('div');
+        info.className = 'ac-item-info';
+        const numero = document.createElement('div');
+        numero.className = 'ac-item-name';
+        appendHighlightedText(numero, p.num, q);
+        const area = document.createElement('div');
+        area.className = 'ac-item-cpf';
+        area.textContent = p.area;
+        info.append(numero, area);
+        item.appendChild(info);
+
         item.addEventListener('mousedown', e => {
           e.preventDefault();
           const p = getProcessosDisponiveis().find(x => x.id === item.dataset.id);
@@ -365,7 +420,9 @@ function initProcessoAutocomplete() {
             updatePreview();
           }
         });
+        fragment.appendChild(item);
       });
+      dropdown.replaceChildren(fragment);
     }
     dropdown.classList.add('active');
   }

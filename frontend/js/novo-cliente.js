@@ -185,19 +185,33 @@ function initFileUpload() {
       : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
     const item = document.createElement('div');
     item.className = 'file-item';
-    item.innerHTML = `
-      <div class="file-item-ico">${icon}</div>
-      <div class="file-item-info">
-        <div class="file-item-name">${file.name}</div>
-        <div class="file-item-meta">${ext} · ${size}</div>
-      </div>
-      <button class="file-item-del" title="Remover arquivo">✕</button>
-    `;
-    item.querySelector('.file-item-del').addEventListener('click', () => {
+
+    const iconElement = document.createElement('div');
+    iconElement.className = 'file-item-ico';
+    iconElement.textContent = icon;
+
+    const info = document.createElement('div');
+    info.className = 'file-item-info';
+    const nome = document.createElement('div');
+    nome.className = 'file-item-name';
+    nome.textContent = file.name;
+    const meta = document.createElement('div');
+    meta.className = 'file-item-meta';
+    meta.textContent = `${ext} · ${size}`;
+    info.append(nome, meta);
+
+    const remover = document.createElement('button');
+    remover.className = 'file-item-del';
+    remover.type = 'button';
+    remover.title = 'Remover arquivo';
+    remover.textContent = '✕';
+    remover.addEventListener('click', () => {
       const idx = uploadedFiles.indexOf(file);
       if (idx > -1) uploadedFiles.splice(idx, 1);
       item.remove();
     });
+
+    item.append(iconElement, info, remover);
     list.appendChild(item);
   }
 }

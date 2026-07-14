@@ -772,7 +772,7 @@
             const email = campo(c, 'email');
             return `<tr>
           <td><div class="client-cell">
-            <div class="tbl-avatar" style="background:${getCor(c.id)}">${getIniciais(c.nome)}</div>
+            <div class="tbl-avatar" style="background:${getCor(c.id)}">${escapeHtml(getIniciais(c.nome))}</div>
             <div>
               <div class="tbl-name">${escapeHtml(valor(c.nome))}</div>
               <div class="tbl-type">${escapeHtml(valor(c.tipoCliente))}</div>
@@ -788,7 +788,7 @@
           <td style="font-weight:600;">${formatarQuantidadeProcessos(c.id)}</td>
           <td style="color:var(--gray-400);font-size:.82rem;">${escapeHtml(formatarDataCadastro(c.dataCadastro))}</td>
           <td><div class="status-dot"><div class="dot ${s.dot}"></div><span style="font-size:.78rem;font-weight:600;">${escapeHtml(s.label)}</span></div></td>
-          <td><button class="btn-outline btn-ver-perfil" data-id="${c.id}">Ver Perfil</button></td>
+          <td><button class="btn-outline btn-ver-perfil" data-id="${escapeHtml(String(c.id ?? ''))}">Ver Perfil</button></td>
         </tr>`;
           }).join('');
         }
@@ -870,7 +870,7 @@
 
         document.getElementById('clientsBody').addEventListener('click', function (e) {
           const btn = e.target.closest('.btn-ver-perfil');
-          if (btn) window.location.href = 'detalhes-cliente.html?id=' + btn.dataset.id;
+          if (btn) window.location.href = 'detalhes-cliente.html?id=' + encodeURIComponent(btn.dataset.id);
         });
 
         document.getElementById('btnNovoCliente').addEventListener('click', () => {

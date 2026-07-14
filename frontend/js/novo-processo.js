@@ -4,15 +4,27 @@
 
 function getIniciais(nome) {
   if (!nome) return '?';
-  const p = nome.trim().split(' ').filter(Boolean);
+  const p = String(nome).trim().split(' ').filter(Boolean);
   return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
+}
+
+function normalizarIdProcessoForm(value) {
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? String(id) : '';
+}
+
+function criarElemento(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = String(text);
+  return element;
 }
 
 let clientesBackend = [];
 const MENSAGEM_SEM_PERMISSAO = 'Você não tem permissão para realizar esta ação.';
 
 const processoEditId =
-  new URLSearchParams(window.location.search).get('id');
+  normalizarIdProcessoForm(new URLSearchParams(window.location.search).get('id'));
 
 function podeEditarProcessos() {
   return window.JurisFlowAuth?.podeEditarProcessos?.() === true;
@@ -34,11 +46,11 @@ async function carregarClientesBackend() {
 
 function getClientesMock() {
   return clientesBackend.map(c => ({
-    id: String(c.id),
-    nome: c.nome,
-    cpf: c.cpfCnpj || '',
+    id: normalizarIdProcessoForm(c.id),
+    nome: String(c.nome ?? ''),
+    cpf: String(c.cpfCnpj ?? ''),
     iniciais: getIniciais(c.nome)
-  }));
+  })).filter(c => c.id);
 }
 
 // ── Masks ─────────────────────────────────────────────────
@@ -172,32 +184,50 @@ function initClienteAutocomplete() {
 
   let selectedCliente = null;
 
-  function highlight(text, q) {
-    if (!q) return text;
+  function appendHighlightedText(element, text, q) {
+    const source = String(text ?? '');
+    if (!q) {
+      element.textContent = source;
+      return;
+    }
     const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(re, '<mark>$1</mark>');
+    let lastIndex = 0;
+    let match;
+
+    while ((match = re.exec(source)) !== null) {
+      element.appendChild(document.createTextNode(source.slice(lastIndex, match.index)));
+      element.appendChild(criarElemento('mark', '', match[0]));
+      lastIndex = match.index + match[0].length;
+    }
+
+    element.appendChild(document.createTextNode(source.slice(lastIndex)));
   }
 
   function openDropdown(results, q) {
+    dropdown.replaceChildren();
+
     if (!results.length) {
-      dropdown.innerHTML = `<div class="ac-empty">Nenhum cliente encontrado para "${q}"</div>`;
+      dropdown.appendChild(criarElemento('div', 'ac-empty', `Nenhum cliente encontrado para "${q}"`));
     } else {
-      dropdown.innerHTML = results.map(c => `
-        <div class="ac-item" data-id="${c.id}">
-          <div class="ac-item-avatar">${c.iniciais}</div>
-          <div class="ac-item-info">
-            <div class="ac-item-name">${highlight(c.nome, q)}</div>
-            <div class="ac-item-cpf">${c.cpf}</div>
-          </div>
-        </div>
-      `).join('');
-      dropdown.querySelectorAll('.ac-item').forEach(item => {
+      results.forEach(c => {
+        const item = criarElemento('div', 'ac-item');
+        item.dataset.id = c.id;
+        item.appendChild(criarElemento('div', 'ac-item-avatar', c.iniciais));
+
+        const info = criarElemento('div', 'ac-item-info');
+        const name = criarElemento('div', 'ac-item-name');
+        appendHighlightedText(name, c.nome, q);
+        info.append(name, criarElemento('div', 'ac-item-cpf', c.cpf));
+        item.appendChild(info);
+
         item.addEventListener('mousedown', e => {
           e.preventDefault();
           const clientId = item.dataset.id;
           const client = getClientesMock().find(c => c.id === clientId);
           if (client) selectCliente(client);
         });
+
+        dropdown.appendChild(item);
       });
     }
     dropdown.classList.add('active');
@@ -326,6 +356,25 @@ function initDateAlerts() {
 }
 
 // ── Timeline ──────────────────────────────────────────────
+function criarItemTimeline(dotClass, title, meta, badge) {
+  const item = criarElemento('div', 'tl-item');
+  item.appendChild(criarElemento('div', `tl-dot ${dotClass}`));
+
+  const content = criarElemento('div', 'tl-content');
+  content.append(
+    criarElemento('div', 'tl-title', title),
+    criarElemento('div', 'tl-meta', meta)
+  );
+
+  const removeButton = criarElemento('button', 'tl-item-del', '✕');
+  removeButton.type = 'button';
+  removeButton.title = 'Remover';
+  removeButton.addEventListener('click', () => item.remove());
+
+  item.append(content, criarElemento('div', 'tl-badge', badge), removeButton);
+  return item;
+}
+
 function initTimeline() {
   const tl = document.getElementById('timeline');
   const addForm = document.getElementById('tlAddForm');
@@ -362,18 +411,12 @@ function initTimeline() {
       ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : 'Sem data';
 
-    const item = document.createElement('div');
-    item.className = 'tl-item';
-    item.innerHTML = `
-      <div class="tl-dot green"></div>
-      <div class="tl-content">
-        <div class="tl-title">${desc}</div>
-        <div class="tl-meta">${dataFmt} · ${nomeUsuarioLogado()}</div>
-      </div>
-      <div class="tl-badge">Manual</div>
-      <button class="tl-item-del" title="Remover">✕</button>
-    `;
-    item.querySelector('.tl-item-del').addEventListener('click', () => item.remove());
+    const item = criarItemTimeline(
+      'green',
+      desc,
+      `${dataFmt} · ${nomeUsuarioLogado()}`,
+      'Manual'
+    );
     tl.appendChild(item);
 
     document.getElementById('tlEventoDesc').value = '';
@@ -414,19 +457,13 @@ function initFileUpload() {
       // Add to timeline
       const tl = document.getElementById('timeline');
       if (tl) {
-        const item = document.createElement('div');
-        item.className = 'tl-item';
         const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        item.innerHTML = `
-          <div class="tl-dot amber"></div>
-          <div class="tl-content">
-            <div class="tl-title">Documento selecionado: ${file.name}</div>
-            <div class="tl-meta">${today} · ${nomeUsuarioLogado()}</div>
-          </div>
-          <div class="tl-badge">Local</div>
-          <button class="tl-item-del" title="Remover">✕</button>
-        `;
-        item.querySelector('.tl-item-del').addEventListener('click', () => item.remove());
+        const item = criarItemTimeline(
+          'amber',
+          `Documento selecionado: ${file.name}`,
+          `${today} · ${nomeUsuarioLogado()}`,
+          'Local'
+        );
         tl.appendChild(item);
       }
     });
@@ -439,21 +476,24 @@ function initFileUpload() {
     const size = file.size < 1024 * 1024
       ? `${(file.size / 1024).toFixed(0)} KB`
       : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
-    const item = document.createElement('div');
-    item.className = 'file-item';
-    item.innerHTML = `
-      <div class="file-item-ico">${icon}</div>
-      <div class="file-item-info">
-        <div class="file-item-name">${file.name}</div>
-        <div class="file-item-meta">${ext} · ${size}</div>
-      </div>
-      <button class="file-item-del" title="Remover">✕</button>
-    `;
-    item.querySelector('.file-item-del').addEventListener('click', () => {
+    const item = criarElemento('div', 'file-item');
+    item.appendChild(criarElemento('div', 'file-item-ico', icon));
+
+    const info = criarElemento('div', 'file-item-info');
+    info.append(
+      criarElemento('div', 'file-item-name', file.name),
+      criarElemento('div', 'file-item-meta', `${ext} · ${size}`)
+    );
+
+    const removeButton = criarElemento('button', 'file-item-del', '✕');
+    removeButton.type = 'button';
+    removeButton.title = 'Remover';
+    removeButton.addEventListener('click', () => {
       const idx = uploadedFiles.indexOf(file);
       if (idx > -1) uploadedFiles.splice(idx, 1);
       item.remove();
     });
+    item.append(info, removeButton);
     list.appendChild(item);
   }
 }
