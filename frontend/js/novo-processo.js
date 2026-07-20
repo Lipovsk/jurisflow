@@ -426,6 +426,8 @@ function initTimeline() {
 }
 
 // ── File Upload ───────────────────────────────────────────
+const LIMITE_UPLOAD_DOCUMENTO_BYTES = 10 * 1024 * 1024;
+const MENSAGEM_LIMITE_UPLOAD_DOCUMENTO = 'O arquivo excede o limite de 10 MB.';
 const uploadedFiles = [];
 
 function initFileUpload() {
@@ -448,8 +450,8 @@ function initFileUpload() {
 
   function addFiles(files) {
     files.forEach(file => {
-      if (file.size > 10 * 1024 * 1024) {
-        window.JurisFlow?.showToast(`"${file.name}" excede 10 MB.`, 'warning');
+      if (file.size > LIMITE_UPLOAD_DOCUMENTO_BYTES) {
+        window.JurisFlow?.showToast(MENSAGEM_LIMITE_UPLOAD_DOCUMENTO, 'warning');
         return;
       }
       uploadedFiles.push(file);

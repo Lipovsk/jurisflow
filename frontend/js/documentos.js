@@ -2,6 +2,8 @@
   'use strict';
 
   const API_BASE = 'http://localhost:8080';
+  const LIMITE_UPLOAD_DOCUMENTO_BYTES = 10 * 1024 * 1024;
+  const MENSAGEM_LIMITE_UPLOAD_DOCUMENTO = 'O arquivo excede o limite de 10 MB.';
   const CATEGORIAS = ['', 'peticao', 'contrato', 'laudo', 'procuracao', 'decisao', 'outros'];
   const catLabel = {
     peticao: 'Petição',
@@ -101,6 +103,35 @@
     } catch {
       return fallback;
     }
+  }
+
+  function mensagemIndicaErroDeTamanho(mensagem) {
+    const valor = normalizar(mensagem);
+    return valor.includes('limite de 10 mb')
+      || valor.includes('excede o limite')
+      || valor.includes('tamanho maximo')
+      || valor.includes('maximum upload size')
+      || valor.includes('payload too large')
+      || valor.includes('file too large')
+      || valor.includes('request entity too large');
+  }
+
+  async function lerMensagemErroUpload(response) {
+    if (response.status === 413) return MENSAGEM_LIMITE_UPLOAD_DOCUMENTO;
+
+    const copia = typeof response.clone === 'function' ? response.clone() : null;
+    const mensagem = await lerErroApi(response, 'Erro ao enviar documento.');
+    if (mensagemIndicaErroDeTamanho(mensagem)) return MENSAGEM_LIMITE_UPLOAD_DOCUMENTO;
+
+    if (copia) {
+      try {
+        const textoResposta = await copia.text();
+        if (mensagemIndicaErroDeTamanho(textoResposta)) return MENSAGEM_LIMITE_UPLOAD_DOCUMENTO;
+      } catch {
+        // Mantém a mensagem segura já obtida do JSON ou o fallback.
+      }
+    }
+    return mensagem;
   }
 
   async function buscarJson(url) {
@@ -317,6 +348,8 @@
   }
 
   function abrirModal(file = null) {
+    if (file && !validarTamanhoArquivo(file)) return;
+
     el.uploadForm.reset();
     el.categoriaInput.value = 'outros';
     preencherClientes();
@@ -344,6 +377,19 @@
     el.fileMeta.textContent = `${file.name} · ${formatBytes(file.size)} · ${file.type || 'tipo não informado pelo navegador'}`;
   }
 
+  function limparArquivoSelecionado() {
+    el.arquivoInput.value = '';
+    atualizarFileMeta(null);
+  }
+
+  function validarTamanhoArquivo(arquivo, limparInput = false) {
+    if (!arquivo || arquivo.size <= LIMITE_UPLOAD_DOCUMENTO_BYTES) return true;
+
+    toast(MENSAGEM_LIMITE_UPLOAD_DOCUMENTO, 'warning');
+    if (limparInput) limparArquivoSelecionado();
+    return false;
+  }
+
   async function enviarDocumento(event) {
     event.preventDefault();
     const arquivo = el.arquivoInput.files?.[0];
@@ -354,6 +400,7 @@
       toast('Selecione um arquivo para enviar.', 'warning');
       return;
     }
+    if (!validarTamanhoArquivo(arquivo, true)) return;
     if (!clienteId && !processoId) {
       toast('Vincule o documento a um cliente ou processo.', 'warning');
       return;
@@ -374,15 +421,19 @@
         method: 'POST',
         body: formData
       });
+      if (response.status === 401 || response.status === 403) return;
       if (!response.ok) {
-        throw new Error(await lerErroApi(response, 'Erro ao enviar documento.'));
+        throw new Error(await lerMensagemErroUpload(response));
       }
       fecharModal();
       toast('Documento enviado com sucesso.', 'success');
       await carregarDocumentos();
     } catch (erro) {
       console.error('Erro no upload:', erro);
-      toast(erro.message || 'Erro ao enviar documento.', 'error');
+      const mensagem = erro instanceof TypeError && normalizar(erro.message).includes('fetch')
+        ? 'Não foi possível enviar o documento. Verifique sua conexão.'
+        : (erro.message || 'Erro ao enviar documento.');
+      toast(mensagem, 'error');
     } finally {
       el.submitUploadBtn.disabled = false;
       el.submitUploadBtn.textContent = 'Enviar';
@@ -454,7 +505,11 @@
   el.uploadModal.addEventListener('click', event => {
     if (event.target === el.uploadModal) fecharModal();
   });
-  el.arquivoInput.addEventListener('change', () => atualizarFileMeta(el.arquivoInput.files?.[0] || null));
+  el.arquivoInput.addEventListener('change', () => {
+    const arquivo = el.arquivoInput.files?.[0] || null;
+    if (!validarTamanhoArquivo(arquivo, true)) return;
+    atualizarFileMeta(arquivo);
+  });
   el.clienteInput.addEventListener('change', () => {
     preencherProcessos(el.clienteInput.value);
   });
