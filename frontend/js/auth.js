@@ -6,7 +6,11 @@
   const USER_KEY = 'jurisflow_auth_usuario';
   const LOGIN_PAGE = 'login.html';
   const LEGACY_LOGIN_PAGE = 'index.html';
+  const MENSAGEM_SEM_PERMISSAO = 'Você não tem permissão para realizar esta ação.';
   const originalFetch = window.fetch.bind(window);
+  let redirecionamentoParaLoginEmAndamento = false;
+  let logoutConfigurado = false;
+  let ultimoAvisoSemPermissao = Number.NEGATIVE_INFINITY;
 
   function isLoginPage() {
     const page = window.location.pathname.split('/').pop() || '';
@@ -59,12 +63,19 @@
   }
 
   function temSessao() {
-    return Boolean(getToken());
+    return Boolean(getToken() && getUsuario());
+  }
+
+  function redirecionarParaLogin() {
+    limparSessao();
+
+    if (isLoginPage() || redirecionamentoParaLoginEmAndamento) return;
+    redirecionamentoParaLoginEmAndamento = true;
+    window.location.href = LOGIN_PAGE;
   }
 
   function logout() {
-    limparSessao();
-    window.location.href = LOGIN_PAGE;
+    redirecionarParaLogin();
   }
 
   function getUsuarioLogado() {
@@ -177,11 +188,22 @@
     throw new Error('Você não tem permissão para acessar esta área.');
   }
 
-  function redirecionarLogin() {
-    limparSessao();
-    if (!isLoginPage()) {
-      window.location.href = LOGIN_PAGE;
+  function mostrarMensagemSemPermissao() {
+    const agora = Date.now();
+    if (agora - ultimoAvisoSemPermissao < 500) return;
+
+    ultimoAvisoSemPermissao = agora;
+    window.alert(MENSAGEM_SEM_PERMISSAO);
+  }
+
+  function tratarRespostaAutenticacao(response) {
+    if (response?.status === 401) {
+      redirecionarParaLogin();
+    } else if (response?.status === 403 && !redirecionamentoParaLoginEmAndamento) {
+      mostrarMensagemSemPermissao();
     }
+
+    return response;
   }
 
   function ocultarSeletores(seletores) {
@@ -231,14 +253,14 @@
     return true;
   }
 
-  window.fetch = async function fetchAutenticado(input, init = {}) {
+  async function fetchAutenticado(input, options = {}) {
     const shouldAuthenticate = isJurisFlowApi(input);
-    const requestInit = { ...init };
+    const requestInit = { ...options };
 
     if (shouldAuthenticate && !isAuthLoginCall(input)) {
       const currentToken = getToken();
       if (currentToken) {
-        const headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
+        const headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
         headers.set('Authorization', `Bearer ${currentToken}`);
         requestInit.headers = headers;
       }
@@ -246,29 +268,42 @@
 
     const response = await originalFetch(input, requestInit);
 
-    if (shouldAuthenticate && !isAuthLoginCall(input) && response.status === 401) {
-      redirecionarLogin();
+    if (shouldAuthenticate && !isAuthLoginCall(input)) {
+      tratarRespostaAutenticacao(response);
     }
 
     return response;
-  };
+  }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  window.fetch = fetchAutenticado;
+
+  function configurarLogout() {
+    if (logoutConfigurado) return;
+    logoutConfigurado = true;
+
+    document.addEventListener('click', event => {
+      const elementoLogout = event.target?.closest?.('[data-action="logout"]');
+      if (!elementoLogout) return;
+
+      event.preventDefault();
+      logout();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', event => {
     if (!isLoginPage() && !temSessao()) {
-      redirecionarLogin();
+      event.stopImmediatePropagation();
+      redirecionarParaLogin();
       return;
     }
 
-    if (!isLoginPage() && !protegerPaginaPorPerfil()) return;
+    if (!isLoginPage() && !protegerPaginaPorPerfil()) {
+      event.stopImmediatePropagation();
+      return;
+    }
     aplicarIdentidadeUsuarioNaTela();
     aplicarPermissoesNaTela();
-
-    document.querySelectorAll('[data-action="logout"]').forEach(element => {
-      element.addEventListener('click', event => {
-        event.preventDefault();
-        logout();
-      });
-    });
+    configurarLogout();
   });
 
   window.JurisFlowAuth = {
@@ -294,6 +329,9 @@
     podeAcessarFinanceiro,
     limparSessao,
     temSessao,
+    redirecionarParaLogin,
+    tratarRespostaAutenticacao,
+    fetchAutenticado,
     logout
   };
 })();

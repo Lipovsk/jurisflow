@@ -238,22 +238,6 @@ function initGreeting() {
   el.textContent = `${greeting}, ${name} 👋`;
 }
 
-// ─── Confirmação de logout ────────────────────────────────────────────────────
-function initLogout() {
-  $$('[data-action="logout"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (confirm('Deseja sair do JurisFlow?')) {
-        if (window.JurisFlowAuth?.logout) {
-          window.JurisFlowAuth.logout();
-        } else {
-          sessionStorage.clear();
-          window.location.href = 'login.html';
-        }
-      }
-    });
-  });
-}
-
 // ─── Data na topbar ───────────────────────────────────────────────────────────
 function initTopbarDate() {
   const el = $('#topbarDate');
@@ -522,12 +506,13 @@ function initStatProgressBars() {
 
 // ─── Inicialização ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.JurisFlowAuth?.temSessao?.() === false) return;
+
   initSidebar();
   initTopbar();
   initClock();
   initGreeting();
   initTopbarDate();
-  initLogout();
   animateCounters();
   // Atalho flutuante desativado para evitar a bolinha móvel nas telas.
   initRippleEffects();

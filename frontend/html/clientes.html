@@ -927,15 +927,15 @@
 
           })
             .then(async res => {
-              if (res.status === 403) {
-                throw new Error('Você não tem permissão para realizar esta ação.');
-              }
+              if (res.status === 401 || res.status === 403) return null;
               if (!res.ok) {
                 throw new Error('Erro ao salvar cliente.');
               }
               return res.json();
             })
-            .then(() => {
+            .then(data => {
+
+              if (!data) return;
 
               carregarClientes();
 

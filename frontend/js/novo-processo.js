@@ -701,8 +701,14 @@ function initFormSubmit() {
       body: JSON.stringify(payload)
     })
       .then(res => {
-        if (res.status === 403) {
-          throw new Error(MENSAGEM_SEM_PERMISSAO);
+        if (res.status === 401 || res.status === 403) {
+          allBtns.forEach(b => {
+            if (!b) return;
+            b.disabled = false;
+            const texto = b.querySelector('.bfs-text');
+            if (texto) texto.textContent = 'Salvar Processo';
+          });
+          return null;
         }
         if (!res.ok) {
           throw new Error('Erro ao salvar processo');
@@ -711,6 +717,8 @@ function initFormSubmit() {
         return res.json();
       })
       .then(async data => {
+        if (!data) return;
+
         console.log('Processo salvo:', data);
         if (processoEditId) {
           window.JurisFlow?.showToast('Processo atualizado com sucesso.', 'success');

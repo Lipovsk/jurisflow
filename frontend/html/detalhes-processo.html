@@ -1125,7 +1125,7 @@
         body: JSON.stringify(payload)
       });
 
-      if (resposta.status === 403) throw new Error(MENSAGEM_SEM_PERMISSAO);
+      if (resposta.status === 401 || resposta.status === 403) return;
       if (!resposta.ok) {
         throw new Error(await lerMensagemErroApi(resposta, 'Erro ao atualizar processo.'));
       }
@@ -1187,7 +1187,7 @@
         method: 'DELETE'
       });
 
-      if (resposta.status === 403) throw new Error(MENSAGEM_SEM_PERMISSAO);
+      if (resposta.status === 401 || resposta.status === 403) return;
       if (!resposta.ok) {
         throw new Error(await lerMensagemErroApi(resposta, 'Erro ao arquivar processo.'));
       }

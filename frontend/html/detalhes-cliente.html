@@ -1200,10 +1200,9 @@ ${podeEditarClientes ? `<button class="btn-act btn-outline-act" id="btnExcluirCl
             body: JSON.stringify(clienteAtualizado)
           });
 
+          if (resposta.status === 401 || resposta.status === 403) return;
           if (!resposta.ok) {
-            alert(resposta.status === 403
-              ? "Você não tem permissão para realizar esta ação."
-              : "Erro ao editar cliente.");
+            alert("Erro ao editar cliente.");
             return;
           }
 

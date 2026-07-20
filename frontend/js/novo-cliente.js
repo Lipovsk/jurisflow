@@ -301,6 +301,17 @@ function initFormSubmit() {
       observacoes: cliente.observacoes
     };
 
+    const allBtns = [
+      document.getElementById('btnSalvar'),
+      document.getElementById('btnSalvarBottom'),
+    ];
+    allBtns.forEach(b => {
+      if (!b) return;
+      b.disabled = true;
+      const texto = b.querySelector('.bfs-text');
+      if (texto) texto.textContent = 'Salvando…';
+    });
+
     fetch('http://localhost:8080/clientes', {
 
   method: 'POST',
@@ -314,6 +325,18 @@ function initFormSubmit() {
 })
 .then(res => {
 
+  if (res.status === 401 || res.status === 403) {
+    if (res.status === 403) {
+      allBtns.forEach(b => {
+        if (!b) return;
+        b.disabled = false;
+        const texto = b.querySelector('.bfs-text');
+        if (texto) texto.textContent = 'Salvar Cliente';
+      });
+    }
+    return null;
+  }
+
   if (!res.ok) {
     throw new Error('Erro ao salvar cliente');
   }
@@ -323,12 +346,9 @@ function initFormSubmit() {
 })
 .then(data => {
 
-  console.log('Cliente salvo:', data);
+  if (!data) return;
 
-  const allBtns = [
-    document.getElementById('btnSalvar'),
-    document.getElementById('btnSalvarBottom'),
-  ];
+  console.log('Cliente salvo:', data);
 
   allBtns.forEach(b => {
     if (b) {
@@ -354,23 +374,19 @@ function initFormSubmit() {
 
   console.error(err);
 
+  allBtns.forEach(b => {
+    if (!b) return;
+    b.disabled = false;
+    const texto = b.querySelector('.bfs-text');
+    if (texto) texto.textContent = 'Salvar Cliente';
+  });
+
   window.JurisFlow?.showToast(
-    'Erro ao conectar com o backend.',
+    err.message || 'Erro ao conectar com o backend.',
     'error'
   );
 
 });
-
-    const allBtns = [
-      document.getElementById('btnSalvar'),
-      document.getElementById('btnSalvarBottom'),
-    ];
-    allBtns.forEach(b => { if (b) { b.disabled = true; const t = b.querySelector('.bfs-text'); if (t) t.textContent = 'Salvando…'; } });
-
-    setTimeout(() => {
-      window.JurisFlow?.showToast('✅ Cliente salvo com sucesso!', 'success');
-      setTimeout(() => { window.location.href = 'clientes.html'; }, 1400);
-    }, 800);
   }
 
   form?.addEventListener('submit', doSave);

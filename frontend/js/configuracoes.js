@@ -50,6 +50,10 @@
     return window.JurisFlowAuth?.isAdmin?.() === true;
   }
 
+  function respostaAutenticacaoTratada(response) {
+    return response?.status === 401 || response?.status === 403;
+  }
+
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
       '&': '&amp;',
@@ -225,6 +229,8 @@
           body: JSON.stringify({ senhaAtual: atual, novaSenha: nova })
         });
 
+        if (respostaAutenticacaoTratada(response)) return;
+
         if (!response.ok) {
           throw new Error(await lerMensagemErroApi(response, 'Erro ao alterar senha.'));
         }
@@ -340,8 +346,12 @@
 
     try {
       const response = await fetch(`${API_BASE}/usuarios?incluirInativos=true`);
+      if (response.status === 401) return;
       if (response.status === 403) {
-        throw new Error('Você não tem permissão para acessar esta área.');
+        const semPermissao = byId('usuariosSemPermissao');
+        if (semPermissao) semPermissao.style.display = 'block';
+        if (tbody) tbody.replaceChildren();
+        return;
       }
       if (!response.ok) {
         throw new Error(await lerMensagemErroApi(response, 'Erro ao carregar usuários.'));
@@ -451,6 +461,8 @@
         body: JSON.stringify(body)
       });
 
+      if (respostaAutenticacaoTratada(response)) return;
+
       if (!response.ok) {
         throw new Error(await lerMensagemErroApi(response, 'Erro ao salvar usuário.'));
       }
@@ -479,6 +491,8 @@
           ativo: proximoAtivo
         })
       });
+
+      if (respostaAutenticacaoTratada(response)) return;
 
       if (!response.ok) {
         throw new Error(await lerMensagemErroApi(response, `Erro ao ${acao} usuário.`));
@@ -523,6 +537,8 @@
         body: JSON.stringify({ novaSenha })
       });
 
+      if (respostaAutenticacaoTratada(response)) return;
+
       if (!response.ok) {
         throw new Error(await lerMensagemErroApi(response, 'Erro ao resetar senha.'));
       }
@@ -556,9 +572,11 @@
 
     try {
       const response = await fetch(`${API_BASE}/auditoria?limite=100`);
+      if (response.status === 401) return;
       if (response.status === 403) {
         if (semPermissao) semPermissao.style.display = 'block';
-        throw new Error('Você não tem permissão para acessar a auditoria.');
+        if (tbody) tbody.replaceChildren();
+        return;
       }
       if (!response.ok) {
         throw new Error(await lerMensagemErroApi(response, 'Erro ao carregar auditoria.'));
