@@ -12,6 +12,9 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 - API REST em Java com Spring Boot e Spring Data JPA/Hibernate.
 - PostgreSQL configurado como banco principal.
 - Preferências visuais persistentes.
+- Schema físico inventariado e preservado em backup operacional ignorado pelo Git.
+- Suporte inicial ao Flyway e migration V1 validados em PostgreSQL vazio e isolado.
+- Hibernate alterado de `update` para `validate`; Flyway desabilitado por padrão até o baseline do banco principal.
 
 ### Clientes
 
@@ -72,7 +75,7 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 
 ## Em andamento / próximo
 
-1. Migrações controladas do banco com Flyway.
+1. Baseline controlado do banco principal e ativação posterior do Flyway nesse ambiente.
 2. Plano de testes automatizados.
 3. Revisão de segurança e integridade.
 4. Refinamento de UX e mensagens de erro.
@@ -81,16 +84,17 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 
 ## Próximas tarefas prioritárias
 
-1. Levantar o schema atual do PostgreSQL.
-2. Configurar Flyway.
-3. Criar um baseline seguro do banco atual.
-4. Trocar `ddl-auto=update` por um modo seguro depois da validação.
+1. Revisar a V1 derivada do schema físico aprovado.
+2. Preparar e executar o baseline explícito do banco principal em fase separada, com backup validado.
+3. Ativar Flyway no banco principal somente após conferir o histórico e o fingerprint estrutural.
+4. Criar a primeira migration evolutiva apenas depois da integração segura do banco existente.
 5. Criar testes de autorização por perfil.
 6. Criar testes de documentos.
 7. Criar testes de clientes e processos com exclusão lógica.
-8. Melhorar o tratamento de upload acima de 10 MB no frontend.
-9. Revisar telas antigas em busca de dados fixos e mocks residuais.
-10. Preparar um checklist de uso real.
+8. Revisar telas antigas em busca de dados fixos e mocks residuais.
+9. Preparar um checklist de uso real.
+
+O estado e as regras operacionais do Flyway estão em [docs/FLYWAY_MIGRATIONS.md](docs/FLYWAY_MIGRATIONS.md).
 
 ## Fora de escopo agora
 

@@ -34,6 +34,7 @@ A ideia principal é permitir que o advogado consiga gerenciar seus clientes e i
 - Spring Web
 - Spring Data JPA
 - PostgreSQL
+- Flyway
 
 ## 🔗 Endpoints principais
 
@@ -54,3 +55,4 @@ DELETE /clientes/{id}
 - [Plano de testes](TEST_PLAN.md)
 - [Permissões por perfil](docs/PERMISSOES.md)
 - [Backup e restauração](docs/BACKUP_RESTORE.md)
+- [Flyway e migrations](docs/FLYWAY_MIGRATIONS.md)

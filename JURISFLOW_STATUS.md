@@ -2,11 +2,11 @@
 
 ## Última atualização
 
-14/07/2026 às 17:38 (UTC-03:00, America/Sao_Paulo).
+21/07/2026 (UTC-03:00, America/Sao_Paulo).
 
 ## Estado geral
 
-O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usuários, backup, auditoria e permissões por perfil já foram implementados e testados nos sprints recentes. O projeto ainda precisa de migrações controladas, ampliação dos testes automatizados e uma revisão final de segurança antes de uso real.
+O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usuários, backup, auditoria e permissões por perfil já foram implementados e testados nos sprints recentes. O suporte inicial ao Flyway e a migration V1 do schema físico atual foram preparados e validados em banco PostgreSQL vazio e isolado. O banco principal ainda precisa de baseline controlado em fase separada, além da ampliação dos testes automatizados e de uma revisão final de segurança antes de uso real.
 
 ## Ambiente atual
 
@@ -26,6 +26,9 @@ O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usu�
 - Cadastro e gerenciamento de clientes.
 - Cadastro e gerenciamento de processos.
 - PostgreSQL configurado como banco principal.
+- Dependências do Flyway compatíveis com Spring Boot 4.0.6.
+- Migration `V1__baseline_schema_atual.sql` derivada do schema físico aprovado e validada em banco vazio.
+- Hibernate configurado com `ddl-auto=validate`; Flyway permanece desabilitado por padrão até o baseline controlado do banco principal.
 - Autenticação JWT.
 - Proteção de rotas autenticadas.
 - Preferências visuais persistentes.
@@ -37,6 +40,7 @@ O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usu�
 - Metadados de documentos persistidos no PostgreSQL.
 - Vínculo de documentos com clientes e processos.
 - Limite de upload de 10 MB.
+- Pré-validação no frontend para bloquear arquivos acima de 10 MB antes da requisição.
 - Download protegido.
 - Exclusão lógica de documentos.
 - Bloqueio prático da exclusão física nos fluxos de clientes e processos: as operações de exclusão fazem arquivamento lógico e preservam os vínculos com documentos históricos.
@@ -64,10 +68,10 @@ A matriz detalhada e os endpoints protegidos estão em [docs/PERMISSOES.md](docs
 ## Funcionalidades parcialmente concluídas ou a verificar
 
 - Validação e normalização mais fortes de campos como área jurídica e tipo de cliente.
-- UX específica no frontend para erro de upload acima de 10 MB.
 - Revisão geral de telas antigas que ainda possam conter texto fixo, mock residual ou uso legado de `localStorage`.
 - Validação visual completa após futuras alterações.
 - Testes automatizados mais abrangentes.
+- Baseline controlado do banco principal e ativação posterior do Flyway nesse ambiente.
 
 ## Bugs conhecidos
 
@@ -75,7 +79,6 @@ A matriz detalhada e os endpoints protegidos estão em [docs/PERMISSOES.md](docs
 - O Git exibe avisos de conversão LF/CRLF no Windows, sem erro real no `git diff --check`.
 - Há risco de XSS persistente em trechos da Dashboard e do autocomplete de novo processo que interpolam dados da API em `innerHTML` sem escape; deve ser corrigido antes de uso real.
 - O logout possui handlers sobrepostos em `auth.js` e `dashboard.js`; o encerramento imediato da sessão pode ocorrer antes da confirmação visual.
-- Uploads acima de 10 MB não têm pré-validação no frontend e podem cair no tratamento genérico do backend, resultando em HTTP 500 e mensagem pouco clara.
 
 ## Decisões técnicas
 
@@ -88,14 +91,19 @@ A matriz detalhada e os endpoints protegidos estão em [docs/PERMISSOES.md](docs
 - Backend como fonte de verdade para permissões.
 - Frontend ocultando ações indisponíveis apenas para melhorar a UX.
 - Backup e restauração documentados em [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md).
-- Próximo passo técnico recomendado: migrações controladas com Flyway.
+- O procedimento e o estado da implantação estão documentados em [docs/FLYWAY_MIGRATIONS.md](docs/FLYWAY_MIGRATIONS.md).
+- Próximo passo técnico recomendado: baseline explícito e controlado do banco principal, sem executar V1 sobre o schema existente.
 
 ## Testes realizados
 
-Resultados conhecidos dos sprints recentes; o Maven não foi reexecutado nesta atualização exclusivamente documental:
+Resultados conhecidos dos sprints recentes e da validação isolada do Flyway em 21/07/2026:
 
-- Build Maven aprovado nos sprints recentes.
+- `mvn compile` aprovado.
 - Suíte automatizada existente: 1 teste executado, 0 falhas e 0 erros.
+- Primeiro startup no banco vazio `jurisflow_flyway_v1_test`: V1 aplicada, Hibernate `validate` aprovado e backend iniciado.
+- Segundo startup no mesmo banco: schema na versão 1, sem reaplicação da V1.
+- Comparação com os catálogos aprovados: 9 tabelas de aplicação, 138 colunas, 62 constraints, 20 índices, 9 sequences, 9 colunas identity e 11 foreign keys.
+- Smoke sem token: `/auth/me`, `/clientes`, `/processos` e `/documentos` retornaram HTTP 401.
 - Testes manuais de autenticação.
 - Testes manuais de usuários e troca/reset de senha.
 - Testes manuais de documentos.
@@ -127,20 +135,12 @@ Resultado de `git log -12 --oneline` em 14/07/2026:
 
 ## Estado do worktree
 
-Antes desta atualização documental, `git status --short` não produziu saída: o worktree estava limpo.
-
-Após a criação e o ajuste dos documentos desta atualização:
-
-```text
- M readme.md
-?? JURISFLOW_STATUS.md
-?? ROADMAP.md
-?? TEST_PLAN.md
-```
+No início da preparação do Flyway, `git status --short` não produziu saída e o HEAD era `270bd0b Melhora validacao de upload no frontend`. As alterações da fase 3/fase 4 inicial permanecem locais e sem commit ou push para revisão.
 
 ## Próximo passo recomendado
 
-1. Criar migrações controladas com Flyway.
-2. Reduzir a dependência de `spring.jpa.hibernate.ddl-auto=update`.
-3. Criar um plano de testes automatizados por perfil e para endpoints críticos.
-4. Fazer uma revisão final de segurança antes de uso real.
+1. Revisar a V1 e preparar o procedimento de baseline explícito do banco principal.
+2. Executar o baseline do banco principal somente em janela controlada, com backup validado.
+3. Ativar Flyway no ambiente principal apenas depois da validação do baseline.
+4. Criar testes automatizados por perfil e para endpoints críticos.
+5. Fazer uma revisão final de segurança antes de uso real.

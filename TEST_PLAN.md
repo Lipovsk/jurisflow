@@ -99,6 +99,20 @@ Definir como testar o JurisFlow antes de considerar funcionalidades concluídas.
 - Restauração em ambiente de teste.
 - Confirmação explícita de restauração.
 
+## Testes de Flyway e migrations
+
+- Confirmar que o banco isolado escolhido não existe antes de criá-lo; nunca apagar um banco encontrado automaticamente.
+- Confirmar que o banco novo inicia sem tabelas de aplicação.
+- Subir o backend com Flyway habilitado apenas por configuração isolada e Hibernate em `validate`.
+- Confirmar que V1 cria `flyway_schema_history` e registra uma migration SQL bem-sucedida.
+- Confirmar que o primeiro startup cria 9 tabelas de aplicação, 138 colunas, 62 constraints, 20 índices, 9 sequences, 9 colunas identity e 11 foreign keys.
+- Comparar nomes e definições estruturais com os catálogos do backup aprovado, sem consultar conteúdo de negócio.
+- Repetir o startup e confirmar que nenhuma migration é reaplicada.
+- Confirmar que as tabelas de aplicação permanecem vazias.
+- Confirmar HTTP 401 em endpoints protegidos e em `/auth/me` sem token.
+- Confirmar que o banco principal não recebeu `flyway_schema_history` e que o banco restaurado existente foi preservado.
+- Executar Maven somente com o profile de teste apontado explicitamente para banco isolado.
+
 ## Testes automatizados desejados
 
 - Testes unitários de services.
@@ -119,3 +133,4 @@ Definir como testar o JurisFlow antes de considerar funcionalidades concluídas.
 - Teste manual relevante concluído.
 - Documentação atualizada quando necessário.
 - Nenhum dado sensível incluído no commit.
+- Nenhum dump, ZIP, backup ou catálogo operacional incluído no commit.
