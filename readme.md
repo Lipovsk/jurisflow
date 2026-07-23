@@ -36,6 +36,12 @@ A ideia principal é permitir que o advogado consiga gerenciar seus clientes e i
 - PostgreSQL
 - Flyway
 
+## Banco de dados e migrations
+
+O Flyway está habilitado por padrão. O banco principal possui baseline explícito da versão 1, e a V1 permanece congelada para representar o schema inicial e criar bancos vazios. Futuras alterações de schema devem ser migrations V2 ou superiores.
+
+O Hibernate usa `ddl-auto=validate`, enquanto `baseline-on-migrate=false` e `clean-disabled=true` permanecem ativos.
+
 ## 🔗 Endpoints principais
 
 ### Clientes

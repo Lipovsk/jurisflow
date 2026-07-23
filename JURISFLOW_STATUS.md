@@ -2,11 +2,11 @@
 
 ## Última atualização
 
-21/07/2026 (UTC-03:00, America/Sao_Paulo).
+22/07/2026 (UTC-03:00, America/Sao_Paulo).
 
 ## Estado geral
 
-O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usuários, backup, auditoria e permissões por perfil já foram implementados e testados nos sprints recentes. O suporte inicial ao Flyway e a migration V1 do schema físico atual foram preparados e validados em banco PostgreSQL vazio e isolado. O banco principal ainda precisa de baseline controlado em fase separada, além da ampliação dos testes automatizados e de uma revisão final de segurança antes de uso real.
+O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usuários, backup, auditoria e permissões por perfil já foram implementados e testados nos sprints recentes. O suporte ao Flyway e a migration V1 do schema físico atual foram validados em PostgreSQL vazio e isolado. O banco principal recebeu o baseline explícito da versão 1 sem executar a V1, e o Flyway está habilitado por padrão com as proteções permanentes definidas no projeto.
 
 ## Ambiente atual
 
@@ -28,7 +28,10 @@ O JurisFlow está em desenvolvimento avançado. Autenticação, documentos, usu�
 - PostgreSQL configurado como banco principal.
 - Dependências do Flyway compatíveis com Spring Boot 4.0.6.
 - Migration `V1__baseline_schema_atual.sql` derivada do schema físico aprovado e validada em banco vazio.
-- Hibernate configurado com `ddl-auto=validate`; Flyway permanece desabilitado por padrão até o baseline controlado do banco principal.
+- Baseline explícito da versão 1 registrado no banco principal sem executar a V1.
+- Hibernate configurado com `ddl-auto=validate` e Flyway habilitado por padrão.
+- `baseline-on-migrate=false` e `clean-disabled=true` mantidos como proteções permanentes.
+- V1 congelada; futuras alterações de schema devem usar V2 ou superior.
 - Autenticação JWT.
 - Proteção de rotas autenticadas.
 - Preferências visuais persistentes.
@@ -71,7 +74,6 @@ A matriz detalhada e os endpoints protegidos estão em [docs/PERMISSOES.md](docs
 - Revisão geral de telas antigas que ainda possam conter texto fixo, mock residual ou uso legado de `localStorage`.
 - Validação visual completa após futuras alterações.
 - Testes automatizados mais abrangentes.
-- Baseline controlado do banco principal e ativação posterior do Flyway nesse ambiente.
 
 ## Bugs conhecidos
 
@@ -92,16 +94,17 @@ A matriz detalhada e os endpoints protegidos estão em [docs/PERMISSOES.md](docs
 - Frontend ocultando ações indisponíveis apenas para melhorar a UX.
 - Backup e restauração documentados em [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md).
 - O procedimento e o estado da implantação estão documentados em [docs/FLYWAY_MIGRATIONS.md](docs/FLYWAY_MIGRATIONS.md).
-- Próximo passo técnico recomendado: baseline explícito e controlado do banco principal, sem executar V1 sobre o schema existente.
+- Próximo passo técnico recomendado: manter a V1 congelada e criar somente migrations V2 ou superiores quando houver uma alteração real de schema.
 
 ## Testes realizados
 
-Resultados conhecidos dos sprints recentes e da validação isolada do Flyway em 21/07/2026:
+Resultados conhecidos dos sprints recentes e das validações do Flyway em 21 e 22/07/2026:
 
 - `mvn compile` aprovado.
 - Suíte automatizada existente: 1 teste executado, 0 falhas e 0 erros.
 - Primeiro startup no banco vazio `jurisflow_flyway_v1_test`: V1 aplicada, Hibernate `validate` aprovado e backend iniciado.
 - Segundo startup no mesmo banco: schema na versão 1, sem reaplicação da V1.
+- Em 22/07/2026, dois startups consecutivos no banco principal com o Flyway habilitado por padrão reconheceram a versão 1, não executaram a V1, mantiveram uma única linha `BASELINE` no histórico e passaram pelo Hibernate `validate`.
 - Comparação com os catálogos aprovados: 9 tabelas de aplicação, 138 colunas, 62 constraints, 20 índices, 9 sequences, 9 colunas identity e 11 foreign keys.
 - Smoke sem token: `/auth/me`, `/clientes`, `/processos` e `/documentos` retornaram HTTP 401.
 - Testes manuais de autenticação.
@@ -135,12 +138,12 @@ Resultado de `git log -12 --oneline` em 14/07/2026:
 
 ## Estado do worktree
 
-No início da preparação do Flyway, `git status --short` não produziu saída e o HEAD era `270bd0b Melhora validacao de upload no frontend`. As alterações da fase 3/fase 4 inicial permanecem locais e sem commit ou push para revisão.
+A implementação inicial do Flyway foi registrada no commit `fa174f7 Adiciona Flyway com baseline inicial do schema`. O baseline explícito da versão 1 foi concluído no banco principal antes da ativação padrão do Flyway.
 
 ## Próximo passo recomendado
 
-1. Revisar a V1 e preparar o procedimento de baseline explícito do banco principal.
-2. Executar o baseline do banco principal somente em janela controlada, com backup validado.
-3. Ativar Flyway no ambiente principal apenas depois da validação do baseline.
+1. Manter a V1 congelada.
+2. Criar futuras alterações de schema somente como V2 ou superior.
+3. Validar cada nova migration em ambiente isolado e com backup antes do banco principal.
 4. Criar testes automatizados por perfil e para endpoints críticos.
 5. Fazer uma revisão final de segurança antes de uso real.

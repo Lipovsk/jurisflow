@@ -101,17 +101,31 @@ Definir como testar o JurisFlow antes de considerar funcionalidades concluídas.
 
 ## Testes de Flyway e migrations
 
+### Banco novo e vazio
+
 - Confirmar que o banco isolado escolhido não existe antes de criá-lo; nunca apagar um banco encontrado automaticamente.
 - Confirmar que o banco novo inicia sem tabelas de aplicação.
-- Subir o backend com Flyway habilitado apenas por configuração isolada e Hibernate em `validate`.
+- Subir o backend com datasource explicitamente isolado e Hibernate em `validate`.
 - Confirmar que V1 cria `flyway_schema_history` e registra uma migration SQL bem-sucedida.
 - Confirmar que o primeiro startup cria 9 tabelas de aplicação, 138 colunas, 62 constraints, 20 índices, 9 sequences, 9 colunas identity e 11 foreign keys.
-- Comparar nomes e definições estruturais com os catálogos do backup aprovado, sem consultar conteúdo de negócio.
 - Repetir o startup e confirmar que nenhuma migration é reaplicada.
 - Confirmar que as tabelas de aplicação permanecem vazias.
+
+### Banco principal com baseline explícito
+
+- Antes do startup, confirmar exatamente uma linha `BASELINE`, versão 1, com sucesso, e nenhuma migration SQL registrada.
+- Subir o backend com a configuração padrão: Flyway habilitado, `baseline-on-migrate=false`, `clean-disabled=true` e Hibernate em `validate`.
+- Confirmar que Flyway encontra a versão atual 1 e não executa V1.
+- Repetir o startup e confirmar idempotência.
+- Confirmar que o histórico permanece com uma única linha `BASELINE`.
+- Comparar a estrutura de negócio antes e depois e confirmar que permaneceu idêntica.
 - Confirmar HTTP 401 em endpoints protegidos e em `/auth/me` sem token.
-- Confirmar que o banco principal não recebeu `flyway_schema_history` e que o banco restaurado existente foi preservado.
-- Executar Maven somente com o profile de teste apontado explicitamente para banco isolado.
+
+### Evoluções futuras
+
+- Nunca alterar a V1 depois do baseline.
+- Criar qualquer futura alteração de schema como V2 ou superior.
+- Validar cada migration em ambiente isolado antes de aplicá-la ao banco principal.
 
 ## Testes automatizados desejados
 

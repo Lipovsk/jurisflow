@@ -13,8 +13,11 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 - PostgreSQL configurado como banco principal.
 - Preferências visuais persistentes.
 - Schema físico inventariado e preservado em backup operacional ignorado pelo Git.
-- Suporte inicial ao Flyway e migration V1 validados em PostgreSQL vazio e isolado.
-- Hibernate alterado de `update` para `validate`; Flyway desabilitado por padrão até o baseline do banco principal.
+- Flyway e migration V1 validados em PostgreSQL vazio e isolado.
+- Baseline explícito da versão 1 registrado no banco principal sem executar a V1.
+- Hibernate configurado com `validate` e Flyway habilitado por padrão.
+- `baseline-on-migrate=false` e `clean-disabled=true` mantidos.
+- V1 congelada; futuras evoluções de schema devem começar em V2.
 
 ### Clientes
 
@@ -75,7 +78,7 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 
 ## Em andamento / próximo
 
-1. Baseline controlado do banco principal e ativação posterior do Flyway nesse ambiente.
+1. Planejamento de migrations V2 ou superiores somente quando houver alteração real de schema.
 2. Plano de testes automatizados.
 3. Revisão de segurança e integridade.
 4. Refinamento de UX e mensagens de erro.
@@ -84,10 +87,10 @@ Finalizar o JurisFlow como sistema jurídico utilizável, seguro e organizado pa
 
 ## Próximas tarefas prioritárias
 
-1. Revisar a V1 derivada do schema físico aprovado.
-2. Preparar e executar o baseline explícito do banco principal em fase separada, com backup validado.
-3. Ativar Flyway no banco principal somente após conferir o histórico e o fingerprint estrutural.
-4. Criar a primeira migration evolutiva apenas depois da integração segura do banco existente.
+1. Manter a V1 congelada.
+2. Criar futuras alterações de schema somente como V2 ou superior.
+3. Validar cada nova migration em ambiente isolado e com backup antes do banco principal.
+4. Documentar cada evolução do schema e seu procedimento de reversão operacional.
 5. Criar testes de autorização por perfil.
 6. Criar testes de documentos.
 7. Criar testes de clientes e processos com exclusão lógica.
